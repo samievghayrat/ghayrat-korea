@@ -89,7 +89,7 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   const ref = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="px-4 py-3 border-b border-gray-100" ref={ref}>
+    <div className="px-4 py-3" ref={ref}>
       <label className="text-sm font-semibold text-gray-700 mb-1.5 block">{label}</label>
       <div className="relative">
         <button
@@ -368,7 +368,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
       )}
 
       {/* Filter sections */}
-      <div className={compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}>
+      <div className={`border-t border-gray-100 ${compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}`}>
         {/* Year + Month */}
         <FilterSection title="Год" defaultOpen={!compact} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
           <div className="space-y-2">

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const maxDuration = 60;
+
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 
 const ALL_BRANDS = [
@@ -72,6 +74,7 @@ async function fetchBrandCount(nameKo: string): Promise<number> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) return 0;
@@ -87,12 +90,19 @@ export async function GET() {
     return NextResponse.json(cache.data);
   }
 
-  const counts = await Promise.all(
-    ALL_BRANDS.map(async (brand) => {
-      const count = await fetchBrandCount(brand.nameKo);
-      return { name: brand.name, nameKo: brand.nameKo, count };
-    })
-  );
+  // Batch in groups of 8 to avoid Vercel timeout
+  const counts: { name: string; nameKo: string; count: number }[] = [];
+  const batchSize = 8;
+  for (let i = 0; i < ALL_BRANDS.length; i += batchSize) {
+    const batch = ALL_BRANDS.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (brand) => {
+        const count = await fetchBrandCount(brand.nameKo);
+        return { name: brand.name, nameKo: brand.nameKo, count };
+      })
+    );
+    counts.push(...batchResults);
+  }
 
   // Filter out brands with 0 count and sort by count descending
   const activeBrands = counts.filter(b => b.count > 0).sort((a, b) => b.count - a.count);

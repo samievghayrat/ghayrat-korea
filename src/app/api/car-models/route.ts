@@ -25,13 +25,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'brand parameter required' }, { status: 400 });
   }
 
-  const koreanBrand = reverseTranslateBrand(brand);
-  if (!koreanBrand) {
-    return NextResponse.json({ models: [] });
-  }
+  // Use Korean name if available, otherwise use the original (for foreign brands)
+  const koreanBrand = reverseTranslateBrand(brand) || brand;
 
   const model = request.nextUrl.searchParams.get('model');
-  const koreanModel = model ? reverseTranslateModel(model) : undefined;
+  // Use Korean name if available, otherwise use original (for models like ES, RX, X5, etc.)
+  const koreanModel = model ? (reverseTranslateModel(model) || model) : undefined;
 
   const cacheKey = koreanModel ? `${koreanBrand}:${koreanModel}` : `${koreanBrand}:_models`;
   const cached = variantsCache.get(cacheKey);

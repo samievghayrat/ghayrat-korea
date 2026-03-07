@@ -1,0 +1,219 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import type { CarListing } from '@/types';
+import ImageGallery from '@/components/detail/ImageGallery';
+import CarSpecs from '@/components/detail/CarSpecs';
+import PriceBreakdown from '@/components/detail/PriceBreakdown';
+import Equipment from '@/components/detail/Equipment';
+import AccidentHistory from '@/components/detail/AccidentHistory';
+import SimilarCars from '@/components/detail/SimilarCars';
+import FavoriteButton from '@/components/shared/FavoriteButton';
+import { formatPrice } from '@/lib/currency';
+import { calculateImportCost } from '@/lib/calculator';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+
+export default function CarDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [car, setCar] = useState<CarListing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [destination, setDestination] = useState<'russia' | 'tajikistan'>('russia');
+
+  useEffect(() => {
+    fetch(`/api/cars/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Not found');
+        return res.json();
+      })
+      .then(data => {
+        setCar(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <LoadingSpinner className="py-32" />;
+
+  if (error || !car) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Автомобиль не найден</h1>
+        <p className="text-gray-500 mb-8">Возможно, объявление было удалено или ссылка устарела.</p>
+        <a href="/" className="btn-primary inline-block">Вернуться в каталог</a>
+      </div>
+    );
+  }
+
+  const breakdown = calculateImportCost({
+    priceKrw: car.price_krw,
+    priceRub: car.price_rub,
+    displacement: car.displacement || 0,
+    year: car.year,
+    month: car.month,
+    fuel: car.fuel,
+    hp: car.hp,
+    destination,
+  });
+
+  const yearMonth = car.month
+    ? `${car.year}/${String(car.month).padStart(2, '0')}`
+    : `${car.year}`;
+
+  const priceLabel = destination === 'russia'
+    ? 'под ключ до Владивостока'
+    : 'с доставкой до Таджикистана';
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-5">
+        <a href="/" className="hover:text-primary transition-colors">Каталог</a>
+        <span>/</span>
+        <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="hover:text-primary transition-colors">{car.brand}</a>
+        <span>/</span>
+        <span className="text-gray-700 font-medium">{car.model}</span>
+      </nav>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Left - images */}
+        <div className="lg:col-span-3">
+          <ImageGallery
+            images={car.images.length > 0
+              ? car.images
+              : [car.imageUrl || '/images/no-image.svg']
+            }
+            alt={`${car.brand} ${car.model}`}
+          />
+        </div>
+
+        {/* Right - info & price */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            {/* Title + Favorite */}
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  {car.brand} {car.model} {car.engine} {car.trim || ''}
+                </h1>
+                <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-400">
+                  <span>{yearMonth} г.</span>
+                  <span>·</span>
+                  <span>{car.fuel}</span>
+                  {car.hp && (
+                    <>
+                      <span>·</span>
+                      <span>{car.hp} л.с.</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <FavoriteButton carId={car.id} />
+            </div>
+
+            {/* Destination toggle */}
+            <div className="flex mt-5 bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setDestination('russia')}
+                className={`flex-1 text-sm font-medium py-2 px-3 rounded-lg transition-all ${
+                  destination === 'russia'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                🇷🇺 Россия
+              </button>
+              <button
+                onClick={() => setDestination('tajikistan')}
+                className={`flex-1 text-sm font-medium py-2 px-3 rounded-lg transition-all ${
+                  destination === 'tajikistan'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                🇹🇯 Таджикистан
+              </button>
+            </div>
+
+            {/* Total price */}
+            <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
+              <div className="text-3xl font-extrabold text-gray-900">{formatPrice(breakdown.total, 'RUB')}</div>
+              <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
+              <div className="text-xs text-gray-400 mt-1">
+                Цена в Корее: <span className="font-semibold text-gray-500">{formatPrice(car.price_krw, 'KRW')}</span>
+                {car.price_usd ? <> · <span className="font-semibold text-gray-500">{formatPrice(car.price_usd, 'USD')}</span></> : null}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <a
+              href="https://t.me/ghayrat_korea"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cta-red mt-5"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              Написать менеджеру
+            </a>
+
+            {/* Toggle breakdown */}
+            <button
+              onClick={() => setShowBreakdown(!showBreakdown)}
+              className="w-full mt-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+            >
+              {showBreakdown ? 'Скрыть расчёт цены' : 'Показать расчёт цены'}
+              <svg className={`w-4 h-4 transition-transform ${showBreakdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showBreakdown && (
+              <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} destination={destination} />
+            )}
+
+            {/* Encar link */}
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+              <a
+                href={`https://fem.encar.com/cars/detail/${car.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+              >
+                Смотреть на Encar.com
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+              <span className="text-gray-200">|</span>
+              <a
+                href="/how-to-buy"
+                className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+              >
+                Как купить автомобиль
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Full-width sections */}
+      <div className="mt-6 space-y-6">
+        <CarSpecs car={car} />
+        <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
+        <Equipment items={car.equipment || []} />
+        <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
+      </div>
+    </div>
+  );
+}

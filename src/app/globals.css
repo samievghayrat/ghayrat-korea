@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f0f2f5;
+  --foreground: #1a1a1a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold
+           hover:bg-primary-light transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold
+           hover:bg-primary hover:text-white transition-all duration-200;
+  }
+  .btn-secondary {
+    @apply bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold
+           hover:bg-gray-700 transition-all duration-200;
+  }
+  .btn-whatsapp {
+    @apply bg-[#25D366] text-white px-5 py-2.5 rounded-lg font-semibold
+           hover:bg-[#20bd5a] transition-all duration-200 inline-flex items-center gap-2;
+  }
+  .btn-telegram {
+    @apply bg-[#0088cc] text-white px-5 py-2.5 rounded-lg font-semibold
+           hover:bg-[#006daa] transition-all duration-200 inline-flex items-center gap-2;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary/15 hover:-translate-y-0.5;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded;
+  }
+  .badge-fuel {
+    @apply badge bg-blue-50 text-blue-700;
+  }
+  .badge-year {
+    @apply badge bg-gray-100 text-gray-700;
+  }
+  .badge-own {
+    @apply badge bg-primary text-white;
+  }
+  .badge-electric {
+    @apply badge bg-emerald-50 text-emerald-700;
+  }
+  .badge-diesel {
+    @apply badge bg-amber-50 text-amber-700;
+  }
+  .input-field {
+    @apply w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm
+           focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none;
+  }
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-gray-900;
+  }
+  .btn-cta-red {
+    @apply w-full bg-red-600 text-white px-6 py-4 rounded-xl font-bold text-base
+           hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg
+           inline-flex items-center justify-center gap-3;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Filter panel scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 2px;
+}
+
+/* Smooth page transitions */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Animate-in utility for FloatingContact */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slideInFromBottom 0.2s ease-out;
+}

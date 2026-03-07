@@ -380,6 +380,18 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
                 <option value="">Год от</option>
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
+              {!compact && (
+                <select
+                  value={filters.monthFrom || ''}
+                  onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="input-field"
+                >
+                  <option value="">Мес.</option>
+                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              )}
+            </div>
+            <div className="flex gap-2">
               <select
                 value={filters.yearTo || ''}
                 onChange={(e) => update('yearTo', e.target.value ? parseInt(e.target.value) : undefined)}
@@ -388,27 +400,17 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
                 <option value="">Год до</option>
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-            </div>
-            {!compact && (
-              <div className="flex gap-2">
-                <select
-                  value={filters.monthFrom || ''}
-                  onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="input-field"
-                >
-                  <option value="">Мес. от</option>
-                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
+              {!compact && (
                 <select
                   value={filters.monthTo || ''}
                   onChange={(e) => update('monthTo', e.target.value ? parseInt(e.target.value) : undefined)}
                   className="input-field"
                 >
-                  <option value="">Мес. до</option>
+                  <option value="">Мес.</option>
                   {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </FilterSection>
 

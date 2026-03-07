@@ -44,10 +44,13 @@ export default function Header() {
       <div className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-xs">
+            <div className="flex sm:hidden items-center text-gray-300 text-xs font-medium tracking-wide">
+              Авто из Южной Кореи
+            </div>
             <div className="hidden sm:flex items-center text-gray-300 text-xs font-medium tracking-wide">
               Авто Под Заказ из Южной Кореи
             </div>
-            <div className="flex items-center gap-4 mx-auto sm:mx-0">
+            <div className="hidden sm:flex items-center gap-4">
               <a
                 href="https://t.me/ghayrat_korea"
                 target="_blank"

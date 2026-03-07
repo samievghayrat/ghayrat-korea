@@ -12,7 +12,6 @@ const ALL_BRANDS = [
   { name: 'Chevrolet', nameKo: '쉐보레(GM대우)' },
   { name: 'Renault Korea', nameKo: '르노코리아(삼성)' },
   { name: 'KG Mobility', nameKo: 'KG모빌리티(쌍용)' },
-  { name: 'Chevrolet (Domestic)', nameKo: '쉐보레' },
   // Japanese
   { name: 'Toyota', nameKo: '도요타' },
   { name: 'Lexus', nameKo: '렉서스' },
@@ -23,6 +22,10 @@ const ALL_BRANDS = [
   { name: 'Subaru', nameKo: '스바루' },
   { name: 'Suzuki', nameKo: '스즈키' },
   { name: 'Daihatsu', nameKo: '다이하쯔' },
+  { name: 'Mitsubishi', nameKo: '미쯔비시' },
+  { name: 'Acura', nameKo: '어큐라' },
+  { name: 'Scion', nameKo: '사이언' },
+  { name: 'Mitsuoka', nameKo: '미쯔오까' },
   // German
   { name: 'BMW', nameKo: 'BMW' },
   { name: 'Mercedes-Benz', nameKo: '벤츠' },
@@ -30,13 +33,22 @@ const ALL_BRANDS = [
   { name: 'Volkswagen', nameKo: '폭스바겐' },
   { name: 'Porsche', nameKo: '포르쉐' },
   { name: 'Mini', nameKo: '미니' },
+  { name: 'Smart', nameKo: '스마트' },
+  { name: 'Opel', nameKo: '오펠' },
+  { name: 'Maybach', nameKo: '마이바흐' },
   // European
   { name: 'Volvo', nameKo: '볼보' },
+  { name: 'Polestar', nameKo: '폴스타' },
   { name: 'Land Rover', nameKo: '랜드로버' },
   { name: 'Jaguar', nameKo: '재규어' },
   { name: 'Peugeot', nameKo: '푸조' },
+  { name: 'Citroën/DS', nameKo: '시트로엥/DS' },
+  { name: 'Renault', nameKo: '르노' },
   { name: 'Fiat', nameKo: '피아트' },
+  { name: 'Alfa Romeo', nameKo: '알파 로메오' },
   { name: 'Saab', nameKo: '사브' },
+  { name: 'MG Rover', nameKo: 'MG로버' },
+  { name: 'INEOS', nameKo: '이네오스' },
   // American
   { name: 'Tesla', nameKo: '테슬라' },
   { name: 'Ford', nameKo: '포드' },
@@ -46,6 +58,18 @@ const ALL_BRANDS = [
   { name: 'GMC', nameKo: 'GMC' },
   { name: 'Dodge', nameKo: '닷지' },
   { name: 'Chrysler', nameKo: '크라이슬러' },
+  { name: 'Hummer', nameKo: '험머' },
+  { name: 'Mercury', nameKo: '머큐리' },
+  { name: 'Buick', nameKo: '뷰익' },
+  { name: 'Saturn', nameKo: '새턴' },
+  { name: 'Pontiac', nameKo: '폰티악' },
+  // Chinese
+  { name: 'BYD', nameKo: 'BYD' },
+  { name: 'Geely', nameKo: '지리' },
+  { name: 'Dongfeng Sokon', nameKo: '동풍소콘' },
+  { name: 'BAIC', nameKo: '북기은상' },
+  { name: 'Sinyuan', nameKo: '신위안' },
+  { name: 'Foton', nameKo: '포톤' },
   // Luxury / Exotic
   { name: 'Bentley', nameKo: '벤틀리' },
   { name: 'Rolls-Royce', nameKo: '롤스로이스' },
@@ -55,6 +79,10 @@ const ALL_BRANDS = [
   { name: 'Aston Martin', nameKo: '애스턴마틴' },
   { name: 'McLaren', nameKo: '맥라렌' },
   { name: 'Lotus', nameKo: '로터스' },
+  { name: 'Bugatti', nameKo: '부가티' },
+  { name: 'Koenigsegg', nameKo: '코닉세그' },
+  { name: 'Pagani', nameKo: '파가니' },
+  { name: 'Isuzu', nameKo: '이스즈' },
 ] as const;
 
 let cache: { data: { brands: { name: string; nameKo: string; count: number }[]; total: number }; timestamp: number } | null = null;

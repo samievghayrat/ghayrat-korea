@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reverseTranslateBrand, reverseTranslateModel } from '@/lib/translations';
 
-const ENCAR_API_BASE = 'http://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 
 // In-memory cache
 const variantsCache: Map<string, { data: unknown; timestamp: number }> = new Map();

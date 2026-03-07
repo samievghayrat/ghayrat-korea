@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const url = 'http://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N.)&sr=%7CModifiedDate%7C0%7C1';
+  const url = 'https://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N.)&sr=%7CModifiedDate%7C0%7C1';
 
   try {
     const res = await fetch(url, {

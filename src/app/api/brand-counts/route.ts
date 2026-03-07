@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const ENCAR_API_BASE = 'http://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 
 const ALL_BRANDS = [
   // Domestic

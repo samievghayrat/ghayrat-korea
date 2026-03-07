@@ -2,7 +2,7 @@ import { translateBrand, translateModel, translateFuel, translateColor, reverseT
 import { convertKrwToRub, convertKrwToUsd } from './currency';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 
-const ENCAR_API_BASE = 'http://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 const ENCAR_DETAIL_BASE = 'https://fem.encar.com/cars/detail';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
 const ENCAR_OPTIONS_API = 'https://api.encar.com/v1/readside/vehicles/car/options/standard';

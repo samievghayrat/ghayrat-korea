@@ -126,7 +126,7 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   );
 }
 
-export default function EncarSearch({ filters, onChange, onReset, brandCounts, compact }: EncarSearchProps) {
+export default function EncarSearch({ filters, onChange, brandCounts, compact }: EncarSearchProps) {
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
@@ -213,32 +213,9 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
     filters.drivetrain, filters.color,
   ].filter(Boolean).length + (filters.options?.length || 0);
 
-  const handleResetAll = () => {
-    setBrandOpen(false);
-    setModelOpen(false);
-    setGenOpen(false);
-    if (onReset) {
-      onReset();
-    } else {
-      onChange({ page: 1 });
-    }
-  };
-
-  const hasAnyFilter = !!(filters.brand || activeFilterCount > 0);
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-      {/* Header — only show reset button when filters are active */}
-      {hasAnyFilter && (
-        <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 flex justify-end">
-          <button onClick={handleResetAll} className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Сбросить
-          </button>
-        </div>
-      )}
 
       {/* Brand selector */}
       <SelectBox

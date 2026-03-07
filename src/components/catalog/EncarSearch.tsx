@@ -452,21 +452,6 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
               className="input-field"
             />
           </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {[10000, 30000, 50000, 100000].map(v => (
-              <button
-                key={v}
-                onClick={() => update('mileageTo', v)}
-                className={`text-[11px] px-2 py-1 rounded border transition-all ${
-                  filters.mileageTo === v
-                    ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                до {v >= 1000 ? `${v / 1000}k` : v}
-              </button>
-            ))}
-          </div>
         </FilterSection>
 
         {/* Extra filters — hidden in compact mode until "More" is tapped */}

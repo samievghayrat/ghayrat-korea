@@ -90,7 +90,7 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
 
   return (
     <div className="px-4 py-3" ref={ref}>
-      <label className="text-sm font-semibold text-gray-700 mb-1.5 block">{label}</label>
+      {label && <label className="text-sm font-semibold text-gray-700 mb-1.5 block">{label}</label>}
       <div className="relative">
         <button
           onClick={onToggle}
@@ -242,7 +242,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
 
       {/* Brand selector */}
       <SelectBox
-        label="Марка"
+        label=""
         value={filters.brand}
         count={selectedBrandCount}
         placeholder="Марка, модель, поколение"
@@ -277,7 +277,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
       {/* Model selector */}
       {filters.brand && (
         <SelectBox
-          label="Модель"
+          label=""
           value={filters.model}
           count={totalGenCount || undefined}
           placeholder="Все модели"
@@ -307,7 +307,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
       {/* Generation selector */}
       {filters.model && (
         <SelectBox
-          label="Поколение"
+          label=""
           value={selectedGenName || 'Все'}
           count={filters.modelVariant
             ? generationVariants.find(v => v.name === filters.modelVariant)?.count

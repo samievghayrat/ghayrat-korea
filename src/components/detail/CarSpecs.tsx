@@ -7,7 +7,7 @@ interface CarSpecsProps {
 
 export default function CarSpecs({ car }: CarSpecsProps) {
   const yearMonth = car.month
-    ? `${String(car.month).padStart(2, '0')}/${car.year} г.`
+    ? `${car.year}/${String(car.month).padStart(2, '0')} г.`
     : `${car.year} г.`;
 
   const specs = [

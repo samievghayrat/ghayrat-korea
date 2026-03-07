@@ -1,10 +1,8 @@
-import Link from 'next/link';
-
 export default function Footer() {
   return (
     <footer className="bg-primary-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -35,31 +33,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Navigation */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Навигация</h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link href="/" className="hover:text-white transition-colors">Каталог</Link></li>
-              <li><Link href="/how-to-buy" className="hover:text-white transition-colors">Как купить</Link></li>
-              <li><Link href="/about" className="hover:text-white transition-colors">О компании</Link></li>
-              <li><Link href="/contacts" className="hover:text-white transition-colors">Контакты</Link></li>
-              <li><Link href="/favorites" className="hover:text-white transition-colors">Избранное</Link></li>
-            </ul>
-          </div>
-
-          {/* Brands */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Популярные марки</h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link href="/?brand=Hyundai" className="hover:text-white transition-colors">Hyundai</Link></li>
-              <li><Link href="/?brand=Kia" className="hover:text-white transition-colors">Kia</Link></li>
-              <li><Link href="/?brand=Genesis" className="hover:text-white transition-colors">Genesis</Link></li>
-              <li><Link href="/?brand=Chevrolet" className="hover:text-white transition-colors">Chevrolet</Link></li>
-              <li><Link href="/?brand=SsangYong" className="hover:text-white transition-colors">SsangYong</Link></li>
-            </ul>
-          </div>
-
-          {/* Contacts */}
+{/* Contacts */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Контакты</h4>
             <div className="space-y-3 text-sm">

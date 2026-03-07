@@ -189,9 +189,8 @@ function buildSearchQuery(filters: CarFilters): string {
 
   if (filters.brand) {
     const koreanBrand = reverseTranslateBrand(filters.brand);
-    if (koreanBrand) {
-      parts.push(`Manufacturer.${koreanBrand}`);
-    }
+    // Use Korean name if available, otherwise use the original (for foreign brands like Lexus, BMW, etc.)
+    parts.push(`Manufacturer.${koreanBrand || filters.brand}`);
   }
 
   if (filters.modelVariant) {
@@ -199,11 +198,9 @@ function buildSearchQuery(filters: CarFilters): string {
     parts.push(`Model.${filters.modelVariant}`);
   } else if (filters.model) {
     // Use ModelGroup for base model search — matches ALL generations/variants
-    // e.g., ModelGroup.아반떼 matches 아반떼, 아반떼 (CN7), 더 뉴 아반떼 (CN7), etc.
     const koreanModel = reverseTranslateModel(filters.model);
-    if (koreanModel) {
-      parts.push(`ModelGroup.${koreanModel}`);
-    }
+    // Use Korean name if available, otherwise use the original (for models like ES, RX, X5, etc.)
+    parts.push(`ModelGroup.${koreanModel || filters.model}`);
   }
 
   if (filters.fuel) {

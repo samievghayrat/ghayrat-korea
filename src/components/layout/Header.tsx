@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import MobileMenu from './MobileMenu';
-
 
 const navLinks = [
   { href: '/', label: 'Каталог' },
@@ -15,7 +13,6 @@ const navLinks = [
 
 export default function Header() {
   const [favCount, setFavCount] = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -40,17 +37,14 @@ export default function Header() {
 
   return (
     <header className="bg-[#1a1f2e] sticky top-0 z-50">
-      {/* Top bar with exchange rates */}
-      <div className="border-b border-white/10">
+      {/* Top bar — desktop only */}
+      <div className="hidden sm:block border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-xs">
-            <div className="flex sm:hidden items-center text-gray-300 text-xs font-medium tracking-wide">
-              Авто из Южной Кореи
-            </div>
-            <div className="hidden sm:flex items-center text-gray-300 text-xs font-medium tracking-wide">
+            <div className="flex items-center text-gray-300 text-xs font-medium tracking-wide">
               Авто Под Заказ из Южной Кореи
             </div>
-            <div className="hidden sm:flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <a
                 href="https://t.me/ghayrat_korea"
                 target="_blank"
@@ -80,7 +74,7 @@ export default function Header() {
 
       {/* Main nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-12 lg:h-14">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-sm">GK</span>
@@ -107,8 +101,7 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-
+          <div className="hidden lg:flex items-center gap-2">
             <Link
               href="/favorites"
               className="relative flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/5"
@@ -117,7 +110,7 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span className="hidden sm:inline text-sm">Избранное</span>
+              <span className="text-sm">Избранное</span>
               <span className="bg-primary text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
                 {String(favCount).padStart(2, '0')}
               </span>
@@ -127,25 +120,25 @@ export default function Header() {
               href="https://t.me/ghayrat_korea"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex btn-primary text-xs py-2 px-4"
+              className="btn-primary text-xs py-2 px-4"
             >
               Написать менеджеру
             </a>
-
-            <button
-              className="lg:hidden text-gray-300 hover:text-white p-2"
-              onClick={() => setMobileOpen(true)}
-              aria-label="Открыть меню"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
           </div>
+
+          {/* Mobile: just show Telegram link */}
+          <a
+            href="https://t.me/ghayrat_korea"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lg:hidden flex items-center gap-1.5 text-gray-300 hover:text-white text-xs"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+            </svg>
+          </a>
         </div>
       </div>
-
-      <MobileMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)} links={navLinks} favCount={favCount} />
     </header>
   );
 }

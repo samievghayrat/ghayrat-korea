@@ -179,20 +179,8 @@ export default function CarDetailPage() {
               <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} destination={destination} />
             )}
 
-            {/* Encar link */}
-            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-              <a
-                href={`https://fem.encar.com/cars/detail/${car.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
-              >
-                Смотреть на Encar.com
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-              <span className="text-gray-200">|</span>
+            {/* How to buy link */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
               <a
                 href="/how-to-buy"
                 className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"

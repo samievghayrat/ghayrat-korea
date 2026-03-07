@@ -17,17 +17,26 @@ export default function FavoritesPage() {
       return;
     }
 
-    // Fetch details for each favorite car
-    Promise.all(
-      favorites.map(id =>
-        fetch(`/api/cars/${id}`)
-          .then(res => res.ok ? res.json() : null)
-          .catch(() => null)
-      )
-    ).then(results => {
-      setCars(results.filter(Boolean));
+    // Fetch details for each favorite car sequentially to avoid rate limiting
+    const fetchSequentially = async () => {
+      const results: (CarListing | null)[] = [];
+      for (const id of favorites) {
+        try {
+          const res = await fetch(`/api/cars/${id}`);
+          if (res.ok) {
+            const car = await res.json();
+            results.push(car);
+            setCars(results.filter((c): c is CarListing => c !== null));
+          } else {
+            results.push(null);
+          }
+        } catch {
+          results.push(null);
+        }
+      }
       setLoading(false);
-    });
+    };
+    fetchSequentially();
   }, [favorites]);
 
   return (

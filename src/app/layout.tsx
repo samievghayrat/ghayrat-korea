@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import BottomNav from '@/components/layout/BottomNav';
 import FloatingContact from '@/components/shared/FloatingContact';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
@@ -25,8 +26,9 @@ export default function RootLayout({
     <html lang="ru">
       <body className={`${inter.className} antialiased`}>
         <Header />
-        <main className="min-h-screen">{children}</main>
+        <main className="min-h-screen pb-16 lg:pb-0">{children}</main>
         <Footer />
+        <BottomNav />
         <FloatingContact />
       </body>
     </html>

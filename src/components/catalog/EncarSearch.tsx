@@ -18,6 +18,7 @@ interface EncarSearchProps {
   totalResults?: number;
   brandCounts?: BrandCount[];
   totalCars?: number;
+  compact?: boolean;
 }
 
 interface ModelVariant {
@@ -125,13 +126,14 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   );
 }
 
-export default function EncarSearch({ filters, onChange, onReset, brandCounts }: EncarSearchProps) {
+export default function EncarSearch({ filters, onChange, onReset, brandCounts, compact }: EncarSearchProps) {
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
   const [brandOpen, setBrandOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const modelList = useMemo(() => {
     if (!filters.brand) return [];
@@ -366,9 +368,9 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts }:
       )}
 
       {/* Filter sections */}
-      <div className="max-h-[500px] overflow-y-auto">
+      <div className={compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}>
         {/* Year + Month */}
-        <FilterSection title="Год и месяц" defaultOpen={true} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
+        <FilterSection title="Год" defaultOpen={!compact} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
           <div className="space-y-2">
             <div className="flex gap-2">
               <select
@@ -380,16 +382,6 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts }:
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <select
-                value={filters.monthFrom || ''}
-                onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="input-field"
-              >
-                <option value="">Мес.</option>
-                {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <select
                 value={filters.yearTo || ''}
                 onChange={(e) => update('yearTo', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="input-field"
@@ -397,15 +389,62 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts }:
                 <option value="">Год до</option>
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-              <select
-                value={filters.monthTo || ''}
-                onChange={(e) => update('monthTo', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="input-field"
-              >
-                <option value="">Мес.</option>
-                {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
             </div>
+            {!compact && (
+              <div className="flex gap-2">
+                <select
+                  value={filters.monthFrom || ''}
+                  onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="input-field"
+                >
+                  <option value="">Мес. от</option>
+                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={filters.monthTo || ''}
+                  onChange={(e) => update('monthTo', e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="input-field"
+                >
+                  <option value="">Мес. до</option>
+                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        </FilterSection>
+
+        {/* Price */}
+        <FilterSection title="Цена (₽)" defaultOpen={!compact} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={filters.priceFrom || ''}
+              onChange={(e) => update('priceFrom', e.target.value ? parseInt(e.target.value) : undefined)}
+              placeholder="От"
+              className="input-field"
+            />
+            <input
+              type="number"
+              value={filters.priceTo || ''}
+              onChange={(e) => update('priceTo', e.target.value ? parseInt(e.target.value) : undefined)}
+              placeholder="До"
+              className="input-field"
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {[100, 200, 300, 500].map(v => (
+              <button
+                key={v}
+                onClick={() => update('priceTo', v)}
+                className={`text-[11px] px-2 py-1 rounded border transition-all ${
+                  filters.priceTo === v
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                до {v * 10000 >= 1000000 ? `${v * 10000 / 1000000} млн` : `${v * 10}к`}
+              </button>
+            ))}
           </div>
         </FilterSection>
 
@@ -444,175 +483,162 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts }:
           </div>
         </FilterSection>
 
-        {/* Price */}
-        <FilterSection title="Цена (₽)" defaultOpen={false} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={filters.priceFrom || ''}
-              onChange={(e) => update('priceFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="От"
-              className="input-field"
-            />
-            <input
-              type="number"
-              value={filters.priceTo || ''}
-              onChange={(e) => update('priceTo', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="До"
-              className="input-field"
-            />
-          </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {[100, 200, 300, 500].map(v => (
-              <button
-                key={v}
-                onClick={() => update('priceTo', v)}
-                className={`text-[11px] px-2 py-1 rounded border transition-all ${
-                  filters.priceTo === v
-                    ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                до {v * 10000 >= 1000000 ? `${v * 10000 / 1000000} млн` : `${v * 10}к`}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
+        {/* Extra filters — hidden in compact mode until "More" is tapped */}
+        {(!compact || showMoreFilters) && (
+          <>
+            {/* Color */}
+            <FilterSection title="Цвет" defaultOpen={false} count={filters.color ? 1 : 0}>
+              <div className="grid grid-cols-3 gap-1.5">
+                {COLOR_OPTIONS.map((c) => {
+                  const colorDot: Record<string, string> = {
+                    white: 'bg-white border border-gray-300', black: 'bg-gray-900', gray: 'bg-gray-400',
+                    silver: 'bg-gray-300', blue: 'bg-blue-500', red: 'bg-red-500',
+                    brown: 'bg-amber-800', green: 'bg-green-600', other: 'bg-gradient-to-r from-yellow-400 to-orange-500',
+                  };
+                  return (
+                    <button
+                      key={c.value}
+                      onClick={() => update('color', filters.color === c.value ? undefined : c.value)}
+                      className={`text-xs px-2 py-2 rounded-lg border flex items-center gap-1.5 transition-all ${
+                        filters.color === c.value
+                          ? 'bg-primary/10 border-primary/30 text-primary font-medium'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${colorDot[c.value] || 'bg-gray-400'}`} />
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </FilterSection>
 
-        {/* Color */}
-        <FilterSection title="Цвет" defaultOpen={false} count={filters.color ? 1 : 0}>
-          <div className="grid grid-cols-3 gap-1.5">
-            {COLOR_OPTIONS.map((c) => {
-              const colorDot: Record<string, string> = {
-                white: 'bg-white border border-gray-300', black: 'bg-gray-900', gray: 'bg-gray-400',
-                silver: 'bg-gray-300', blue: 'bg-blue-500', red: 'bg-red-500',
-                brown: 'bg-amber-800', green: 'bg-green-600', other: 'bg-gradient-to-r from-yellow-400 to-orange-500',
-              };
-              return (
-                <button
-                  key={c.value}
-                  onClick={() => update('color', filters.color === c.value ? undefined : c.value)}
-                  className={`text-xs px-2 py-2 rounded-lg border flex items-center gap-1.5 transition-all ${
-                    filters.color === c.value
-                      ? 'bg-primary/10 border-primary/30 text-primary font-medium'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${colorDot[c.value] || 'bg-gray-400'}`} />
-                  {c.label}
-                </button>
-              );
-            })}
-          </div>
-        </FilterSection>
-
-        {/* Fuel */}
-        <FilterSection title="Тип топлива" defaultOpen={false} count={filters.fuel ? 1 : 0}>
-          <div className="space-y-1">
-            {FUEL_TYPES.map((f) => (
-              <button
-                key={f.value}
-                onClick={() => update('fuel', filters.fuel === f.value ? undefined : f.value)}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
-                  filters.fuel === f.value
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
-                    f.value === 'gasoline' ? 'bg-blue-500' :
-                    f.value === 'diesel' ? 'bg-amber-500' :
-                    f.value === 'hybrid' ? 'bg-teal-500' :
-                    f.value === 'electric' ? 'bg-emerald-500' : 'bg-gray-400'
-                  }`} />
-                  {f.label}
-                </span>
-                {filters.fuel === f.value && (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                )}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-
-        {/* Transmission */}
-        <FilterSection title="КПП" defaultOpen={false} count={filters.transmission ? 1 : 0}>
-          <div className="space-y-1">
-            {TRANSMISSION_TYPES.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => update('transmission', filters.transmission === t.value ? undefined : t.value)}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all ${
-                  filters.transmission === t.value
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-
-        {/* Drivetrain */}
-        <FilterSection title="Привод" defaultOpen={false} count={filters.drivetrain ? 1 : 0}>
-          <div className="grid grid-cols-3 gap-1.5">
-            {DRIVETRAIN_TYPES.map((d) => (
-              <button
-                key={d.value}
-                onClick={() => update('drivetrain', filters.drivetrain === d.value ? undefined : d.value)}
-                className={`text-xs px-2 py-2 rounded-lg border text-center transition-all ${
-                  filters.drivetrain === d.value
-                    ? 'bg-primary/10 border-primary/30 text-primary font-medium'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-
-        {/* Options / Equipment */}
-        <FilterSection title="Опции" defaultOpen={false} count={filters.options?.length || 0}>
-          <div className="grid grid-cols-2 gap-1.5">
-            {CAR_OPTIONS.map((opt) => {
-              const selected = filters.options?.includes(opt.code) || false;
-              return (
-                <button
-                  key={opt.code}
-                  onClick={() => {
-                    const current = filters.options || [];
-                    const next = selected
-                      ? current.filter(c => c !== opt.code)
-                      : [...current, opt.code];
-                    onChange({ ...filters, options: next.length > 0 ? next : undefined, page: 1 });
-                  }}
-                  className={`text-left text-[11px] px-2.5 py-2 rounded-lg border transition-all flex items-center gap-1.5 ${
-                    selected
-                      ? 'bg-primary/10 border-primary/30 text-primary font-medium'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center ${
-                    selected ? 'bg-primary border-primary' : 'border-gray-300'
-                  }`}>
-                    {selected && (
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            {/* Fuel */}
+            <FilterSection title="Тип топлива" defaultOpen={false} count={filters.fuel ? 1 : 0}>
+              <div className="space-y-1">
+                {FUEL_TYPES.map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => update('fuel', filters.fuel === f.value ? undefined : f.value)}
+                    className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
+                      filters.fuel === f.value
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        f.value === 'gasoline' ? 'bg-blue-500' :
+                        f.value === 'diesel' ? 'bg-amber-500' :
+                        f.value === 'hybrid' ? 'bg-teal-500' :
+                        f.value === 'electric' ? 'bg-emerald-500' : 'bg-gray-400'
+                      }`} />
+                      {f.label}
+                    </span>
+                    {filters.fuel === f.value && (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                       </svg>
                     )}
-                  </span>
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </FilterSection>
+                  </button>
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* Transmission */}
+            <FilterSection title="КПП" defaultOpen={false} count={filters.transmission ? 1 : 0}>
+              <div className="space-y-1">
+                {TRANSMISSION_TYPES.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => update('transmission', filters.transmission === t.value ? undefined : t.value)}
+                    className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all ${
+                      filters.transmission === t.value
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* Drivetrain */}
+            <FilterSection title="Привод" defaultOpen={false} count={filters.drivetrain ? 1 : 0}>
+              <div className="grid grid-cols-3 gap-1.5">
+                {DRIVETRAIN_TYPES.map((d) => (
+                  <button
+                    key={d.value}
+                    onClick={() => update('drivetrain', filters.drivetrain === d.value ? undefined : d.value)}
+                    className={`text-xs px-2 py-2 rounded-lg border text-center transition-all ${
+                      filters.drivetrain === d.value
+                        ? 'bg-primary/10 border-primary/30 text-primary font-medium'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </FilterSection>
+
+            {/* Options / Equipment */}
+            <FilterSection title="Опции" defaultOpen={false} count={filters.options?.length || 0}>
+              <div className="grid grid-cols-2 gap-1.5">
+                {CAR_OPTIONS.map((opt) => {
+                  const selected = filters.options?.includes(opt.code) || false;
+                  return (
+                    <button
+                      key={opt.code}
+                      onClick={() => {
+                        const current = filters.options || [];
+                        const next = selected
+                          ? current.filter(c => c !== opt.code)
+                          : [...current, opt.code];
+                        onChange({ ...filters, options: next.length > 0 ? next : undefined, page: 1 });
+                      }}
+                      className={`text-left text-[11px] px-2.5 py-2 rounded-lg border transition-all flex items-center gap-1.5 ${
+                        selected
+                          ? 'bg-primary/10 border-primary/30 text-primary font-medium'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center ${
+                        selected ? 'bg-primary border-primary' : 'border-gray-300'
+                      }`}>
+                        {selected && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </FilterSection>
+          </>
+        )}
       </div>
+
+      {/* "More filters" toggle — only in compact mode */}
+      {compact && (
+        <button
+          onClick={() => setShowMoreFilters(!showMoreFilters)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          {showMoreFilters ? 'Скрыть фильтры' : 'Ещё фильтры'}
+          {!showMoreFilters && activeFilterCount > 0 && (
+            <span className="bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{activeFilterCount}</span>
+          )}
+          <ChevronIcon open={showMoreFilters} />
+        </button>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm leading-relaxed mb-4">
-              Подбор и доставка автомобилей из Южной Кореи. Работаем без посредников.
+              Автомобили со всей Кореи: Encar, аукционы и прямые продажи.
             </p>
             <div className="flex gap-3">
               <a href="https://t.me/ghayrat_korea" target="_blank" rel="noopener noreferrer"

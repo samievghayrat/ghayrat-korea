@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { reverseTranslateBrand, reverseTranslateModel } from '@/lib/translations';
+import { reverseTranslateBrand, reverseTranslateModel, translateModel } from '@/lib/translations';
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 
 // In-memory cache
 const variantsCache: Map<string, { data: unknown; timestamp: number }> = new Map();
 const CACHE_TTL = 30 * 60 * 1000;
+
+// Strip generation/variant suffixes to get the base model group name
+function getBaseModelName(koreanModelName: string): string {
+  let name = koreanModelName;
+  for (const prefix of ['디 올 뉴 ', '더 뉴 ', '올 뉴 ', '뉴 ']) {
+    if (name.startsWith(prefix)) { name = name.slice(prefix.length); break; }
+  }
+  name = name.replace(/\s*\d+세대$/, '');
+  name = name.replace(/\s*\([A-Z0-9]+\)$/, '');
+  name = name.replace(/\s*(하이브리드|쿠페|유로|플러스)$/, '');
+  return name.trim();
+}
 
 export async function GET(request: NextRequest) {
   const brand = request.nextUrl.searchParams.get('brand');
@@ -21,7 +33,7 @@ export async function GET(request: NextRequest) {
   const model = request.nextUrl.searchParams.get('model');
   const koreanModel = model ? reverseTranslateModel(model) : undefined;
 
-  const cacheKey = koreanModel ? `${koreanBrand}:${koreanModel}` : koreanBrand;
+  const cacheKey = koreanModel ? `${koreanBrand}:${koreanModel}` : `${koreanBrand}:_models`;
   const cached = variantsCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return NextResponse.json(cached.data);
@@ -54,33 +66,56 @@ export async function GET(request: NextRequest) {
     const data = await res.json();
     const searchResults = data.SearchResults || [];
     const totalCount = data.Count || searchResults.length;
-
-    const modelData = new Map<string, { count: number; minYear: number; maxYear: number }>();
-    for (const item of searchResults) {
-      const m = item.Model as string;
-      if (m) {
-        const year = parseInt(String(item.Year).substring(0, 4));
-        const existing = modelData.get(m);
-        if (existing) {
-          existing.count++;
-          if (year && year < existing.minYear) existing.minYear = year;
-          if (year && year > existing.maxYear) existing.maxYear = year;
-        } else {
-          modelData.set(m, { count: 1, minYear: year || 9999, maxYear: year || 0 });
-        }
-      }
-    }
-
-    // Scale counts proportionally if we only sampled 1000 out of more
     const sampleSize = searchResults.length;
     const scale = sampleSize > 0 && totalCount > sampleSize ? totalCount / sampleSize : 1;
 
-    const models = Array.from(modelData.entries())
-      .map(([name, d]) => ({
+    if (koreanModel) {
+      // Return generation-level variants (existing behavior)
+      const modelData = new Map<string, { count: number; minYear: number; maxYear: number }>();
+      for (const item of searchResults) {
+        const m = item.Model as string;
+        if (m) {
+          const year = parseInt(String(item.Year).substring(0, 4));
+          const existing = modelData.get(m);
+          if (existing) {
+            existing.count++;
+            if (year && year < existing.minYear) existing.minYear = year;
+            if (year && year > existing.maxYear) existing.maxYear = year;
+          } else {
+            modelData.set(m, { count: 1, minYear: year || 9999, maxYear: year || 0 });
+          }
+        }
+      }
+
+      const models = Array.from(modelData.entries())
+        .map(([name, d]) => ({
+          name,
+          count: Math.round(d.count * scale),
+          yearFrom: d.minYear,
+          yearTo: d.maxYear,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      const result = { models, total: totalCount };
+      variantsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return NextResponse.json(result);
+    }
+
+    // No model specified — return model-group level counts sorted by popularity
+    // Group Korean model names into base model groups, then translate to English
+    const groupCounts = new Map<string, number>();
+    for (const item of searchResults) {
+      const m = item.Model as string;
+      if (!m) continue;
+      const base = getBaseModelName(m);
+      const translated = translateModel(base);
+      groupCounts.set(translated, (groupCounts.get(translated) || 0) + 1);
+    }
+
+    const models = Array.from(groupCounts.entries())
+      .map(([name, count]) => ({
         name,
-        count: Math.round(d.count * scale),
-        yearFrom: d.minYear,
-        yearTo: d.maxYear,
+        count: Math.round(count * scale),
       }))
       .sort((a, b) => b.count - a.count);
 

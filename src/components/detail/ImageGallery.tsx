@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 
 interface ImageGalleryProps {
@@ -11,6 +11,29 @@ interface ImageGalleryProps {
 export default function ImageGallery({ images, alt }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const goNext = useCallback(() => {
+    setActiveIndex(i => (i < images.length - 1 ? i + 1 : 0));
+  }, [images.length]);
+
+  const goPrev = useCallback(() => {
+    setActiveIndex(i => (i > 0 ? i - 1 : images.length - 1));
+  }, [images.length]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
+      else goPrev();
+    }
+  };
 
   if (images.length === 0) {
     return (
@@ -20,15 +43,17 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
     );
   }
 
-  const thumbnails = images.slice(0, 4);
-  const extraCount = images.length - 4;
+  const thumbnails = images.slice(0, 6);
+  const extraCount = images.length - 6;
 
   return (
     <>
       {/* Main image */}
       <div
-        className="relative aspect-[16/10] bg-gray-100 rounded-xl overflow-hidden cursor-pointer group"
+        className="relative aspect-[16/10] bg-gray-100 rounded-xl overflow-hidden cursor-pointer"
         onClick={() => setLightboxOpen(true)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <Image
           src={images[activeIndex]}
@@ -39,57 +64,71 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
           priority
           unoptimized
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-          <svg className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-          </svg>
-        </div>
         {/* Navigation arrows */}
         {images.length > 1 && (
           <>
             <button
-              onClick={(e) => { e.stopPropagation(); setActiveIndex(i => i > 0 ? i - 1 : images.length - 1); }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center"
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors"
             >
-              &#8592;
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); setActiveIndex(i => i < images.length - 1 ? i + 1 : 0); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center"
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors"
             >
-              &#8594;
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </>
         )}
-        <div className="absolute bottom-3 right-3 bg-black/60 text-white text-sm px-2 py-1 rounded">
+        {/* Counter badge */}
+        <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full">
           {activeIndex + 1} / {images.length}
         </div>
+        {/* Dot indicators (mobile) */}
+        {images.length > 1 && images.length <= 20 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 sm:hidden">
+            {images.slice(0, 10).map((_, i) => (
+              <span
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  i === activeIndex ? 'bg-white w-3' : 'bg-white/50'
+                }`}
+              />
+            ))}
+            {images.length > 10 && <span className="text-white/50 text-[8px] leading-none">…</span>}
+          </div>
+        )}
       </div>
 
-      {/* Thumbnail grid (4 columns) */}
+      {/* Thumbnail strip */}
       {images.length > 1 && (
-        <div className="grid grid-cols-4 gap-2 mt-3">
+        <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
           {thumbnails.map((img, i) => {
-            const isLast = i === 3 && extraCount > 0;
+            const isLast = i === 5 && extraCount > 0;
             return (
               <button
                 key={i}
                 onClick={() => {
                   if (isLast) {
-                    setActiveIndex(3);
+                    setActiveIndex(5);
                     setLightboxOpen(true);
                   } else {
                     setActiveIndex(i);
                   }
                 }}
-                className={`relative aspect-[16/10] rounded-lg overflow-hidden border-2 transition-colors ${
+                className={`relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-colors ${
                   i === activeIndex ? 'border-primary' : 'border-transparent hover:border-gray-300'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="150px" unoptimized />
+                <Image src={img} alt="" fill className="object-cover" sizes="80px" unoptimized />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">+{extraCount} фото</span>
+                    <span className="text-white font-bold text-xs">+{extraCount}</span>
                   </div>
                 )}
               </button>
@@ -100,21 +139,32 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
 
       {/* Lightbox */}
       {lightboxOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
-          <button className="absolute top-4 right-4 text-white text-3xl z-10" onClick={() => setLightboxOpen(false)}>
-            &times;
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <button className="absolute top-4 right-4 text-white/80 hover:text-white z-10 w-10 h-10 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
           <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl z-10"
-            onClick={(e) => { e.stopPropagation(); setActiveIndex(i => i > 0 ? i - 1 : images.length - 1); }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10 w-10 h-10 flex items-center justify-center"
+            onClick={(e) => { e.stopPropagation(); goPrev(); }}
           >
-            &#8592;
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
           <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl z-10"
-            onClick={(e) => { e.stopPropagation(); setActiveIndex(i => i < images.length - 1 ? i + 1 : 0); }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10 w-10 h-10 flex items-center justify-center"
+            onClick={(e) => { e.stopPropagation(); goNext(); }}
           >
-            &#8594;
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
           <div className="relative w-[90vw] h-[80vh]" onClick={(e) => e.stopPropagation()}>
             <Image
@@ -126,7 +176,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
               unoptimized
             />
           </div>
-          <div className="absolute bottom-4 text-white text-sm">
+          <div className="absolute bottom-4 text-white/80 text-sm font-medium">
             {activeIndex + 1} / {images.length}
           </div>
         </div>

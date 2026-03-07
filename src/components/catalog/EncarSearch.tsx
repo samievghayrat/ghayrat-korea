@@ -245,7 +245,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
         label="Марка"
         value={filters.brand}
         count={selectedBrandCount}
-        placeholder="Все марки"
+        placeholder="Марка, модель, поколение"
         open={brandOpen}
         onToggle={() => { setBrandOpen(!brandOpen); setModelOpen(false); setGenOpen(false); }}
         onClear={filters.brand ? clearBrand : undefined}

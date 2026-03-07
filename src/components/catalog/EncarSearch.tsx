@@ -432,21 +432,6 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
               className="input-field"
             />
           </div>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {[100, 200, 300, 500].map(v => (
-              <button
-                key={v}
-                onClick={() => update('priceTo', v)}
-                className={`text-[11px] px-2 py-1 rounded border transition-all ${
-                  filters.priceTo === v
-                    ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                до {v * 10000 >= 1000000 ? `${v * 10000 / 1000000} млн` : `${v * 10}к`}
-              </button>
-            ))}
-          </div>
         </FilterSection>
 
         {/* Mileage */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageGalleryProps {
@@ -13,6 +13,11 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+
+  // Reset index when images array changes (e.g., API data replaces session data)
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [images.length]);
 
   const goNext = useCallback(() => {
     setActiveIndex(i => (i < images.length - 1 ? i + 1 : 0));

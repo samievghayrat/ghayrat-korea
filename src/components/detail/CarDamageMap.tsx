@@ -135,14 +135,6 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
   const exterior = panels.filter((p) => exteriorPanelSet.has(p.name));
   const structural = panels.filter((p) => structuralPanelSet.has(p.name));
 
-  // Group by rank for summary
-  const rankGroups: Record<string, PanelDamage[]> = { '1': [], '2': [], A: [], B: [], C: [] };
-  for (const panel of panels) {
-    if (panel.rank && rankGroups[panel.rank]) {
-      rankGroups[panel.rank].push(panel);
-    }
-  }
-
   return (
     <div className="space-y-4">
       {/* Two car diagrams */}
@@ -161,36 +153,25 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
         />
       </div>
 
-      {/* Rank summary */}
-      <div className="space-y-1.5 text-sm">
-        {Object.entries(rankGroups).map(([rank, list]) => (
-          <div key={rank} className="flex items-start gap-2">
-            <span className="w-16 text-gray-400 text-xs font-semibold shrink-0 pt-0.5">
-              {rank === '1' || rank === '2' ? `${rank}랭크` : `${rank}랭크`}
+      {/* Damaged panels list — only show if there are damages */}
+      {panels.length > 0 && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+          {panels.map((p) => (
+            <span key={p.name} className="inline-flex items-center gap-1">
+              <span className="text-xs font-medium text-gray-700">{p.nameRu}</span>
+              {p.damages.map((d) => (
+                <span
+                  key={d}
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[8px] font-bold leading-none"
+                  style={{ backgroundColor: damageMarker[d].bg }}
+                >
+                  {damageMarker[d].letter}
+                </span>
+              ))}
             </span>
-            {list.length === 0 ? (
-              <span className="text-gray-300 text-xs pt-0.5">없음</span>
-            ) : (
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {list.map((p) => (
-                  <span key={p.name} className="inline-flex items-center gap-1">
-                    <span className="text-xs font-medium text-gray-700">{p.nameRu}</span>
-                    {p.damages.map((d) => (
-                      <span
-                        key={d}
-                        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[8px] font-bold leading-none"
-                        style={{ backgroundColor: damageMarker[d].bg }}
-                      >
-                        {damageMarker[d].letter}
-                      </span>
-                    ))}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-gray-100">

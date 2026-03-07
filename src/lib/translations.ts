@@ -51,6 +51,14 @@ export const brandMap: Record<string, string> = {
   '애스턴마틴': 'Aston Martin',
   '맥라렌': 'McLaren',
   '인피니티': 'Infiniti',
+  '도요타': 'Toyota',
+  '마쯔다': 'Mazda',
+  '스즈키': 'Suzuki',
+  '다이하쯔': 'Daihatsu',
+  '닷지': 'Dodge',
+  'GMC': 'GMC',
+  '사브': 'Saab',
+  '로터스': 'Lotus',
 };
 
 // Korean → English model translations

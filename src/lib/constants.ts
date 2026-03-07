@@ -1,11 +1,10 @@
 export const BRANDS = [
-  'Hyundai', 'Kia', 'Genesis', 'Chevrolet', 'SsangYong', 'KG Mobility',
-  'Renault Samsung', 'Daewoo', 'GM Daewoo',
-  'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche',
-  'Toyota', 'Lexus', 'Honda', 'Nissan', 'Mazda', 'Mitsubishi', 'Subaru',
-  'Volvo', 'Land Rover', 'Jaguar', 'Mini', 'Peugeot', 'Citroen', 'Renault',
-  'Ford', 'Jeep', 'Cadillac', 'Lincoln', 'Tesla',
-  'Ferrari', 'Lamborghini', 'Maserati', 'Bentley', 'Rolls-Royce',
+  'Hyundai', 'Kia', 'Genesis', 'Chevrolet', 'KG Mobility', 'Renault Korea',
+  'Toyota', 'Lexus', 'Honda', 'Nissan', 'Infiniti', 'Mazda', 'Subaru', 'Suzuki', 'Daihatsu',
+  'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche', 'Mini',
+  'Volvo', 'Land Rover', 'Jaguar', 'Peugeot', 'Fiat', 'Saab',
+  'Tesla', 'Ford', 'Jeep', 'Lincoln', 'Cadillac', 'GMC', 'Dodge', 'Chrysler',
+  'Bentley', 'Rolls-Royce', 'Maserati', 'Ferrari', 'Lamborghini', 'Aston Martin', 'McLaren', 'Lotus',
 ] as const;
 
 // Model options per brand for cascade filter

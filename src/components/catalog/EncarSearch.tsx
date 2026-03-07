@@ -370,7 +370,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
       {/* Filter sections */}
       <div className={`border-t border-gray-100 ${compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}`}>
         {/* Year + Month */}
-        <FilterSection title="Год" defaultOpen={!compact} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
+        <FilterSection title="Год" defaultOpen={false} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
           <div className="space-y-2">
             <div className="flex gap-2">
               <select
@@ -414,7 +414,7 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
         </FilterSection>
 
         {/* Price */}
-        <FilterSection title="Цена (₽)" defaultOpen={!compact} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
+        <FilterSection title="Цена (₽)" defaultOpen={false} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
           <div className="flex gap-2">
             <input
               type="number"

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 const navLinks = [
@@ -11,8 +11,18 @@ const navLinks = [
   { href: '/contacts', label: 'Контакты' },
 ];
 
+const LANGUAGES = [
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'tj', label: 'Тоҷикӣ', flag: '🇹🇯' },
+  { code: 'uz', label: "O'zbek", flag: '🇺🇿' },
+];
+
 export default function Header() {
   const [favCount, setFavCount] = useState(0);
+  const [lang, setLang] = useState('ru');
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -25,6 +35,8 @@ export default function Header() {
       }
     };
     updateCount();
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) setLang(savedLang);
     window.addEventListener('storage', updateCount);
     window.addEventListener('favoritesUpdated', updateCount);
     return () => {
@@ -32,6 +44,24 @@ export default function Header() {
       window.removeEventListener('favoritesUpdated', updateCount);
     };
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLangChange = (code: string) => {
+    setLang(code);
+    localStorage.setItem('lang', code);
+    setLangOpen(false);
+  };
+
+  const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
   if (pathname.startsWith('/admin')) return null;
 
@@ -66,7 +96,38 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Language switcher */}
+            <div className="relative" ref={langRef}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
+              >
+                <span className="text-base leading-none">{currentLang.flag}</span>
+                <span className="hidden lg:inline text-xs font-medium">{currentLang.code.toUpperCase()}</span>
+                <svg className={`w-3 h-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 min-w-[140px]">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => handleLangChange(l.code)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${
+                        lang === l.code ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-base leading-none">{l.flag}</span>
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Favorites */}
             <Link
               href="/favorites"
               className="relative text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
@@ -82,27 +143,16 @@ export default function Header() {
               )}
             </Link>
 
+            {/* Telegram CTA — desktop only */}
             <a
               href="https://t.me/ghayrat_korea"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary text-xs py-2 px-4"
+              className="hidden lg:inline-flex btn-primary text-xs py-2 px-4"
             >
               Написать менеджеру
             </a>
           </div>
-
-          {/* Mobile: just show Telegram link */}
-          <a
-            href="https://t.me/ghayrat_korea"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="lg:hidden flex items-center gap-1.5 text-primary text-xs"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-            </svg>
-          </a>
         </div>
       </div>
     </header>

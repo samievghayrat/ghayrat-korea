@@ -3,7 +3,6 @@ import { convertKrwToRub, convertKrwToUsd } from './currency';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
-const ENCAR_DETAIL_BASE = 'https://fem.encar.com/cars/detail';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
 const ENCAR_OPTIONS_API = 'https://api.encar.com/v1/readside/vehicles/car/options/standard';
 
@@ -603,82 +602,103 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
 
 export async function getCarDetail(carId: string): Promise<CarListing | null> {
   try {
-    // Fetch the detail page data from Encar
-    const response = await fetch(`${ENCAR_DETAIL_BASE}/${carId}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-    });
+    // Use readside API (works from Vercel) instead of scraping fem.encar.com HTML
+    const readRes = await fetch(
+      `https://api.encar.com/v1/readside/vehicle/${carId}?include=PHOTOS,OPTIONS,INSPECT`,
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      }
+    );
 
-    if (!response.ok) return null;
-
-    const html = await response.text();
-
-    // Extract preloaded state JSON from the page
-    const stateMatch = html.match(/__PRELOADED_STATE__\s*=\s*({[\s\S]*?});?\s*<\/script>/);
-    if (!stateMatch) return null;
-
-    let state;
-    try {
-      state = JSON.parse(stateMatch[1]);
-    } catch {
+    if (!readRes.ok) {
+      console.error(`Readside API error: ${readRes.status} for car ${carId}`);
       return null;
     }
 
-    const base = state?.cars?.base;
-    if (!base) return null;
+    const readData = await readRes.json();
 
-    // Data is nested: category (brand/model/year), spec (mileage/fuel/etc), advertisement (price)
-    const category = base.category || {};
-    const spec = base.spec || {};
-    const ad = base.advertisement || {};
+    // Also fetch from search API to get structured listing data
+    const searchQuery = `(And.Hidden.N._.CarId.${carId}.)`;
+    const searchRes = await fetch(
+      `${ENCAR_API_BASE}?${new URLSearchParams({ count: 'true', q: searchQuery, sr: '|ModifiedDate|0|1' })}`,
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      }
+    );
 
-    const priceKrw = (ad.price || 0) * 10000;
+    let searchItem: Record<string, unknown> | null = null;
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      const results = searchData.SearchResults || [];
+      if (results.length > 0) {
+        searchItem = results[0];
+      }
+    }
+
+    // Use readside data as primary, search data as fallback for some fields
+    const manufacturer = readData.manufacturerName || (searchItem?.Manufacturer as string) || '';
+    const modelName = readData.modelGroupName || readData.modelName || (searchItem?.Model as string) || '';
+    const yearMonth = String(readData.yearMonth || searchItem?.Year || '');
+    const mileage = readData.mileage || (searchItem?.Mileage as number) || 0;
+    const fuelName = readData.fuelName || (searchItem?.FuelType as string) || '';
+    const displacement = readData.displacement || (searchItem?.Displacement as number) || 0;
+    const colorName = readData.colorName || (searchItem?.Color as string) || '';
+    const bodyName = readData.bodyName || (searchItem?.BodyType as string) || '';
+    const transmissionName = readData.transmissionName || (searchItem?.Transmission as string) || '';
+    const gradeName = readData.gradeEnglishName || readData.gradeName || '';
+    const price = readData.price || (searchItem?.Price as number) || 0;
+
+    const priceKrw = price * 10000;
     const [priceRub, priceUsd] = await Promise.all([
       convertKrwToRub(priceKrw),
       convertKrwToUsd(priceKrw),
     ]);
 
-    // Get photos — sorted: OUTER first, then INNER, then OPTION, by filename number
-    const photos: { type: string; path: string }[] = base.photos || [];
+    // Get photos from readside API
+    const photos: { type: string; path: string }[] = readData.photos || [];
     const typeOrder: Record<string, number> = { OUTER: 0, INNER: 1, OPTION: 2 };
     const imageUrls = photos
-      .filter((p) => ['OUTER', 'INNER', 'OPTION'].includes(p.type))
-      .sort((a, b) => {
+      .filter((p: { type: string }) => ['OUTER', 'INNER', 'OPTION'].includes(p.type))
+      .sort((a: { type: string; path: string }, b: { type: string; path: string }) => {
         const ta = typeOrder[a.type] ?? 9;
         const tb = typeOrder[b.type] ?? 9;
         if (ta !== tb) return ta - tb;
-        // Sort by numeric suffix in filename (e.g., _003.jpg → 3)
         const na = parseInt(a.path.match(/_(\d+)\.\w+$/)?.[1] || '0');
         const nb = parseInt(b.path.match(/_(\d+)\.\w+$/)?.[1] || '0');
         return na - nb;
       })
-      .map((p) => `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${p.path}`)}`);
+      .map((p: { path: string }) => `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${p.path}`)}`);
 
-    // Fetch inspection data in parallel with option resolution
-    const inspectionPromise = fetchInspectionData(carId);
+    // If no photos from readside, try search result photo prefix
+    if (imageUrls.length === 0 && searchItem?.Photo) {
+      const photo = searchItem.Photo as string;
+      imageUrls.push(`/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`);
+    }
 
     // Resolve option codes to translated names
-    const rawOptions = base.options;
+    const rawOptions = readData.options;
     const optionCodes: string[] = [];
     if (rawOptions && typeof rawOptions === 'object' && !Array.isArray(rawOptions)) {
-      // Options is { type, standard: ["001",...], choice: ["1022",...], etc: [], tuning: [] }
       for (const key of ['standard', 'choice', 'etc', 'tuning']) {
         if (Array.isArray(rawOptions[key])) {
           optionCodes.push(...rawOptions[key].filter((c: unknown) => typeof c === 'string'));
         }
       }
     }
+
     const [equipment, inspectionData, panAutoHp] = await Promise.all([
       resolveOptionCodes(optionCodes),
-      inspectionPromise,
+      fetchInspectionData(carId),
       fetchHpFromPanAuto(carId),
     ]);
 
-    const brand = translateBrand(category.manufacturerName || '');
-    const model = translateModel(category.modelGroupName || category.modelName || '');
-    const yearMonth = String(category.yearMonth || '');
-    const trim = category.gradeEnglishName || translateModel(category.gradeName || '');
+    const brand = translateBrand(manufacturer);
+    const model = translateModel(modelName);
+    const trim = gradeName ? (readData.gradeEnglishName || translateModel(gradeName)) : undefined;
 
     return {
       id: carId,
@@ -688,14 +708,14 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       trim: trim || undefined,
       year: parseInt(yearMonth.substring(0, 4)) || 0,
       month: parseInt(yearMonth.substring(4, 6)) || undefined,
-      mileage: spec.mileage || 0,
-      fuel: translateFuel(spec.fuelName || ''),
-      engine: spec.displacement ? `${(spec.displacement / 1000).toFixed(1)}L` : '',
-      displacement: spec.displacement || 0,
-      hp: panAutoHp || spec.maxPower || spec.horsePower || spec.power || estimateHp(spec.displacement || 0, spec.fuelName || '') || undefined,
-      color: translateColor(spec.colorName || ''),
-      bodyType: translateBodyType(spec.bodyName || ''),
-      transmission: translateTransmission(spec.transmissionName || ''),
+      mileage,
+      fuel: translateFuel(fuelName),
+      engine: displacement ? `${(displacement / 1000).toFixed(1)}L` : '',
+      displacement,
+      hp: panAutoHp || readData.maxPower || readData.horsePower || (searchItem?.MaxPower as number) || estimateHp(displacement, fuelName) || undefined,
+      color: translateColor(colorName),
+      bodyType: translateBodyType(bodyName),
+      transmission: translateTransmission(transmissionName),
       drivetrain: '',
       price_krw: priceKrw,
       price_rub: priceRub,
@@ -703,7 +723,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       imageUrl: imageUrls[0] || '/images/no-image.svg',
       images: imageUrls,
       equipment,
-      vin: base.vin || '',
+      vin: readData.vin || '',
       accidentHistory: [],
       inspectionData: inspectionData || undefined,
     };

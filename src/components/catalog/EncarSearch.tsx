@@ -130,32 +130,14 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
-  const [modelVariants, setModelVariants] = useState<{ name: string; count: number }[]>([]);
-  const [modelLoading, setModelLoading] = useState(false);
   const [brandOpen, setBrandOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  // Fetch models with counts sorted by popularity when brand changes
-  useEffect(() => {
-    if (!filters.brand) {
-      setModelVariants([]);
-      return;
-    }
-    setModelLoading(true);
-    fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}`)
-      .then(res => res.json())
-      .then(data => {
-        setModelVariants(data.models || []);
-      })
-      .catch(() => {
-        // Fallback to static list without counts
-        const staticModels = BRAND_MODELS[filters.brand!] || [];
-        setModelVariants(staticModels.map(m => ({ name: m, count: 0 })));
-      })
-      .finally(() => setModelLoading(false));
-  }, [filters.brand]);
+  const modelList = filters.brand
+    ? (BRAND_MODELS[filters.brand] || []).sort((a, b) => a.localeCompare(b))
+    : [];
 
   const fetchGenerations = useCallback(async (brand: string, model: string) => {
     setGenerationLoading(true);
@@ -303,35 +285,22 @@ export default function EncarSearch({ filters, onChange, onReset, brandCounts, c
           onToggle={() => { setModelOpen(!modelOpen); setBrandOpen(false); setGenOpen(false); }}
           onClear={filters.model ? clearModel : undefined}
         >
-          {modelLoading ? (
-            <div className="flex items-center gap-2 px-3 py-4 justify-center">
-              <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span className="text-sm text-gray-400">Загрузка...</span>
-            </div>
-          ) : (
-            <div className="py-1">
-              {modelVariants.map((m) => (
-                <button
-                  key={m.name}
-                  onClick={() => handleModelSelect(m.name)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
-                    filters.model === m.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
-                  }`}
-                >
-                  <span className="text-sm">{m.name}</span>
-                  {m.count > 0 && (
-                    <span className="text-sm text-gray-400 tabular-nums">{m.count.toLocaleString('ru-RU')}</span>
-                  )}
-                </button>
-              ))}
-              {modelVariants.length === 0 && (
-                <p className="px-3 py-2 text-sm text-gray-400">Нет моделей</p>
-              )}
-            </div>
-          )}
+          <div className="py-1">
+            {modelList.map((m) => (
+              <button
+                key={m}
+                onClick={() => handleModelSelect(m)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                  filters.model === m ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
+                }`}
+              >
+                <span className="text-sm">{m}</span>
+              </button>
+            ))}
+            {modelList.length === 0 && (
+              <p className="px-3 py-2 text-sm text-gray-400">Нет моделей</p>
+            )}
+          </div>
         </SelectBox>
       )}
 

@@ -326,7 +326,7 @@ async function transformSearchResults(
 
       const photo = item.Photo as string;
       const imageUrl = photo
-        ? `${ENCAR_IMAGE_CDN}${photo}001.jpg`
+        ? `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
         : '/images/no-image.svg';
 
       const displacement = (item.Displacement as number) || 0;
@@ -671,12 +671,12 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
         const nb = parseInt(b.path.match(/_(\d+)\.\w+$/)?.[1] || '0');
         return na - nb;
       })
-      .map((p: { path: string }) => `${ENCAR_IMAGE_CDN}${p.path}`);
+      .map((p: { path: string }) => `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${p.path}`)}`);
 
     // If no photos from readside, try search result photo prefix
     if (imageUrls.length === 0 && searchItem?.Photo) {
       const photo = searchItem.Photo as string;
-      imageUrls.push(`${ENCAR_IMAGE_CDN}${photo}001.jpg`);
+      imageUrls.push(`/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`);
     }
 
     // Resolve option codes to translated names

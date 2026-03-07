@@ -14,16 +14,34 @@ import { formatPrice } from '@/lib/currency';
 import { calculateImportCost } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
+function getSessionCar(id: string): CarListing | null {
+  try {
+    const raw = sessionStorage.getItem(`car_${id}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
 export default function CarDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [car, setCar] = useState<CarListing | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [car, setCar] = useState<CarListing | null>(() => {
+    if (typeof window !== 'undefined') return getSessionCar(id);
+    return null;
+  });
+  const [loading, setLoading] = useState(!car);
   const [error, setError] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [destination, setDestination] = useState<'russia' | 'tajikistan'>('russia');
 
   useEffect(() => {
+    // If we already have session data, show it immediately but still try API for full details
+    const sessionCar = getSessionCar(id);
+    if (sessionCar && !car) {
+      setCar(sessionCar);
+      setLoading(false);
+    }
+
     fetch(`/api/cars/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Not found');
@@ -34,7 +52,10 @@ export default function CarDetailPage() {
         setLoading(false);
       })
       .catch(() => {
-        setError(true);
+        // If API fails but we have session data, keep showing it
+        if (!sessionCar) {
+          setError(true);
+        }
         setLoading(false);
       });
   }, [id]);
@@ -127,7 +148,7 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇷🇺 Россия
+                Russia
               </button>
               <button
                 onClick={() => setDestination('tajikistan')}
@@ -137,7 +158,7 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇹🇯 Таджикистан
+                Tajikistan
               </button>
             </div>
 
@@ -156,7 +177,7 @@ export default function CarDetailPage() {
               href="https://t.me/ghayrat_korea"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-cta-red mt-5"
+              className="btn-cta-green mt-5"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>

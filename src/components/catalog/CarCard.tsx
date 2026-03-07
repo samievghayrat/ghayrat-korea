@@ -12,6 +12,12 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car }: CarCardProps) {
+  const handleClick = () => {
+    try {
+      sessionStorage.setItem(`car_${car.id}`, JSON.stringify(car));
+    } catch {}
+  };
+
   const displayModel = car.generation
     ? `${car.model} ${car.generation}`
     : car.model;
@@ -32,7 +38,7 @@ export default function CarCard({ car }: CarCardProps) {
   });
 
   return (
-    <Link href={`/catalog/${car.id}`} className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
+    <Link href={`/catalog/${car.id}`} onClick={handleClick} className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
       {/* Image container */}
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
         <Image

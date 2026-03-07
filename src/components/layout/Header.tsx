@@ -36,7 +36,7 @@ export default function Header() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <header className="bg-[#1a1f2e] sticky top-0 z-50">
+    <header className="bg-primary sticky top-0 z-50">
       {/* Top bar — desktop only */}
       <div className="hidden sm:block border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

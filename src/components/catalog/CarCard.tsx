@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { CarListing } from '@/types';
 import FavoriteButton from '@/components/shared/FavoriteButton';
-import { calculateImportCost } from '@/lib/calculator';
 import { useApp } from '@/contexts/AppContext';
 
 interface CarCardProps {
@@ -27,22 +26,6 @@ export default function CarCard({ car }: CarCardProps) {
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
-
-  // Calculate turnkey price. Note: search results may have incomplete hp/displacement,
-  // so this is an estimate. The detail page will show the accurate price.
-  const breakdown = calculateImportCost({
-    priceKrw: car.price_krw,
-    priceRub: car.price_rub,
-    displacement: car.displacement || 0,
-    year: car.year,
-    month: car.month,
-    fuel: car.fuel,
-    hp: car.hp,
-    destination: 'russia',
-  });
-
-  // Show "~" prefix when hp or displacement data is missing (estimate)
-  const isEstimate = !car.hp || !car.displacement;
 
   return (
     <Link href={`/catalog/${car.id}`} onClick={handleClick} className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
@@ -89,7 +72,7 @@ export default function CarCard({ car }: CarCardProps) {
             </div>
             <div className="text-right">
               <div className="text-[13px] font-bold text-gray-700">
-                {isEstimate ? '~ ' : ''}{formatPrice(breakdown.total)}
+                {formatPrice(car.price_turnkey_russia || 0)}
               </div>
               <div className="text-[10px] text-gray-400">{t('card.turnkeyVladivostok')}</div>
             </div>

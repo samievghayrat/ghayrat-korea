@@ -1,5 +1,6 @@
 import { translateBrand, translateModel, translateFuel, translateColor, reverseTranslateBrand, reverseTranslateModel } from './translations';
 import { convertKrwToRub, convertKrwToUsd } from './currency';
+import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
@@ -383,6 +384,15 @@ async function transformSearchResults(
 
       const hp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
       const displacement = (item.Displacement as number) || parseDisplacementFromBadge((item.Badge as string) || '');
+      const fuel = translateFuel((item.FuelType as string) || '');
+
+      // Pre-calculate turnkey prices on server
+      const russiaBreakdown = calculateImportCost({
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia',
+      });
+      const tjBreakdown = calculateImportCost({
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'tajikistan',
+      });
 
       return {
         id: String(item.Id || ''),
@@ -392,7 +402,7 @@ async function transformSearchResults(
         year,
         month,
         mileage: (item.Mileage as number) || 0,
-        fuel: translateFuel((item.FuelType as string) || ''),
+        fuel,
         engine: displacement ? `${(displacement / 1000).toFixed(1)}L` : '',
         displacement,
         hp: hp || undefined,
@@ -402,6 +412,8 @@ async function transformSearchResults(
         price_krw: priceKrw,
         price_rub: priceRub,
         price_usd: priceUsd,
+        price_turnkey_russia: russiaBreakdown.total,
+        price_turnkey_tajikistan: tjBreakdown.total,
         imageUrl,
         images: [],
       } satisfies CarListing;
@@ -762,6 +774,22 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       : undefined;
     const trim = gradeName ? (cat.gradeEnglishName || translateModel(gradeName)) : undefined;
 
+    const finalDisplacement = displacement || vinData.displacement || 0;
+    const finalHp = vinData.hp || panAutoHp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined;
+    const finalFuel = translateFuel(fuelName);
+    const carYear = parseInt(yearMonth.substring(0, 4)) || 0;
+    const carMonth = parseInt(yearMonth.substring(4, 6)) || undefined;
+
+    // Pre-calculate turnkey prices on server with accurate data
+    const russiaBreakdown = calculateImportCost({
+      priceKrw, priceRub, displacement: finalDisplacement,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia',
+    });
+    const tjBreakdown = calculateImportCost({
+      priceKrw, priceRub, displacement: finalDisplacement,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'tajikistan',
+    });
+
     return {
       id: carId,
       source: 'encar',
@@ -769,13 +797,13 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       model,
       generation: generation || undefined,
       trim: trim || undefined,
-      year: parseInt(yearMonth.substring(0, 4)) || 0,
-      month: parseInt(yearMonth.substring(4, 6)) || undefined,
+      year: carYear,
+      month: carMonth,
       mileage,
-      fuel: translateFuel(fuelName),
-      engine: (displacement || vinData.displacement) ? `${((displacement || vinData.displacement || 0) / 1000).toFixed(1)}L` : '',
-      displacement: displacement || vinData.displacement || 0,
-      hp: vinData.hp || panAutoHp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined,
+      fuel: finalFuel,
+      engine: finalDisplacement ? `${(finalDisplacement / 1000).toFixed(1)}L` : '',
+      displacement: finalDisplacement,
+      hp: finalHp,
       color: translateColor(colorName),
       bodyType: translateBodyType(bodyName),
       transmission: translateTransmission(transmissionName),
@@ -784,6 +812,8 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       price_krw: priceKrw,
       price_rub: priceRub,
       price_usd: priceUsd,
+      price_turnkey_russia: russiaBreakdown.total,
+      price_turnkey_tajikistan: tjBreakdown.total,
       imageUrl: imageUrls[0] || '/images/no-image.svg',
       images: imageUrls,
       equipment,

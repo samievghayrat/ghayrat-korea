@@ -18,6 +18,8 @@ export interface CarListing {
   price_krw: number;
   price_rub: number;
   price_usd?: number;
+  price_turnkey_russia?: number;    // server-calculated turnkey price in RUB
+  price_turnkey_tajikistan?: number; // server-calculated turnkey price in RUB
   imageUrl: string;
   images: string[];
   photoCount?: number;

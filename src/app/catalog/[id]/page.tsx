@@ -55,7 +55,12 @@ export default function CarDetailPage() {
       });
   }, [id]);
 
-  // Only calculate breakdown from API data (accurate hp/displacement), not session data
+  // Use server-calculated turnkey price (available immediately from session car)
+  const turnkeyPrice = destination === 'russia'
+    ? car?.price_turnkey_russia
+    : car?.price_turnkey_tajikistan;
+
+  // Client-side breakdown only for the detailed breakdown view (uses API data)
   const breakdown = useMemo(() => {
     if (!car || !apiLoaded) return null;
     return calculateImportCost({
@@ -93,6 +98,9 @@ export default function CarDetailPage() {
   const galleryImages = car.images && car.images.length > 0
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
+
+  // Display price: use server-calculated turnkey, fall back to breakdown total
+  const displayPrice = turnkeyPrice || breakdown?.total;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -177,12 +185,12 @@ export default function CarDetailPage() {
               </button>
             </div>
 
-            {/* Total price */}
+            {/* Total price - shows immediately from server-calculated value */}
             <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
-              {breakdown ? (
+              {displayPrice ? (
                 <>
                   <div className="text-3xl font-extrabold text-gray-900">
-                    {formatPrice(breakdown.total)}
+                    {formatPrice(displayPrice)}
                   </div>
                   <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
                   <div className="text-xs text-gray-400 mt-1">
@@ -211,7 +219,7 @@ export default function CarDetailPage() {
               {t('nav.writeManager')}
             </a>
 
-            {/* Toggle breakdown */}
+            {/* Toggle breakdown - only available after API loads */}
             {breakdown && (
               <>
                 <button

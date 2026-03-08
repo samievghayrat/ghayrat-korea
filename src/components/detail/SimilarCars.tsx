@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { CarListing } from '@/types';
-import { formatPrice, formatMileage } from '@/lib/currency';
 import { calculateImportCost } from '@/lib/calculator';
+import { useApp } from '@/contexts/AppContext';
 
 interface SimilarCarsProps {
   brand: string;
@@ -16,6 +16,7 @@ interface SimilarCarsProps {
 
 export default function SimilarCars({ brand, model, excludeId, priceRub }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
+  const { formatPrice, formatMileage } = useApp();
 
   useEffect(() => {
     const params = new URLSearchParams({
@@ -36,7 +37,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">
-        Похожие {brand} {model}
+        {brand} {model}
       </h2>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-1 px-1">
         {cars.map((car) => {
@@ -74,7 +75,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
                   {formatMileage(car.mileage)} · {car.fuel}
                 </div>
                 <div className="font-bold text-primary mt-1.5 text-sm">
-                  {formatPrice(bd.total, 'RUB')}
+                  ~ {formatPrice(bd.total)}
                 </div>
               </div>
             </Link>

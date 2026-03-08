@@ -20,12 +20,13 @@ export default function CarSpecs({ car }: CarSpecsProps) {
     { label: t('spec.date'), value: yearMonth },
     { label: t('spec.mileage'), value: car.mileage ? formatMileage(car.mileage) : null },
     { label: t('spec.engine'), value: car.engine || null },
-    { label: t('spec.displacement'), value: car.displacement ? `${car.displacement} cc` : null },
-    { label: t('spec.power'), value: car.hp ? `~${car.hp} ${t('spec.hp')}` : null },
+    { label: t('spec.displacement'), value: car.displacement ? `${car.displacement.toLocaleString()} cc` : null },
+    { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
     { label: t('spec.fuel'), value: car.fuel || null },
     { label: t('spec.trans'), value: car.transmission || null },
     { label: t('spec.color'), value: car.color || null },
     { label: t('spec.body'), value: car.bodyType || null },
+    { label: t('spec.seats'), value: car.seatCount ? String(car.seatCount) : null },
     { label: 'VIN', value: car.vin || null },
   ].filter(s => s.value);
 

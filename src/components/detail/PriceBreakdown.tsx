@@ -1,7 +1,6 @@
 'use client';
 
 import type { PriceBreakdownData } from '@/types';
-import { EXCHANGE_RATES } from '@/lib/constants';
 import { useApp } from '@/contexts/AppContext';
 
 interface PriceBreakdownProps {
@@ -25,6 +24,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           label: t('price.customsDuty'),
           value: breakdown.customsDuty,
           sublabel: breakdown.customsDutyDetails,
+        },
+        {
+          label: t('price.customsFee'),
+          value: breakdown.customsFee,
+          sublabel: t('price.customsFeeDesc'),
         },
         {
           label: t('price.utilizationFee'),
@@ -61,13 +65,6 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
 
   return (
     <div className="space-y-3 pt-4">
-      {/* Exchange rates */}
-      <div className="flex gap-3 text-[11px] text-gray-400">
-        <span>USD: <span className="text-gray-600 font-medium">{EXCHANGE_RATES.USD} &#8381;</span></span>
-        <span>EUR: <span className="text-gray-600 font-medium">{EXCHANGE_RATES.EUR} &#8381;</span></span>
-        <span>1000 KRW: <span className="text-gray-600 font-medium">{(EXCHANGE_RATES.KRW * 1000).toFixed(2)} &#8381;</span></span>
-      </div>
-
       {/* Rows */}
       <div className="space-y-3">
         {rows.map((row) => (

@@ -99,6 +99,21 @@ body {
   border-radius: 2px;
 }
 
+/* Thin scrollbar for horizontal strips (thumbnails, etc.) */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 2px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
 /* Smooth page transitions */
 @layer utilities {
   .text-balance {

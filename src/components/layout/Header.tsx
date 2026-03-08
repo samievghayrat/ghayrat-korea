@@ -14,9 +14,9 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
 ];
 
 const CURRENCIES: { code: Currency; label: string; symbol: string }[] = [
-  { code: 'RUB', label: 'RUB', symbol: '₽' },
   { code: 'USD', label: 'USD', symbol: '$' },
   { code: 'EUR', label: 'EUR', symbol: '€' },
+  { code: 'RUB', label: 'RUB', symbol: '₽' },
   { code: 'KRW', label: 'KRW', symbol: '₩' },
 ];
 
@@ -134,7 +134,6 @@ export default function Header() {
                 className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-base leading-none">{currentLang.flag}</span>
-                <span className="hidden lg:inline text-xs font-medium">{currentLang.code.toUpperCase()}</span>
                 <svg className={`w-3 h-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>

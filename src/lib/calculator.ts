@@ -139,6 +139,19 @@ const UTIL_35L_PLUS: UtilCoeff[] = [
   [Infinity, 229.08, 344.28],
 ];
 
+// Customs processing fee (таможенный сбор за таможенное оформление) — 2026 rates
+function calculateCustomsFee(valueRub: number): number {
+  if (valueRub <= 200000) return 1231;
+  if (valueRub <= 450000) return 2462;
+  if (valueRub <= 1200000) return 4924;
+  if (valueRub <= 2700000) return 13541;
+  if (valueRub <= 4200000) return 18465;
+  if (valueRub <= 5500000) return 21344;
+  if (valueRub <= 7000000) return 49240;
+  if (valueRub <= 10000000) return 49240;
+  return 73860;
+}
+
 function getCarAgeYears(year: number, month?: number): number {
   const now = new Date();
   const carDate = new Date(year, (month || 1) - 1);
@@ -247,6 +260,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     return {
       carPrice,
       customsDuty: 0,
+      customsFee: 0,
       utilizationFee: 0,
       serviceFee,
       serviceFeeUsd,
@@ -263,33 +277,37 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   // Car age
   const ageYears = getCarAgeYears(input.year, input.month);
 
-  // 2. Customs duty (tks.ru rates)
+  // 2. Customs duty (единый таможенный платёж для физлиц)
   const { dutyEur, details: customsDutyDetails } = calculateCustomsDutyEur(
     priceEur,
     input.displacement,
     ageYears,
     isElectric,
   );
-  const customsDuty = Math.round(dutyEur * eurToRub);
+  const customsDuty = Math.round(dutyEur * eurToRub) + 20000;
 
-  // 3. Utilization fee (Постановление No 1713)
+  // 3. Customs processing fee (таможенный сбор за оформление)
+  const customsFee = calculateCustomsFee(carPrice);
+
+  // 4. Utilization fee (Постановление No 1713)
   const hp = input.hp || 0;
   const { fee: utilizationFee, details: utilizationWarning } =
     calculateUtilizationFee(input.displacement, hp, ageYears, isElectric);
 
-  // 4. Service fee: $1,600 (shipping Korea→Vladivostok + company services)
+  // 5. Service fee: $1,600 (shipping Korea→Vladivostok + company services)
   const serviceFeeUsd = 1600;
   const serviceFee = Math.round(serviceFeeUsd * usdToRub);
 
-  // 5. Broker fee: 100,000 RUB
+  // 6. Broker fee: 100,000 RUB
   const brokerFee = 100000;
 
-  const total = carPrice + customsDuty + utilizationFee + serviceFee + brokerFee;
+  const total = carPrice + customsDuty + customsFee + utilizationFee + serviceFee + brokerFee;
 
   return {
     carPrice,
     customsDuty,
     customsDutyDetails,
+    customsFee,
     utilizationFee,
     utilizationWarning,
     serviceFee,

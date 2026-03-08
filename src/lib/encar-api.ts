@@ -20,14 +20,69 @@ function translateTransmission(korean: string): string {
   return transmissionMap[korean] || korean;
 }
 
-// Estimate HP from displacement when API doesn't provide it
-function estimateHp(displacement: number, fuel: string): number | undefined {
-  if (!displacement) return undefined;
-  const isElectric = fuel.includes('전기') || fuel.includes('Электро');
-  if (isElectric) return undefined;
-  const isDiesel = fuel.includes('디젤') || fuel.includes('Дизель');
-  if (isDiesel) return Math.round(displacement * 0.09);
-  return Math.round(displacement * 0.085);
+// Fetch exact HP and displacement from NHTSA VIN Decoder API
+interface VinData {
+  hp?: number;
+  displacement?: number;
+}
+
+async function fetchDataFromVin(vin: string): Promise<VinData> {
+  if (!vin || vin.length < 11) return {};
+  try {
+    const res = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(vin)}?format=json`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return {};
+    const data = await res.json();
+    const results = data.Results as { VariableId: number; Variable: string; Value: string | null }[];
+    if (!results) return {};
+
+    const result: VinData = {};
+
+    // HP: VariableId 71 = EngineKW, VariableId 228 = EngineBrakeHP
+    const hpEntry = results.find(r => r.Variable === 'Engine Brake (hp) From' || r.VariableId === 228);
+    if (hpEntry?.Value) {
+      const hp = parseFloat(hpEntry.Value);
+      if (hp > 0) result.hp = Math.round(hp);
+    }
+    if (!result.hp) {
+      const kwEntry = results.find(r => r.Variable === 'Engine Power (kW)' || r.VariableId === 71);
+      if (kwEntry?.Value) {
+        const kw = parseFloat(kwEntry.Value);
+        if (kw > 0) result.hp = Math.round(kw * 1.341);
+      }
+    }
+
+    // Displacement: VariableId 13 = Displacement (cc), 11 = Displacement (L)
+    const ccEntry = results.find(r => r.Variable === 'Displacement (CC)' || r.VariableId === 13);
+    if (ccEntry?.Value) {
+      const cc = parseFloat(ccEntry.Value);
+      if (cc > 0) result.displacement = Math.round(cc);
+    }
+    if (!result.displacement) {
+      const lEntry = results.find(r => r.Variable === 'Displacement (L)' || r.VariableId === 11);
+      if (lEntry?.Value) {
+        const l = parseFloat(lEntry.Value);
+        if (l > 0) result.displacement = Math.round(l * 1000);
+      }
+    }
+
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+// Parse displacement from badge string like "가솔린 1.6 터보 2WD" → 1600
+function parseDisplacementFromBadge(badge: string): number {
+  if (!badge) return 0;
+  const match = badge.match(/(\d+\.\d+)/);
+  if (match) {
+    const liters = parseFloat(match[1]);
+    if (liters > 0 && liters < 10) return Math.round(liters * 1000);
+  }
+  return 0;
 }
 
 // Fetch HP from pan-auto.ru API (they maintain HP lookup tables for Encar cars)
@@ -326,9 +381,8 @@ async function transformSearchResults(
         ? `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
         : '/images/no-image.svg';
 
-      const displacement = (item.Displacement as number) || 0;
-      const fuelType = (item.FuelType as string) || '';
-      const hp = (item.MaxPower as number) || (item.HorsePower as number) || estimateHp(displacement, fuelType) || 0;
+      const hp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
+      const displacement = (item.Displacement as number) || parseDisplacementFromBadge((item.Badge as string) || '');
 
       return {
         id: String(item.Id || ''),
@@ -339,8 +393,8 @@ async function transformSearchResults(
         month,
         mileage: (item.Mileage as number) || 0,
         fuel: translateFuel((item.FuelType as string) || ''),
-        engine: item.Displacement ? `${((item.Displacement as number) / 1000).toFixed(1)}L` : '',
-        displacement: (item.Displacement as number) || 0,
+        engine: displacement ? `${(displacement / 1000).toFixed(1)}L` : '',
+        displacement,
         hp: hp || undefined,
         color: translateColor((item.Color as string) || ''),
         bodyType: translateBodyType((item.BodyType as string) || ''),
@@ -531,7 +585,7 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
   try {
     // Resolve vehicleId (listing ID and vehicleId can differ)
     const readRes = await fetch(
-      `https://api.encar.com/v1/readside/vehicle/${carId}?include=INSPECT`,
+      `https://api.encar.com/v1/readside/vehicle/${carId}`,
       { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
     );
     if (!readRes.ok) return null;
@@ -599,15 +653,26 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
 
 export async function getCarDetail(carId: string): Promise<CarListing | null> {
   try {
-    // Use readside API (works from Vercel) instead of scraping fem.encar.com HTML
-    const readRes = await fetch(
-      `https://api.encar.com/v1/readside/vehicle/${carId}?include=PHOTOS,OPTIONS,INSPECT`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(10000),
-      }
-    );
+    // Fetch readside and search API in parallel for faster loading
+    const searchQuery = `(And.Hidden.N._.CarId.${carId}.)`;
+    const [readRes, searchRes] = await Promise.all([
+      fetch(
+        `https://api.encar.com/v1/readside/vehicle/${carId}`,
+        {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(10000),
+        }
+      ),
+      fetch(
+        `${ENCAR_API_BASE}?${new URLSearchParams({ count: 'true', q: searchQuery, sr: '|ModifiedDate|0|1' })}`,
+        {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(10000),
+        }
+      ).catch(() => null),
+    ]);
 
     if (!readRes.ok) {
       console.error(`Readside API error: ${readRes.status} for car ${carId}`);
@@ -616,19 +681,8 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     const readData = await readRes.json();
 
-    // Also fetch from search API to get structured listing data
-    const searchQuery = `(And.Hidden.N._.CarId.${carId}.)`;
-    const searchRes = await fetch(
-      `${ENCAR_API_BASE}?${new URLSearchParams({ count: 'true', q: searchQuery, sr: '|ModifiedDate|0|1' })}`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(10000),
-      }
-    );
-
     let searchItem: Record<string, unknown> | null = null;
-    if (searchRes.ok) {
+    if (searchRes?.ok) {
       const searchData = await searchRes.json();
       const results = searchData.SearchResults || [];
       if (results.length > 0) {
@@ -636,18 +690,23 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       }
     }
 
+    // Readside API nests data under category, spec, advertisement
+    const cat = readData.category || {};
+    const spec = readData.spec || {};
+    const adv = readData.advertisement || {};
+
     // Use readside data as primary, search data as fallback for some fields
-    const manufacturer = readData.manufacturerName || (searchItem?.Manufacturer as string) || '';
-    const modelName = readData.modelGroupName || readData.modelName || (searchItem?.Model as string) || '';
-    const yearMonth = String(readData.yearMonth || searchItem?.Year || '');
-    const mileage = readData.mileage || (searchItem?.Mileage as number) || 0;
-    const fuelName = readData.fuelName || (searchItem?.FuelType as string) || '';
-    const displacement = readData.displacement || (searchItem?.Displacement as number) || 0;
-    const colorName = readData.colorName || (searchItem?.Color as string) || '';
-    const bodyName = readData.bodyName || (searchItem?.BodyType as string) || '';
-    const transmissionName = readData.transmissionName || (searchItem?.Transmission as string) || '';
-    const gradeName = readData.gradeEnglishName || readData.gradeName || '';
-    const price = readData.price || (searchItem?.Price as number) || 0;
+    const manufacturer = cat.manufacturerName || (searchItem?.Manufacturer as string) || '';
+    const modelName = cat.modelGroupName || cat.modelName || (searchItem?.Model as string) || '';
+    const yearMonth = String(cat.yearMonth || searchItem?.Year || '');
+    const mileage = spec.mileage || (searchItem?.Mileage as number) || 0;
+    const fuelName = spec.fuelName || (searchItem?.FuelType as string) || '';
+    const displacement = spec.displacement || (searchItem?.Displacement as number) || parseDisplacementFromBadge((searchItem?.Badge as string) || '');
+    const colorName = spec.colorName || (searchItem?.Color as string) || '';
+    const bodyName = spec.bodyName || (searchItem?.BodyType as string) || '';
+    const transmissionName = spec.transmissionName || (searchItem?.Transmission as string) || '';
+    const gradeName = cat.gradeEnglishName || cat.gradeName || '';
+    const price = adv.price || (searchItem?.Price as number) || 0;
 
     const priceKrw = price * 10000;
     const [priceRub, priceUsd] = await Promise.all([
@@ -687,15 +746,16 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       }
     }
 
-    const [equipment, inspectionData, panAutoHp] = await Promise.all([
+    const [equipment, inspectionData, panAutoHp, vinData] = await Promise.all([
       resolveOptionCodes(optionCodes),
       fetchInspectionData(carId),
       fetchHpFromPanAuto(carId),
+      fetchDataFromVin(readData.vin),
     ]);
 
     const brand = translateBrand(manufacturer);
     const model = translateModel(modelName);
-    const trim = gradeName ? (readData.gradeEnglishName || translateModel(gradeName)) : undefined;
+    const trim = gradeName ? (cat.gradeEnglishName || translateModel(gradeName)) : undefined;
 
     return {
       id: carId,
@@ -707,13 +767,14 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       month: parseInt(yearMonth.substring(4, 6)) || undefined,
       mileage,
       fuel: translateFuel(fuelName),
-      engine: displacement ? `${(displacement / 1000).toFixed(1)}L` : '',
-      displacement,
-      hp: panAutoHp || readData.maxPower || readData.horsePower || (searchItem?.MaxPower as number) || estimateHp(displacement, fuelName) || undefined,
+      engine: (displacement || vinData.displacement) ? `${((displacement || vinData.displacement || 0) / 1000).toFixed(1)}L` : '',
+      displacement: displacement || vinData.displacement || 0,
+      hp: vinData.hp || panAutoHp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined,
       color: translateColor(colorName),
       bodyType: translateBodyType(bodyName),
       transmission: translateTransmission(transmissionName),
       drivetrain: '',
+      seatCount: spec.seatCount || undefined,
       price_krw: priceKrw,
       price_rub: priceRub,
       price_usd: priceUsd,

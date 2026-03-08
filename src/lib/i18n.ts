@@ -138,6 +138,7 @@ const t = {
   'spec.trans': { ru: 'КПП', en: 'Transmission', tj: 'КПП', uz: 'Uzatmalar qutisi' },
   'spec.color': { ru: 'Цвет', en: 'Color', tj: 'Ранг', uz: 'Rang' },
   'spec.body': { ru: 'Кузов', en: 'Body', tj: 'Кузов', uz: 'Kuzov' },
+  'spec.seats': { ru: 'Кол-во мест', en: 'Seats', tj: 'Ҷойҳо', uz: 'Oʻrindiqlar' },
   'spec.hp': { ru: 'л.с.', en: 'hp', tj: 'қ.о.', uz: 'o.k.' },
 
   // Price breakdown
@@ -145,7 +146,9 @@ const t = {
   'price.customsDuty': { ru: 'Таможенная пошлина', en: 'Customs duty', tj: 'Божи гумрукӣ', uz: 'Bojxona boji' },
   'price.utilizationFee': { ru: 'Утилизационный сбор', en: 'Utilization fee', tj: 'Ҳаққи утилизатсия', uz: 'Utilizatsiya to\'lovi' },
   'price.delivery': { ru: 'Доставка и оформление', en: 'Delivery & processing', tj: 'Интиқол ва расмиёт', uz: 'Yetkazib berish va rasmiylashtirish' },
-  'price.deliveryDesc': { ru: 'доставка, подбор, проверка', en: 'shipping, selection, inspection', tj: 'интиқол, интихоб, тафтиш', uz: 'yetkazish, tanlash, tekshirish' },
+  'price.deliveryDesc': { ru: 'расходы в Корее, доставка до Владивостока, услуга компании', en: 'expenses in Korea, delivery to Vladivostok, company service', tj: 'хароҷот дар Корея, интиқол то Владивосток, хизмати ширкат', uz: 'Koreyadagi xarajatlar, Vladivostokgacha yetkazish, kompaniya xizmati' },
+  'price.customsFee': { ru: 'Таможенный сбор', en: 'Customs processing fee', tj: 'Ҳаққи гумрукӣ', uz: 'Bojxona yigʻimi' },
+  'price.customsFeeDesc': { ru: 'сбор за оформление', en: 'declaration processing', tj: 'барои расмиёт', uz: 'rasmiylashtirish uchun' },
   'price.broker': { ru: 'Брокер во Владивостоке', en: 'Broker in Vladivostok', tj: 'Брокер дар Владивосток', uz: 'Vladivostokdagi broker' },
   'price.brokerDesc': { ru: 'Таможенное оформление', en: 'Customs clearance', tj: 'Расмиёти гумрукӣ', uz: 'Bojxona rasmiylashtiruvi' },
   'price.deliveryTj': { ru: 'Доставка до Таджикистана', en: 'Delivery to Tajikistan', tj: 'Интиқол то Тоҷикистон', uz: 'Tojikistonga yetkazish' },
@@ -158,6 +161,7 @@ const t = {
   'price.showBreakdown': { ru: 'Показать расчёт цены', en: 'Show price breakdown', tj: 'Нишон додани ҳисоб', uz: 'Narx tafsilotini ko\'rsatish' },
   'price.hideBreakdown': { ru: 'Скрыть расчёт цены', en: 'Hide price breakdown', tj: 'Пинҳон кардани ҳисоб', uz: 'Narx tafsilotini yashirish' },
   'price.priceInKorea': { ru: 'Цена в Корее:', en: 'Price in Korea:', tj: 'Нарх дар Корея:', uz: 'Koreyadagi narx:' },
+  'price.calculatingExact': { ru: 'Уточняем стоимость...', en: 'Calculating exact price...', tj: 'Ҳисоби дақиқ...', uz: 'Aniq narx hisoblanmoqda...' },
 
   // Price bar
   'pricebar.carPrice': { ru: 'Стоимость авто', en: 'Car price', tj: 'Нархи мошин', uz: 'Avto narxi' },

@@ -27,6 +27,7 @@ export interface CarListing {
   accidentHistory?: AccidentRecord[];
   inspectionData?: InspectionData;
   displacement?: number;
+  seatCount?: number;
   isActive?: boolean;
   createdAt?: string;
 }
@@ -91,6 +92,7 @@ export interface PriceBreakdownData {
   carPrice: number;
   customsDuty: number;
   customsDutyDetails?: string; // e.g., "2.7 EUR × 1999 cc"
+  customsFee: number; // таможенный сбор за оформление
   utilizationFee: number;
   utilizationWarning?: string; // warning for >160 HP cars
   serviceFee: number; // $1,600 converted to RUB

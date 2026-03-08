@@ -1,6 +1,8 @@
 'use client';
 
 import type { PanelDamage, DamageType } from '@/types';
+import { useApp } from '@/contexts/AppContext';
+import type { TranslationKey } from '@/lib/i18n';
 
 interface CarDamageMapProps {
   panels: PanelDamage[];
@@ -15,13 +17,13 @@ const damageMarker: Record<DamageType, { letter: string; bg: string; text: strin
   DAMAGE:    { letter: 'T', bg: '#8e44ad', text: '#fff' },
 };
 
-const damageLabel: Record<DamageType, string> = {
-  CHANGE: 'Замена',
-  METAL: 'Рихтовка/сварка',
-  CORROSION: 'Коррозия',
-  SCRATCH: 'Царапина',
-  HILLS: 'Вмятина',
-  DAMAGE: 'Повреждение',
+const damageLabelKey: Record<DamageType, TranslationKey> = {
+  CHANGE: 'damage.change',
+  METAL: 'damage.metal',
+  CORROSION: 'damage.corrosion',
+  SCRATCH: 'damage.scratch',
+  HILLS: 'damage.dent',
+  DAMAGE: 'damage.damage',
 };
 
 // Marker positions as CSS percentages (left%, top%) on the 320x303 car image
@@ -74,13 +76,13 @@ const structuralPositions: Record<string, { left: string; top: string }> = {
 const exteriorPanelSet = new Set(Object.keys(exteriorPositions));
 const structuralPanelSet = new Set(Object.keys(structuralPositions));
 
-function DamageMarker({ damage, style, label }: { damage: DamageType; style: React.CSSProperties; label: string }) {
+function DamageMarker({ damage, style, label, damageText }: { damage: DamageType; style: React.CSSProperties; label: string; damageText: string }) {
   const m = damageMarker[damage];
   return (
     <span
       className="absolute flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold leading-none -translate-x-1/2 -translate-y-1/2 shadow-sm cursor-default"
       style={{ ...style, backgroundColor: m.bg, color: m.text }}
-      title={`${label}: ${damageLabel[damage]}`}
+      title={`${label}: ${damageText}`}
     >
       {m.letter}
     </span>
@@ -92,11 +94,13 @@ function CarDiagram({
   bgImage,
   panels,
   positions,
+  getDamageLabel,
 }: {
   title: string;
   bgImage: string;
   panels: PanelDamage[];
   positions: Record<string, { left: string; top: string }>;
+  getDamageLabel: (d: DamageType) => string;
 }) {
   const relevant = panels.filter((p) => positions[p.name]);
 
@@ -122,6 +126,7 @@ function CarDiagram({
               key={panel.name}
               damage={panel.damages[0]}
               label={panel.nameRu}
+              damageText={getDamageLabel(panel.damages[0])}
               style={{ left: pos.left, top: pos.top }}
             />
           );
@@ -132,28 +137,31 @@ function CarDiagram({
 }
 
 export default function CarDamageMap({ panels }: CarDamageMapProps) {
+  const { t } = useApp();
   const exterior = panels.filter((p) => exteriorPanelSet.has(p.name));
   const structural = panels.filter((p) => structuralPanelSet.has(p.name));
 
+  const getDamageLabel = (d: DamageType) => t(damageLabelKey[d]);
+
   return (
     <div className="space-y-4">
-      {/* Two car diagrams */}
       <div className="flex gap-2 sm:gap-4">
         <CarDiagram
-          title="Внешние панели"
+          title={t('damage.exterior')}
           bgImage="/images/inspect_exterior.png"
           panels={exterior}
           positions={exteriorPositions}
+          getDamageLabel={getDamageLabel}
         />
         <CarDiagram
-          title="Каркас / рама"
+          title={t('damage.structural')}
           bgImage="/images/inspect_structural.png"
           panels={structural}
           positions={structuralPositions}
+          getDamageLabel={getDamageLabel}
         />
       </div>
 
-      {/* Damaged panels list — only show if there are damages */}
       {panels.length > 0 && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
           {panels.map((p) => (
@@ -173,7 +181,6 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
         </div>
       )}
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-gray-100">
         {(Object.entries(damageMarker) as [DamageType, { letter: string; bg: string }][]).map(
           ([key, m]) => (
@@ -184,13 +191,13 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
               >
                 {m.letter}
               </span>
-              {damageLabel[key as DamageType]}
+              {getDamageLabel(key as DamageType)}
             </span>
           ),
         )}
       </div>
 
-      <p className="text-[10px] text-gray-300">* Для пассажирских автомобилей</p>
+      <p className="text-[10px] text-gray-300">{t('damage.passenger')}</p>
     </div>
   );
 }

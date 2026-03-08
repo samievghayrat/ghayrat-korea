@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useApp } from '@/contexts/AppContext';
 
 interface EquipmentProps {
   items: string[];
@@ -9,36 +10,36 @@ interface EquipmentProps {
 const INITIAL_VISIBLE = 4;
 
 interface Category {
-  title: string;
+  titleKey: string;
   icon: string;
   keywords: string[];
 }
 
 const categories: Category[] = [
   {
-    title: 'Интерьер и экстерьер',
+    titleKey: 'equip.interior',
     icon: '🏠',
     keywords: ['кож', 'салон', 'люк', 'санруф', 'фар', 'LED', 'HID', 'зеркал', 'стекл', 'дверь', 'багажник', 'электропривод багажника', 'крыш', 'рейлинг', 'диск', 'свет', 'лобов', 'проекц', 'шторк'],
   },
   {
-    title: 'Безопасность',
+    titleKey: 'equip.safety',
     icon: '🛡',
     keywords: ['подуш', 'ABS', 'антиблок', 'ESP', 'ESC', 'стабилиз', 'камер', 'парктроник', 'датчик', 'круиз', 'контроль', 'слеп', 'полос', 'тормоз', 'TPMS', 'давлен', 'LDWS'],
   },
   {
-    title: 'Мультимедиа',
+    titleKey: 'equip.multimedia',
     icon: '📱',
     keywords: ['навигац', 'монитор', 'Bluetooth', 'USB', 'AUX', 'CD', 'Hi-Pass', 'транспондер', 'кнопк', 'руле'],
   },
   {
-    title: 'Комфорт и сиденья',
+    titleKey: 'equip.comfort',
     icon: '💺',
     keywords: ['сиден', 'подогрев', 'вентиляц', 'руля', 'климат', 'ключ', 'запуск', 'кондиц', 'память', 'массаж', 'электрорегулировк', 'лепест', 'складн', 'электрохром', 'доводчик', 'бесключ'],
   },
 ];
 
-function categorizeItems(items: string[]): Record<string, string[]> {
-  const result: Record<string, string[]> = {};
+function categorizeItems(items: string[]): { titleKey: string; icon?: string; items: string[] }[] {
+  const result: { titleKey: string; icon?: string; items: string[] }[] = [];
   const used = new Set<number>();
 
   for (const cat of categories) {
@@ -52,50 +53,46 @@ function categorizeItems(items: string[]): Record<string, string[]> {
       }
     });
     if (matched.length > 0) {
-      result[cat.title] = matched;
+      result.push({ titleKey: cat.titleKey, icon: cat.icon, items: matched });
     }
   }
 
-  // Remaining go to "Прочее"
   const other = items.filter((_, idx) => !used.has(idx));
   if (other.length > 0) {
-    result['Прочее'] = other;
+    result.push({ titleKey: 'equip.other', items: other });
   }
 
   return result;
 }
 
 export default function Equipment({ items }: EquipmentProps) {
+  const { t } = useApp();
   const [expanded, setExpanded] = useState(false);
 
   if (!items || !Array.isArray(items) || items.length === 0) return null;
 
   const grouped = categorizeItems(items);
-  const groupNames = Object.keys(grouped);
 
-  // In collapsed mode, show only first INITIAL_VISIBLE items per category
-  const totalHidden = groupNames.reduce((sum, name) => {
-    const extra = grouped[name].length - INITIAL_VISIBLE;
+  const totalHidden = grouped.reduce((sum, g) => {
+    const extra = g.items.length - INITIAL_VISIBLE;
     return sum + (extra > 0 ? extra : 0);
   }, 0);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-xl font-bold text-gray-900">Комплектация</h2>
-        <span className="text-sm text-gray-400">{items.length} опций</span>
+        <h2 className="text-xl font-bold text-gray-900">{t('equip.title')}</h2>
+        <span className="text-sm text-gray-400">{items.length} {t('equip.options')}</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {groupNames.map((name) => {
-          const cat = categories.find(c => c.title === name);
-          const all = grouped[name];
-          const visible = expanded ? all : all.slice(0, INITIAL_VISIBLE);
+        {grouped.map((group) => {
+          const visible = expanded ? group.items : group.items.slice(0, INITIAL_VISIBLE);
           return (
-            <div key={name}>
+            <div key={group.titleKey}>
               <h3 className="text-sm font-bold text-gray-700 mb-2.5 flex items-center gap-1.5">
-                {cat && <span className="text-base">{cat.icon}</span>}
-                {name}
-                <span className="text-gray-300 font-normal text-xs">({all.length})</span>
+                {group.icon && <span className="text-base">{group.icon}</span>}
+                {t(group.titleKey as Parameters<typeof t>[0])}
+                <span className="text-gray-300 font-normal text-xs">({group.items.length})</span>
               </h3>
               <ul className="space-y-1.5">
                 {visible.map((item, i) => (
@@ -116,7 +113,7 @@ export default function Equipment({ items }: EquipmentProps) {
           onClick={() => setExpanded(!expanded)}
           className="mt-4 w-full py-2.5 text-sm font-medium text-primary hover:text-primary-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
         >
-          {expanded ? 'Скрыть' : `Показать все (ещё ${totalHidden})`}
+          {expanded ? t('equip.hide') : `${t('equip.showAll')} (${t('equip.more')} ${totalHidden})`}
           <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>

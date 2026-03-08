@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { AccidentRecord, InspectionData } from '@/types';
 import CarDamageMap from './CarDamageMap';
+import { useApp } from '@/contexts/AppContext';
 
 interface AccidentHistoryProps {
   records: AccidentRecord[];
@@ -11,6 +12,7 @@ interface AccidentHistoryProps {
 }
 
 export default function AccidentHistory({ records, inspectionData }: AccidentHistoryProps) {
+  const { t } = useApp();
   const [expanded, setExpanded] = useState(false);
 
   const hasInspection = !!inspectionData;
@@ -24,9 +26,8 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Техническое состояние</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">{t('accident.title')}</h2>
 
-      {/* Accident / repair status flags */}
       {hasInspection && (
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
@@ -38,12 +39,12 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
               inspectionData.accidentHistory === true ? 'bg-red-500' : 'bg-green-500'
             }`} />
             <div>
-              <div className="text-xs text-gray-500">Аварийность</div>
+              <div className="text-xs text-gray-500">{t('accident.history')}</div>
               <div className={`text-sm font-medium ${
                 inspectionData.accidentHistory === true ? 'text-red-700' : 'text-green-700'
               }`}>
-                {inspectionData.accidentHistory === true ? 'Есть' :
-                 inspectionData.accidentHistory === false ? 'Нет' : '—'}
+                {inspectionData.accidentHistory === true ? t('accident.yes') :
+                 inspectionData.accidentHistory === false ? t('accident.no') : '—'}
               </div>
             </div>
           </div>
@@ -56,19 +57,18 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
               inspectionData.simpleRepair === true ? 'bg-orange-500' : 'bg-green-500'
             }`} />
             <div>
-              <div className="text-xs text-gray-500">Простой ремонт</div>
+              <div className="text-xs text-gray-500">{t('accident.simpleRepair')}</div>
               <div className={`text-sm font-medium ${
                 inspectionData.simpleRepair === true ? 'text-orange-700' : 'text-green-700'
               }`}>
-                {inspectionData.simpleRepair === true ? 'Есть' :
-                 inspectionData.simpleRepair === false ? 'Нет' : '—'}
+                {inspectionData.simpleRepair === true ? t('accident.yes') :
+                 inspectionData.simpleRepair === false ? t('accident.no') : '—'}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Car damage diagram — always show when inspection exists */}
       {hasInspection && inspectionData && (
         <div className="mb-4">
           {!hasDamage && (
@@ -77,8 +77,8 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <div>
-                <span className="font-medium text-green-700 text-sm">Повреждений кузова не обнаружено</span>
-                <p className="text-xs text-green-600 mt-0.5">По данным технической экспертизы Encar</p>
+                <span className="font-medium text-green-700 text-sm">{t('accident.noDamage')}</span>
+                <p className="text-xs text-green-600 mt-0.5">{t('accident.byEncar')}</p>
               </div>
             </div>
           )}
@@ -86,32 +86,30 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
         </div>
       )}
 
-      {/* No inspection data available */}
       {!hasInspection && !hasRecords && (
         <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl">
           <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span className="text-sm text-gray-500">Данные техосмотра недоступны для этого автомобиля</span>
+          <span className="text-sm text-gray-500">{t('accident.noData')}</span>
         </div>
       )}
 
-      {/* Insurance records */}
       {hasRecords && records && (
         <div className={hasInspection ? 'mt-6 pt-6 border-t border-gray-100' : ''}>
-          <h3 className="text-base font-semibold text-gray-900 mb-3">История страховых случаев</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-3">{t('accident.insuranceHistory')}</h3>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="flex items-baseline gap-1">
-              <span className="text-gray-500 text-sm">Случаев</span>
+              <span className="text-gray-500 text-sm">{t('accident.cases')}</span>
               <span className="flex-1 border-b border-dotted border-gray-300" />
               <span className="font-semibold text-orange-600">{records.length}</span>
             </div>
             {totalAmount > 0 && (
               <div className="flex items-baseline gap-1">
-                <span className="text-gray-500 text-sm">Сумма</span>
+                <span className="text-gray-500 text-sm">{t('accident.amount')}</span>
                 <span className="flex-1 border-b border-dotted border-gray-300" />
-                <span className="font-semibold text-orange-600">{totalAmount.toLocaleString('ru-RU')} &#8381;</span>
+                <span className="font-semibold text-orange-600">{totalAmount.toLocaleString()} &#8381;</span>
               </div>
             )}
           </div>
@@ -120,7 +118,7 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
             onClick={() => setExpanded(!expanded)}
             className="text-sm text-primary hover:underline flex items-center gap-1"
           >
-            {expanded ? 'Скрыть подробности' : 'Показать подробности'}
+            {expanded ? t('accident.hideDetails') : t('accident.showDetails')}
             <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -148,7 +146,6 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
           )}
         </div>
       )}
-
     </div>
   );
 }

@@ -10,9 +10,9 @@ import Equipment from '@/components/detail/Equipment';
 import AccidentHistory from '@/components/detail/AccidentHistory';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
-import { formatPrice } from '@/lib/currency';
 import { calculateImportCost } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { useApp } from '@/contexts/AppContext';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -26,6 +26,7 @@ export default function CarDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
+  const { t, formatPrice, formatKrwPrice } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -59,9 +60,9 @@ export default function CarDetailPage() {
   if (error || !car) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Автомобиль не найден</h1>
-        <p className="text-gray-500 mb-8">Возможно, объявление было удалено или ссылка устарела.</p>
-        <a href="/" className="btn-primary inline-block">Вернуться в каталог</a>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('detail.notFound')}</h1>
+        <p className="text-gray-500 mb-8">{t('detail.notFoundDesc')}</p>
+        <a href="/" className="btn-primary inline-block">{t('detail.backToCatalog')}</a>
       </div>
     );
   }
@@ -82,8 +83,8 @@ export default function CarDetailPage() {
     : `${car.year}`;
 
   const priceLabel = destination === 'russia'
-    ? 'под ключ до Владивостока'
-    : 'с доставкой до Таджикистана';
+    ? t('card.turnkeyVladivostok')
+    : t('card.turnkeyTajikistan');
 
   const galleryImages = car.images && car.images.length > 0
     ? car.images
@@ -93,7 +94,7 @@ export default function CarDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-400 mb-5">
-        <a href="/" className="hover:text-primary transition-colors">Каталог</a>
+        <a href="/" className="hover:text-primary transition-colors">{t('nav.catalog')}</a>
         <span>/</span>
         <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="hover:text-primary transition-colors">{car.brand}</a>
         <span>/</span>
@@ -113,7 +114,7 @@ export default function CarDetailPage() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Загрузка фото...
+              {t('detail.loadingPhotos')}
             </div>
           )}
         </div>
@@ -134,7 +135,7 @@ export default function CarDetailPage() {
                   {car.hp && (
                     <>
                       <span>·</span>
-                      <span>{car.hp} л.с.</span>
+                      <span>{car.hp} {t('spec.hp')}</span>
                     </>
                   )}
                 </div>
@@ -168,11 +169,10 @@ export default function CarDetailPage() {
 
             {/* Total price */}
             <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
-              <div className="text-3xl font-extrabold text-gray-900">{formatPrice(breakdown.total, 'RUB')}</div>
+              <div className="text-3xl font-extrabold text-gray-900">{formatPrice(breakdown.total)}</div>
               <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
               <div className="text-xs text-gray-400 mt-1">
-                Цена в Корее: <span className="font-semibold text-gray-500">{formatPrice(car.price_krw, 'KRW')}</span>
-                {car.price_usd ? <> · <span className="font-semibold text-gray-500">{formatPrice(car.price_usd, 'USD')}</span></> : null}
+                {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
               </div>
             </div>
 
@@ -186,7 +186,7 @@ export default function CarDetailPage() {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
               </svg>
-              Написать менеджеру
+              {t('nav.writeManager')}
             </a>
 
             {/* Toggle breakdown */}
@@ -194,7 +194,7 @@ export default function CarDetailPage() {
               onClick={() => setShowBreakdown(!showBreakdown)}
               className="w-full mt-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
             >
-              {showBreakdown ? 'Скрыть расчёт цены' : 'Показать расчёт цены'}
+              {showBreakdown ? t('price.hideBreakdown') : t('price.showBreakdown')}
               <svg className={`w-4 h-4 transition-transform ${showBreakdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -210,7 +210,7 @@ export default function CarDetailPage() {
                 href="/how-to-buy"
                 className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
               >
-                Как купить автомобиль
+                {t('detail.howToBuy')}
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

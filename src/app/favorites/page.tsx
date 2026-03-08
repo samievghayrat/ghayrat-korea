@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import type { CarListing } from '@/types';
 import CarGrid from '@/components/catalog/CarGrid';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useApp } from '@/contexts/AppContext';
 
 export default function FavoritesPage() {
+  const { t } = useApp();
   const { favorites, clearFavorites } = useFavorites();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,6 @@ export default function FavoritesPage() {
       return;
     }
 
-    // Fetch details for each favorite car sequentially to avoid rate limiting
     const fetchSequentially = async () => {
       const results: (CarListing | null)[] = [];
       for (const id of favorites) {
@@ -43,12 +44,12 @@ export default function FavoritesPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Избранное</h1>
-          <p className="text-gray-500 mt-1">{favorites.length} автомобилей</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('fav.title')}</h1>
+          <p className="text-gray-500 mt-1">{favorites.length} {t('fav.count')}</p>
         </div>
         {favorites.length > 0 && (
           <button onClick={clearFavorites} className="text-sm text-red-500 hover:underline">
-            Очистить всё
+            {t('fav.clearAll')}
           </button>
         )}
       </div>
@@ -59,9 +60,9 @@ export default function FavoritesPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-600 mb-2">Нет избранных автомобилей</h3>
-          <p className="text-gray-500 mb-6">Нажмите на сердечко на карточке автомобиля, чтобы добавить в избранное</p>
-          <a href="/catalog" className="btn-primary inline-block">Перейти в каталог</a>
+          <h3 className="text-lg font-medium text-gray-600 mb-2">{t('fav.empty')}</h3>
+          <p className="text-gray-500 mb-6">{t('fav.emptyDesc')}</p>
+          <a href="/catalog" className="btn-primary inline-block">{t('fav.goToCatalog')}</a>
         </div>
       ) : (
         <CarGrid cars={cars} loading={loading} />

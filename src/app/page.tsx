@@ -8,6 +8,7 @@ import FilterChips from '@/components/catalog/FilterChips';
 import Pagination from '@/components/catalog/Pagination';
 import SortSelect from '@/components/catalog/SortSelect';
 import EncarSearch from '@/components/catalog/EncarSearch';
+import { useApp } from '@/contexts/AppContext';
 
 interface BrandCount {
   name: string;
@@ -16,6 +17,7 @@ interface BrandCount {
 }
 
 function CatalogContent() {
+  const { t } = useApp();
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -86,10 +88,10 @@ function CatalogContent() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Поиск...
+                {t('search.searching')}
               </span>
             ) : (
-              <span className="font-bold text-gray-900 text-lg">{total.toLocaleString('ru-RU')} <span className="font-normal text-sm text-gray-500">авто</span></span>
+              <span className="font-bold text-gray-900 text-lg">{total.toLocaleString()} <span className="font-normal text-sm text-gray-500">{t('search.cars')}</span></span>
             )}
           </div>
           <SortSelect
@@ -125,10 +127,10 @@ function CatalogContent() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Поиск...
+                  {t('search.searching')}
                 </span>
               ) : (
-                <>Найдено <span className="font-bold text-gray-900">{total.toLocaleString('ru-RU')}</span> авто</>
+                <>{t('search.found')} <span className="font-bold text-gray-900">{total.toLocaleString()}</span> {t('search.cars')}</>
               )}
             </div>
             <SortSelect

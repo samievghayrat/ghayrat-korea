@@ -4,16 +4,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import MobileMenu from './MobileMenu';
-
-const navLinks = [
-  { href: '/', label: 'Каталог' },
-  { href: '/how-to-buy', label: 'Как купить' },
-  { href: '/about', label: 'О компании' },
-  { href: '/contacts', label: 'Контакты' },
-];
+import { useApp } from '@/contexts/AppContext';
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { t } = useApp();
   const [favCount, setFavCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,6 +35,13 @@ export default function BottomNav() {
   const isHome = pathname === '/' || pathname === '/catalog';
   const isFav = pathname === '/favorites';
 
+  const navLinks = [
+    { href: '/', label: t('nav.catalog') },
+    { href: '/how-to-buy', label: t('nav.howToBuy') },
+    { href: '/about', label: t('nav.about') },
+    { href: '/contacts', label: t('nav.contacts') },
+  ];
+
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 lg:hidden">
@@ -51,7 +53,7 @@ export default function BottomNav() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
-            <span className="text-[10px] font-medium">Каталог</span>
+            <span className="text-[10px] font-medium">{t('nav.catalog')}</span>
           </Link>
 
           <Link
@@ -69,7 +71,7 @@ export default function BottomNav() {
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-medium">Избранное</span>
+            <span className="text-[10px] font-medium">{t('nav.favorites')}</span>
           </Link>
 
           <button
@@ -79,7 +81,7 @@ export default function BottomNav() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            <span className="text-[10px] font-medium">Меню</span>
+            <span className="text-[10px] font-medium">{t('nav.menu')}</span>
           </button>
         </div>
       </div>

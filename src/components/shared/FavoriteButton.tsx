@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useApp } from '@/contexts/AppContext';
 
 interface FavoriteButtonProps {
   carId: string;
@@ -9,6 +10,7 @@ interface FavoriteButtonProps {
 }
 
 export default function FavoriteButton({ carId, className = '', size = 'md' }: FavoriteButtonProps) {
+  const { t } = useApp();
   const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export default function FavoriteButton({ carId, className = '', size = 'md' }: F
       className={`p-2 rounded-full transition-colors ${
         isFav ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-gray-400 bg-white/80 hover:bg-white hover:text-red-400'
       } ${className}`}
-      title={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+      title={isFav ? t('fav.removeFromFav') : t('fav.addToFav')}
     >
       <svg className={sizeClass} fill={isFav ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

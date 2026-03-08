@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BRAND_MODELS, FUEL_TYPES, YEAR_OPTIONS, TRANSMISSION_TYPES, DRIVETRAIN_TYPES, COLOR_OPTIONS, CAR_OPTIONS } from '@/lib/constants';
+import { BRAND_MODELS, YEAR_OPTIONS } from '@/lib/constants';
 import { translateGenerationName } from '@/lib/translations';
 import type { CarFilters } from '@/types';
+import { useApp } from '@/contexts/AppContext';
 
 interface BrandCount {
   name: string;
@@ -127,6 +128,7 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
 }
 
 export default function EncarSearch({ filters, onChange, brandCounts, compact }: EncarSearchProps) {
+  const { t } = useApp();
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
@@ -134,6 +136,60 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
   const [modelOpen, setModelOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+
+  const FUEL_TYPES = [
+    { value: 'gasoline', label: t('fuel.gasoline') },
+    { value: 'diesel', label: t('fuel.diesel') },
+    { value: 'hybrid', label: t('fuel.hybrid') },
+    { value: 'electric', label: t('fuel.electric') },
+    { value: 'lpg', label: t('fuel.lpg') },
+  ];
+
+  const TRANSMISSION_TYPES = [
+    { value: 'auto', label: t('trans.auto') },
+    { value: 'manual', label: t('trans.manual') },
+    { value: 'dct', label: t('trans.dct') },
+    { value: 'cvt', label: t('trans.cvt') },
+  ];
+
+  const DRIVETRAIN_TYPES = [
+    { value: 'fwd', label: t('drive.fwd') },
+    { value: 'rwd', label: t('drive.rwd') },
+    { value: 'awd', label: t('drive.awd') },
+  ];
+
+  const COLOR_OPTIONS = [
+    { value: 'white', label: t('color.white') },
+    { value: 'black', label: t('color.black') },
+    { value: 'gray', label: t('color.gray') },
+    { value: 'silver', label: t('color.silver') },
+    { value: 'blue', label: t('color.blue') },
+    { value: 'red', label: t('color.red') },
+    { value: 'brown', label: t('color.brown') },
+    { value: 'green', label: t('color.green') },
+    { value: 'other', label: t('color.other') },
+  ];
+
+  const CAR_OPTIONS = [
+    { code: '010', label: t('opt.010') },
+    { code: '014', label: t('opt.014') },
+    { code: '005', label: t('opt.005') },
+    { code: '058', label: t('opt.058') },
+    { code: '087', label: t('opt.087') },
+    { code: '075', label: t('opt.075') },
+    { code: '007', label: t('opt.007') },
+    { code: '009', label: t('opt.009') },
+    { code: '082', label: t('opt.082') },
+    { code: '023', label: t('opt.023') },
+    { code: '068', label: t('opt.068') },
+    { code: '079', label: t('opt.079') },
+    { code: '057', label: t('opt.057') },
+    { code: '059', label: t('opt.059') },
+    { code: '088', label: t('opt.088') },
+    { code: '086', label: t('opt.086') },
+    { code: '095', label: t('opt.095') },
+    { code: '091', label: t('opt.091') },
+  ];
 
   const modelList = filters.brand
     ? (BRAND_MODELS[filters.brand] || []).sort((a, b) => a.localeCompare(b))
@@ -222,7 +278,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
         label=""
         value={filters.brand}
         count={selectedBrandCount}
-        placeholder="Марка, модель, поколение"
+        placeholder={t('search.brandPlaceholder')}
         open={brandOpen}
         onToggle={() => { setBrandOpen(!brandOpen); setModelOpen(false); setGenOpen(false); }}
         onClear={filters.brand ? clearBrand : undefined}
@@ -257,7 +313,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
           label=""
           value={filters.model}
           count={totalGenCount || undefined}
-          placeholder="Все модели"
+          placeholder={t('search.allModels')}
           open={modelOpen}
           onToggle={() => { setModelOpen(!modelOpen); setBrandOpen(false); setGenOpen(false); }}
           onClear={filters.model ? clearModel : undefined}
@@ -275,7 +331,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
               </button>
             ))}
             {modelList.length === 0 && (
-              <p className="px-3 py-2 text-sm text-gray-400">Нет моделей</p>
+              <p className="px-3 py-2 text-sm text-gray-400">{t('search.noModels')}</p>
             )}
           </div>
         </SelectBox>
@@ -285,11 +341,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
       {filters.model && (
         <SelectBox
           label=""
-          value={selectedGenName || 'Все'}
+          value={selectedGenName || t('search.all')}
           count={filters.modelVariant
             ? generationVariants.find(v => v.name === filters.modelVariant)?.count
             : totalGenCount || undefined}
-          placeholder="Все"
+          placeholder={t('search.all')}
           open={genOpen}
           onToggle={() => { setGenOpen(!genOpen); setBrandOpen(false); setModelOpen(false); }}
           onClear={filters.modelVariant ? () => handleGenSelect(undefined) : undefined}
@@ -300,7 +356,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span className="text-sm text-gray-400">Загрузка...</span>
+              <span className="text-sm text-gray-400">{t('search.loading')}</span>
             </div>
           ) : (
             <div className="py-1">
@@ -311,7 +367,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                   !filters.modelVariant ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                 }`}
               >
-                <span className="text-sm">Все</span>
+                <span className="text-sm">{t('search.all')}</span>
                 <span className="text-sm text-gray-400 tabular-nums">{totalGenCount.toLocaleString('ru-RU')}</span>
               </button>
               {/* Generation variants */}
@@ -346,7 +402,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
       {/* Filter sections */}
       <div className={`border-t border-gray-100 ${compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}`}>
         {/* Year + Month */}
-        <FilterSection title="Год" defaultOpen={false} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
+        <FilterSection title={t('filter.year')} defaultOpen={false} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
           <div className="space-y-2">
             <div className="flex gap-2">
               <select
@@ -354,7 +410,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                 onChange={(e) => update('yearFrom', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="input-field"
               >
-                <option value="">Год от</option>
+                <option value="">{t('filter.yearFrom')}</option>
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               {!compact && (
@@ -363,7 +419,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                   onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
                   className="input-field"
                 >
-                  <option value="">Мес.</option>
+                  <option value="">{t('filter.month')}</option>
                   {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
               )}
@@ -374,7 +430,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                 onChange={(e) => update('yearTo', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="input-field"
               >
-                <option value="">Год до</option>
+                <option value="">{t('filter.yearTo')}</option>
                 {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               {!compact && (
@@ -383,7 +439,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                   onChange={(e) => update('monthTo', e.target.value ? parseInt(e.target.value) : undefined)}
                   className="input-field"
                 >
-                  <option value="">Мес.</option>
+                  <option value="">{t('filter.month')}</option>
                   {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
               )}
@@ -392,40 +448,40 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
         </FilterSection>
 
         {/* Price */}
-        <FilterSection title="Цена (₽)" defaultOpen={false} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
+        <FilterSection title={t('filter.price')} defaultOpen={false} count={(filters.priceFrom || filters.priceTo) ? 1 : 0}>
           <div className="flex gap-2">
             <input
               type="number"
               value={filters.priceFrom || ''}
               onChange={(e) => update('priceFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="От"
+              placeholder={t('filter.from')}
               className="input-field"
             />
             <input
               type="number"
               value={filters.priceTo || ''}
               onChange={(e) => update('priceTo', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="До"
+              placeholder={t('filter.to')}
               className="input-field"
             />
           </div>
         </FilterSection>
 
         {/* Mileage */}
-        <FilterSection title="Пробег" defaultOpen={false} count={(filters.mileageFrom || filters.mileageTo) ? 1 : 0}>
+        <FilterSection title={t('filter.mileage')} defaultOpen={false} count={(filters.mileageFrom || filters.mileageTo) ? 1 : 0}>
           <div className="flex gap-2">
             <input
               type="number"
               value={filters.mileageFrom || ''}
               onChange={(e) => update('mileageFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="От, км"
+              placeholder={t('filter.fromKm')}
               className="input-field"
             />
             <input
               type="number"
               value={filters.mileageTo || ''}
               onChange={(e) => update('mileageTo', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="До, км"
+              placeholder={t('filter.toKm')}
               className="input-field"
             />
           </div>
@@ -435,7 +491,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
         {(!compact || showMoreFilters) && (
           <>
             {/* Color */}
-            <FilterSection title="Цвет" defaultOpen={false} count={filters.color ? 1 : 0}>
+            <FilterSection title={t('filter.color')} defaultOpen={false} count={filters.color ? 1 : 0}>
               <div className="grid grid-cols-3 gap-1.5">
                 {COLOR_OPTIONS.map((c) => {
                   const colorDot: Record<string, string> = {
@@ -462,7 +518,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
             </FilterSection>
 
             {/* Fuel */}
-            <FilterSection title="Тип топлива" defaultOpen={false} count={filters.fuel ? 1 : 0}>
+            <FilterSection title={t('filter.fuelType')} defaultOpen={false} count={filters.fuel ? 1 : 0}>
               <div className="space-y-1">
                 {FUEL_TYPES.map((f) => (
                   <button
@@ -494,7 +550,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
             </FilterSection>
 
             {/* Transmission */}
-            <FilterSection title="КПП" defaultOpen={false} count={filters.transmission ? 1 : 0}>
+            <FilterSection title={t('filter.transmission')} defaultOpen={false} count={filters.transmission ? 1 : 0}>
               <div className="space-y-1">
                 {TRANSMISSION_TYPES.map((t) => (
                   <button
@@ -513,7 +569,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
             </FilterSection>
 
             {/* Drivetrain */}
-            <FilterSection title="Привод" defaultOpen={false} count={filters.drivetrain ? 1 : 0}>
+            <FilterSection title={t('filter.drivetrain')} defaultOpen={false} count={filters.drivetrain ? 1 : 0}>
               <div className="grid grid-cols-3 gap-1.5">
                 {DRIVETRAIN_TYPES.map((d) => (
                   <button
@@ -532,7 +588,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
             </FilterSection>
 
             {/* Options / Equipment */}
-            <FilterSection title="Опции" defaultOpen={false} count={filters.options?.length || 0}>
+            <FilterSection title={t('filter.options')} defaultOpen={false} count={filters.options?.length || 0}>
               <div className="grid grid-cols-2 gap-1.5">
                 {CAR_OPTIONS.map((opt) => {
                   const selected = filters.options?.includes(opt.code) || false;
@@ -580,7 +636,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
-          {showMoreFilters ? 'Скрыть фильтры' : 'Ещё фильтры'}
+          {showMoreFilters ? t('search.hideFilters') : t('search.moreFilters')}
           {!showMoreFilters && activeFilterCount > 0 && (
             <span className="bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{activeFilterCount}</span>
           )}

@@ -1,17 +1,22 @@
+'use client';
+
 import type { PriceBreakdownData } from '@/types';
+import { useApp } from '@/contexts/AppContext';
 
 interface PriceBarProps {
   breakdown: PriceBreakdownData;
 }
 
-const segments = [
-  { key: 'car', label: 'Стоимость авто', color: 'bg-amber-400', dot: 'bg-amber-400' },
-  { key: 'customs', label: 'Таможенная пошлина', color: 'bg-violet-500', dot: 'bg-violet-500' },
-  { key: 'service', label: 'Доставка и оформление', color: 'bg-emerald-500', dot: 'bg-emerald-500' },
-  { key: 'other', label: 'Утильсбор + брокер', color: 'bg-teal-500', dot: 'bg-teal-500' },
-] as const;
-
 export default function PriceBar({ breakdown }: PriceBarProps) {
+  const { t } = useApp();
+
+  const segments = [
+    { key: 'car', label: t('pricebar.carPrice'), color: 'bg-amber-400', dot: 'bg-amber-400' },
+    { key: 'customs', label: t('pricebar.customs'), color: 'bg-violet-500', dot: 'bg-violet-500' },
+    { key: 'service', label: t('pricebar.delivery'), color: 'bg-emerald-500', dot: 'bg-emerald-500' },
+    { key: 'other', label: t('pricebar.other'), color: 'bg-teal-500', dot: 'bg-teal-500' },
+  ];
+
   const values = [
     breakdown.carPrice,
     breakdown.customsDuty,
@@ -22,7 +27,6 @@ export default function PriceBar({ breakdown }: PriceBarProps) {
   if (total === 0) return null;
 
   const percentages = values.map((v) => Math.round((v / total) * 100));
-  // Fix rounding so they sum to 100
   const diff = 100 - percentages.reduce((a, b) => a + b, 0);
   if (diff !== 0) percentages[0] += diff;
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useApp } from '@/contexts/AppContext';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ isOpen, onClose, links, favCount }: MobileMenuProps) {
+  const { t } = useApp();
+
   if (!isOpen) return null;
 
   return (
@@ -17,8 +20,8 @@ export default function MobileMenu({ isOpen, onClose, links, favCount }: MobileM
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-xl">
         <div className="flex items-center justify-between p-4 border-b">
-          <span className="text-lg font-bold text-primary">Меню</span>
-          <button onClick={onClose} className="text-gray-500" aria-label="Закрыть меню">
+          <span className="text-lg font-bold text-primary">{t('nav.menu')}</span>
+          <button onClick={onClose} className="text-gray-500" aria-label={t('nav.closeMenu')}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -41,7 +44,7 @@ export default function MobileMenu({ isOpen, onClose, links, favCount }: MobileM
             onClick={onClose}
             className="px-4 py-3 rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary font-medium transition-colors flex items-center justify-between"
           >
-            <span>Избранное</span>
+            <span>{t('nav.favorites')}</span>
             {favCount > 0 && (
               <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{favCount}</span>
             )}

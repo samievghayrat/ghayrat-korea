@@ -1,8 +1,9 @@
 'use client';
 
 import type { CarFilters } from '@/types';
-import { FUEL_TYPES, BODY_TYPES, TRANSMISSION_TYPES, DRIVETRAIN_TYPES, COLOR_OPTIONS, CAR_OPTIONS } from '@/lib/constants';
 import { translateGenerationName } from '@/lib/translations';
+import { useApp } from '@/contexts/AppContext';
+import type { TranslationKey } from '@/lib/i18n';
 
 interface FilterChipsProps {
   filters: CarFilters;
@@ -10,50 +11,80 @@ interface FilterChipsProps {
 }
 
 export default function FilterChips({ filters, onChange }: FilterChipsProps) {
-  const chips: { label: string; key: keyof CarFilters; color?: string }[] = [];
+  const { t, currency } = useApp();
+
+  const fuelMap: Record<string, TranslationKey> = {
+    gasoline: 'fuel.gasoline', diesel: 'fuel.diesel', hybrid: 'fuel.hybrid',
+    electric: 'fuel.electric', lpg: 'fuel.lpg',
+  };
+  const bodyMap: Record<string, TranslationKey> = {
+    sedan: 'body.sedan', suv: 'body.suv', hatchback: 'body.hatchback',
+    wagon: 'body.wagon', coupe: 'body.coupe', convertible: 'body.convertible',
+    minivan: 'body.minivan', pickup: 'body.pickup',
+  };
+  const transMap: Record<string, TranslationKey> = {
+    auto: 'trans.auto', manual: 'trans.manual', dct: 'trans.dct', cvt: 'trans.cvt',
+  };
+  const driveMap: Record<string, TranslationKey> = {
+    fwd: 'drive.fwd', rwd: 'drive.rwd', awd: 'drive.awd',
+  };
+  const colorMap: Record<string, TranslationKey> = {
+    white: 'color.white', black: 'color.black', gray: 'color.gray', silver: 'color.silver',
+    blue: 'color.blue', red: 'color.red', brown: 'color.brown', green: 'color.green', other: 'color.other',
+  };
+  const optMap: Record<string, TranslationKey> = {
+    '010': 'opt.010', '014': 'opt.014', '005': 'opt.005', '058': 'opt.058',
+    '087': 'opt.087', '075': 'opt.075', '007': 'opt.007', '009': 'opt.009',
+    '082': 'opt.082', '023': 'opt.023', '068': 'opt.068', '079': 'opt.079',
+    '057': 'opt.057', '059': 'opt.059', '088': 'opt.088', '086': 'opt.086',
+    '095': 'opt.095', '091': 'opt.091',
+  };
+
+  const currencySymbol = { RUB: '₽', USD: '$', EUR: '€', KRW: '₩' }[currency];
+
+  const chips: { label: string; key: keyof CarFilters }[] = [];
 
   if (filters.brand) chips.push({ label: filters.brand, key: 'brand' });
-  if (filters.model) chips.push({ label: `Модель: ${filters.model}`, key: 'model' });
+  if (filters.model) chips.push({ label: `${t('chip.model')} ${filters.model}`, key: 'model' });
   if (filters.modelVariant) {
     const translated = translateGenerationName(filters.modelVariant);
-    chips.push({ label: `Поколение: ${translated}`, key: 'modelVariant' });
+    chips.push({ label: `${t('chip.generation')} ${translated}`, key: 'modelVariant' });
   }
   if (filters.fuel) {
-    const fuelLabel = FUEL_TYPES.find(f => f.value === filters.fuel)?.label || filters.fuel;
-    chips.push({ label: fuelLabel, key: 'fuel' });
+    const key = fuelMap[filters.fuel];
+    chips.push({ label: key ? t(key) : filters.fuel, key: 'fuel' });
   }
   if (filters.bodyType) {
-    const bodyLabel = BODY_TYPES.find(b => b.value === filters.bodyType)?.label || filters.bodyType;
-    chips.push({ label: bodyLabel, key: 'bodyType' });
+    const key = bodyMap[filters.bodyType];
+    chips.push({ label: key ? t(key) : filters.bodyType, key: 'bodyType' });
   }
   if (filters.transmission) {
-    const transLabel = TRANSMISSION_TYPES.find(t => t.value === filters.transmission)?.label || filters.transmission;
-    chips.push({ label: `КПП: ${transLabel}`, key: 'transmission' });
+    const key = transMap[filters.transmission];
+    chips.push({ label: `${t('chip.trans')} ${key ? t(key) : filters.transmission}`, key: 'transmission' });
   }
   if (filters.drivetrain) {
-    const driveLabel = DRIVETRAIN_TYPES.find(d => d.value === filters.drivetrain)?.label || filters.drivetrain;
-    chips.push({ label: `Привод: ${driveLabel}`, key: 'drivetrain' });
+    const key = driveMap[filters.drivetrain];
+    chips.push({ label: `${t('chip.drive')} ${key ? t(key) : filters.drivetrain}`, key: 'drivetrain' });
   }
   if (filters.color) {
-    const colorLabel = COLOR_OPTIONS.find(c => c.value === filters.color)?.label || filters.color;
-    chips.push({ label: `Цвет: ${colorLabel}`, key: 'color' });
+    const key = colorMap[filters.color];
+    chips.push({ label: `${t('chip.color')} ${key ? t(key) : filters.color}`, key: 'color' });
   }
   if (filters.yearFrom) {
     const monthStr = filters.monthFrom ? `.${String(filters.monthFrom).padStart(2, '0')}` : '';
-    chips.push({ label: `от ${filters.yearFrom}${monthStr} г.`, key: 'yearFrom' });
+    chips.push({ label: `${t('chip.from')} ${filters.yearFrom}${monthStr} ${t('chip.yr')}`, key: 'yearFrom' });
   }
   if (filters.yearTo) {
     const monthStr = filters.monthTo ? `.${String(filters.monthTo).padStart(2, '0')}` : '';
-    chips.push({ label: `до ${filters.yearTo}${monthStr} г.`, key: 'yearTo' });
+    chips.push({ label: `${t('chip.to')} ${filters.yearTo}${monthStr} ${t('chip.yr')}`, key: 'yearTo' });
   }
-  if (filters.priceFrom) chips.push({ label: `от ${(filters.priceFrom * 10000).toLocaleString('ru-RU')} ₽`, key: 'priceFrom' });
-  if (filters.priceTo) chips.push({ label: `до ${(filters.priceTo * 10000).toLocaleString('ru-RU')} ₽`, key: 'priceTo' });
-  if (filters.mileageTo) chips.push({ label: `до ${filters.mileageTo.toLocaleString('ru-RU')} км`, key: 'mileageTo' });
+  if (filters.priceFrom) chips.push({ label: `${t('chip.from')} ${(filters.priceFrom * 10000).toLocaleString()} ${currencySymbol}`, key: 'priceFrom' });
+  if (filters.priceTo) chips.push({ label: `${t('chip.to')} ${(filters.priceTo * 10000).toLocaleString()} ${currencySymbol}`, key: 'priceTo' });
+  if (filters.mileageTo) chips.push({ label: `${t('chip.to')} ${filters.mileageTo.toLocaleString()} ${t('chip.km')}`, key: 'mileageTo' });
 
-  // Option chips
   const optionChips = (filters.options || []).map(code => {
-    const opt = CAR_OPTIONS.find(o => o.code === code);
-    return { code, label: opt?.label || code };
+    const key = optMap[code];
+    return { code, label: key ? t(key) : code };
   });
 
   if (chips.length === 0 && optionChips.length === 0) return null;

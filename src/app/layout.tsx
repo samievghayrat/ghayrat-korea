@@ -5,16 +5,17 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import FloatingContact from '@/components/shared/FloatingContact';
+import { AppProvider } from '@/contexts/AppContext';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
   title: {
-    default: 'GHAYRAT KOREA — Автомобили из Кореи',
+    default: 'GHAYRAT KOREA — Cars from Korea',
     template: '%s | GHAYRAT KOREA',
   },
-  description: 'Автомобили из Южной Кореи с доставкой в Россию. Каталог авто с аукционов Кореи, расчет стоимости под ключ.',
-  keywords: ['автомобили из кореи', 'авто из кореи', 'купить машину из кореи', 'encar', 'корейские авто'],
+  description: 'Cars from South Korea with delivery. Catalog of cars from Korean auctions, turnkey cost calculation.',
+  keywords: ['cars from korea', 'buy car from korea', 'encar', 'korean cars'],
 };
 
 export default function RootLayout({
@@ -25,11 +26,13 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${inter.className} antialiased`}>
-        <Header />
-        <main className="min-h-screen pb-16 lg:pb-0">{children}</main>
-        <Footer />
-        <BottomNav />
-        <FloatingContact />
+        <AppProvider>
+          <Header />
+          <main className="min-h-screen pb-16 lg:pb-0">{children}</main>
+          <Footer />
+          <BottomNav />
+          <FloatingContact />
+        </AppProvider>
       </body>
     </html>
   );

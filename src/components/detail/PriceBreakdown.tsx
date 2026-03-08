@@ -1,6 +1,8 @@
+'use client';
+
 import type { PriceBreakdownData } from '@/types';
-import { formatPrice } from '@/lib/currency';
 import { EXCHANGE_RATES } from '@/lib/constants';
+import { useApp } from '@/contexts/AppContext';
 
 interface PriceBreakdownProps {
   breakdown: PriceBreakdownData;
@@ -9,52 +11,53 @@ interface PriceBreakdownProps {
 }
 
 export default function PriceBreakdown({ breakdown, priceKrw, destination = 'russia' }: PriceBreakdownProps) {
+  const { t, formatPrice } = useApp();
   const isRussia = destination === 'russia';
 
   const rows = isRussia
     ? [
         {
-          label: 'Стоимость авто в Корее',
+          label: t('price.carPriceKorea'),
           value: breakdown.carPrice,
-          sublabel: `${priceKrw.toLocaleString('ru-RU')} KRW`,
+          sublabel: `${priceKrw.toLocaleString()} KRW`,
         },
         {
-          label: 'Таможенная пошлина',
+          label: t('price.customsDuty'),
           value: breakdown.customsDuty,
           sublabel: breakdown.customsDutyDetails,
         },
         {
-          label: 'Утилизационный сбор',
+          label: t('price.utilizationFee'),
           value: breakdown.utilizationFee,
           sublabel: breakdown.utilizationWarning,
           warning: breakdown.utilizationFee > 10000,
         },
         {
-          label: 'Доставка и оформление',
+          label: t('price.delivery'),
           value: breakdown.serviceFee,
-          sublabel: `$${breakdown.serviceFeeUsd.toLocaleString('en-US')} — доставка, подбор, проверка`,
+          sublabel: `$${breakdown.serviceFeeUsd.toLocaleString('en-US')} — ${t('price.deliveryDesc')}`,
         },
         {
-          label: 'Брокер во Владивостоке',
+          label: t('price.broker'),
           value: breakdown.brokerFee,
-          sublabel: 'Таможенное оформление',
+          sublabel: t('price.brokerDesc'),
         },
       ]
     : [
         {
-          label: 'Стоимость авто в Корее',
+          label: t('price.carPriceKorea'),
           value: breakdown.carPrice,
-          sublabel: `${priceKrw.toLocaleString('ru-RU')} KRW`,
+          sublabel: `${priceKrw.toLocaleString()} KRW`,
         },
         {
-          label: 'Доставка до Таджикистана',
+          label: t('price.deliveryTj'),
           value: breakdown.serviceFee,
-          sublabel: `$${breakdown.serviceFeeUsd.toLocaleString('en-US')} — доставка Корея → Таджикистан`,
+          sublabel: `$${breakdown.serviceFeeUsd.toLocaleString('en-US')} — ${t('price.deliveryTjDesc')}`,
         },
       ];
 
-  const totalLabel = isRussia ? 'Итого под ключ' : 'Итого с доставкой';
-  const totalSublabel = isRussia ? 'Во Владивостоке' : 'В Таджикистане';
+  const totalLabel = isRussia ? t('price.totalTurnkey') : t('price.totalDelivered');
+  const totalSublabel = isRussia ? t('price.inVladivostok') : t('price.inTajikistan');
 
   return (
     <div className="space-y-3 pt-4">
@@ -77,7 +80,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
                 </div>
               )}
             </div>
-            <span className="font-semibold text-sm text-gray-900 whitespace-nowrap ml-4">{formatPrice(row.value, 'RUB')}</span>
+            <span className="font-semibold text-sm text-gray-900 whitespace-nowrap ml-4">{formatPrice(row.value)}</span>
           </div>
         ))}
       </div>
@@ -90,8 +93,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
             <div className="text-[11px] text-gray-400">{totalSublabel}</div>
           </div>
           <div className="text-right">
-            <div className="text-xl font-bold text-primary">{formatPrice(breakdown.total, 'RUB')}</div>
-            <div className="text-xs text-gray-400">&#8776; {formatPrice(Math.round(breakdown.total / EXCHANGE_RATES.USD), 'USD')}</div>
+            <div className="text-xl font-bold text-primary">{formatPrice(breakdown.total)}</div>
           </div>
         </div>
       </div>
@@ -102,7 +104,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Расчёт по ставкам tks.ru. Точная стоимость зависит от курса валют на момент оформления.
+          {t('price.disclaimer')}
         </p>
       </div>
     </div>

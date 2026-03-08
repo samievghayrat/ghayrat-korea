@@ -3,26 +3,30 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { useApp } from '@/contexts/AppContext';
+import type { Lang, Currency } from '@/lib/i18n';
 
-const navLinks = [
-  { href: '/', label: 'Каталог' },
-  { href: '/how-to-buy', label: 'Как купить' },
-  { href: '/about', label: 'О компании' },
-  { href: '/contacts', label: 'Контакты' },
-];
-
-const LANGUAGES = [
+const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: 'ru', label: 'Русский', flag: '🇷🇺' },
   { code: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'tj', label: 'Тоҷикӣ', flag: '🇹🇯' },
   { code: 'uz', label: "O'zbek", flag: '🇺🇿' },
 ];
 
+const CURRENCIES: { code: Currency; label: string; symbol: string }[] = [
+  { code: 'RUB', label: 'RUB', symbol: '₽' },
+  { code: 'USD', label: 'USD', symbol: '$' },
+  { code: 'EUR', label: 'EUR', symbol: '€' },
+  { code: 'KRW', label: 'KRW', symbol: '₩' },
+];
+
 export default function Header() {
+  const { lang, setLang, currency, setCurrency, t } = useApp();
   const [favCount, setFavCount] = useState(0);
-  const [lang, setLang] = useState('ru');
   const [langOpen, setLangOpen] = useState(false);
+  const [currOpen, setCurrOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  const currRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -35,8 +39,6 @@ export default function Header() {
       }
     };
     updateCount();
-    const savedLang = localStorage.getItem('lang');
-    if (savedLang) setLang(savedLang);
     window.addEventListener('storage', updateCount);
     window.addEventListener('favoritesUpdated', updateCount);
     return () => {
@@ -50,34 +52,32 @@ export default function Header() {
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
         setLangOpen(false);
       }
+      if (currRef.current && !currRef.current.contains(e.target as Node)) {
+        setCurrOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLangChange = (code: string) => {
-    setLang(code);
-    localStorage.setItem('lang', code);
-    setLangOpen(false);
-  };
-
   const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
+  const currentCurr = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+
+  const navLinks = [
+    { href: '/', label: t('nav.catalog') },
+    { href: '/how-to-buy', label: t('nav.howToBuy') },
+    { href: '/about', label: t('nav.about') },
+    { href: '/contacts', label: t('nav.contacts') },
+  ];
 
   if (pathname.startsWith('/admin')) return null;
 
   return (
     <header className="bg-white sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-      {/* Main nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12 lg:h-14">
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm">GK</span>
-            </div>
-            <div className="leading-tight">
-              <div className="text-gray-900 font-bold text-base tracking-wide">GHAYRAT</div>
-              <div className="text-primary text-[10px] font-medium tracking-[0.2em] -mt-0.5">KOREA</div>
-            </div>
+          <Link href="/" className="flex items-center flex-shrink-0">
+            <span className="text-gray-900 font-bold text-lg tracking-wide">Ghayrat Korea</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -96,11 +96,41 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            {/* Currency switcher */}
+            <div className="relative" ref={currRef}>
+              <button
+                onClick={() => { setCurrOpen(!currOpen); setLangOpen(false); }}
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
+              >
+                <span className="text-xs font-bold">{currentCurr.symbol}</span>
+                <span className="hidden lg:inline text-xs font-medium">{currentCurr.label}</span>
+                <svg className={`w-3 h-3 transition-transform ${currOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {currOpen && (
+                <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 min-w-[120px]">
+                  {CURRENCIES.map((c) => (
+                    <button
+                      key={c.code}
+                      onClick={() => { setCurrency(c.code); setCurrOpen(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${
+                        currency === c.code ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="font-bold w-4 text-center">{c.symbol}</span>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Language switcher */}
             <div className="relative" ref={langRef}>
               <button
-                onClick={() => setLangOpen(!langOpen)}
+                onClick={() => { setLangOpen(!langOpen); setCurrOpen(false); }}
                 className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-base leading-none">{currentLang.flag}</span>
@@ -114,7 +144,7 @@ export default function Header() {
                   {LANGUAGES.map((l) => (
                     <button
                       key={l.code}
-                      onClick={() => handleLangChange(l.code)}
+                      onClick={() => { setLang(l.code); setLangOpen(false); }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${
                         lang === l.code ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'
                       }`}
@@ -143,14 +173,14 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Telegram CTA — desktop only */}
+            {/* Telegram CTA -- desktop only */}
             <a
               href="https://t.me/ghayrat_korea"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden lg:inline-flex btn-primary text-xs py-2 px-4"
             >
-              Написать менеджеру
+              {t('nav.writeManager')}
             </a>
           </div>
         </div>

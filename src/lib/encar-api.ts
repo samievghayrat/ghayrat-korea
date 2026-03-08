@@ -697,7 +697,8 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     // Use readside data as primary, search data as fallback for some fields
     const manufacturer = cat.manufacturerName || (searchItem?.Manufacturer as string) || '';
-    const modelName = cat.modelGroupName || cat.modelName || (searchItem?.Model as string) || '';
+    const modelGroupName = cat.modelGroupName || (searchItem?.Model as string) || '';
+    const modelFullName = cat.modelName || ''; // specific generation e.g. "더 뉴 투싼 (NX4)"
     const yearMonth = String(cat.yearMonth || searchItem?.Year || '');
     const mileage = spec.mileage || (searchItem?.Mileage as number) || 0;
     const fuelName = spec.fuelName || (searchItem?.FuelType as string) || '';
@@ -754,7 +755,11 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     ]);
 
     const brand = translateBrand(manufacturer);
-    const model = translateModel(modelName);
+    const model = translateModel(modelGroupName);
+    // Generation: use modelName if it differs from modelGroupName (e.g. "더 뉴 투싼 (NX4)")
+    const generation = modelFullName && modelFullName !== modelGroupName
+      ? translateModel(modelFullName)
+      : undefined;
     const trim = gradeName ? (cat.gradeEnglishName || translateModel(gradeName)) : undefined;
 
     return {
@@ -762,6 +767,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       source: 'encar',
       brand,
       model,
+      generation: generation || undefined,
       trim: trim || undefined,
       year: parseInt(yearMonth.substring(0, 4)) || 0,
       month: parseInt(yearMonth.substring(4, 6)) || undefined,

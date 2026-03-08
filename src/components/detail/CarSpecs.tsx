@@ -14,6 +14,9 @@ export default function CarSpecs({ car }: CarSpecsProps) {
     ? `${car.year}/${String(car.month).padStart(2, '0')} г.`
     : `${car.year} г.`;
 
+  // Full car name: Brand Model Generation Trim
+  const fullName = [car.brand, car.model, car.generation, car.trim].filter(Boolean).join(' ');
+
   const specs = [
     { label: t('spec.date'), value: yearMonth },
     { label: t('spec.mileage'), value: car.mileage ? formatMileage(car.mileage) : null },
@@ -29,7 +32,8 @@ export default function CarSpecs({ car }: CarSpecsProps) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-5">{t('spec.generalData')}</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-1">{fullName}</h2>
+      <p className="text-sm text-gray-400 mb-5">{t('spec.generalData')}</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3.5">
         {specs.map((spec) => (
           <div key={spec.label} className="flex items-baseline gap-1">

@@ -19,7 +19,6 @@ export default function CarSpecs({ car }: CarSpecsProps) {
     { label: t('spec.model'), value: car.model },
     { label: t('spec.date'), value: yearMonth },
     { label: t('spec.mileage'), value: car.mileage ? formatMileage(car.mileage) : null },
-    { label: t('spec.engine'), value: car.engine || null },
     { label: t('spec.displacement'), value: car.displacement ? `${car.displacement.toLocaleString()} cc` : null },
     { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
     { label: t('spec.fuel'), value: car.fuel || null },

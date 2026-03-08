@@ -55,9 +55,9 @@ export default function CarDetailPage() {
       });
   }, [id]);
 
-  // Memoize the breakdown to avoid recalculating on every render
+  // Only calculate breakdown from API data (accurate hp/displacement), not session data
   const breakdown = useMemo(() => {
-    if (!car) return null;
+    if (!car || !apiLoaded) return null;
     return calculateImportCost({
       priceKrw: car.price_krw,
       priceRub: car.price_rub,
@@ -68,11 +68,11 @@ export default function CarDetailPage() {
       hp: car.hp,
       destination,
     });
-  }, [car, destination]);
+  }, [car, destination, apiLoaded]);
 
   if (loading) return <LoadingSpinner className="py-32" />;
 
-  if (error || !car || !breakdown) {
+  if (error || !car) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('detail.notFound')}</h1>
@@ -93,9 +93,6 @@ export default function CarDetailPage() {
   const galleryImages = car.images && car.images.length > 0
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
-
-  // Show estimate indicator when viewing session data (before API loads complete details)
-  const isEstimate = !apiLoaded && (!car.hp || !car.displacement);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -182,20 +179,21 @@ export default function CarDetailPage() {
 
             {/* Total price */}
             <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
-              <div className="text-3xl font-extrabold text-gray-900">
-                {isEstimate ? '~ ' : ''}{formatPrice(breakdown.total)}
-              </div>
-              <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
-              <div className="text-xs text-gray-400 mt-1">
-                {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
-              </div>
-              {isEstimate && (
-                <div className="text-[11px] text-amber-500 mt-1.5 flex items-center gap-1">
-                  <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {t('price.calculatingExact')}
+              {breakdown ? (
+                <>
+                  <div className="text-3xl font-extrabold text-gray-900">
+                    {formatPrice(breakdown.total)}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-9 w-48 bg-gray-200 rounded" />
+                  <div className="h-4 w-36 bg-gray-200 rounded" />
+                  <div className="h-3 w-44 bg-gray-200 rounded" />
                 </div>
               )}
             </div>
@@ -214,18 +212,22 @@ export default function CarDetailPage() {
             </a>
 
             {/* Toggle breakdown */}
-            <button
-              onClick={() => setShowBreakdown(!showBreakdown)}
-              className="w-full mt-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
-              {showBreakdown ? t('price.hideBreakdown') : t('price.showBreakdown')}
-              <svg className={`w-4 h-4 transition-transform ${showBreakdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            {breakdown && (
+              <>
+                <button
+                  onClick={() => setShowBreakdown(!showBreakdown)}
+                  className="w-full mt-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  {showBreakdown ? t('price.hideBreakdown') : t('price.showBreakdown')}
+                  <svg className={`w-4 h-4 transition-transform ${showBreakdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-            {showBreakdown && (
-              <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} destination={destination} />
+                {showBreakdown && (
+                  <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} destination={destination} />
+                )}
+              </>
             )}
 
             {/* How to buy link */}

@@ -15,16 +15,14 @@ export default function CarSpecs({ car }: CarSpecsProps) {
     : `${car.year} г.`;
 
   const specs = [
-    { label: t('spec.brand'), value: car.brand },
-    { label: t('spec.model'), value: car.model },
     { label: t('spec.date'), value: yearMonth },
     { label: t('spec.mileage'), value: car.mileage ? formatMileage(car.mileage) : null },
     { label: t('spec.displacement'), value: car.displacement ? `${car.displacement.toLocaleString()} cc` : null },
     { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
     { label: t('spec.fuel'), value: car.fuel || null },
     { label: t('spec.trans'), value: car.transmission || null },
-    { label: t('spec.color'), value: car.color || null },
     { label: t('spec.body'), value: car.bodyType || null },
+    { label: t('spec.color'), value: car.color || null },
     { label: t('spec.seats'), value: car.seatCount ? String(car.seatCount) : null },
     { label: 'VIN', value: car.vin || null },
   ].filter(s => s.value);

@@ -176,7 +176,7 @@ export default function Header() {
               href="https://t.me/ghayrat_korea"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:inline-flex btn-primary text-xs py-2 px-4"
+              className="hidden lg:inline-flex btn-primary text-sm py-2.5 px-6"
             >
               {t('nav.writeManager')}
             </a>

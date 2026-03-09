@@ -89,7 +89,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: TranslationKey) => getTranslation(key, lang);
 
   const convertPrice = (rubAmount: number) => rubToTarget(rubAmount, currency, rates);
-  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubToTarget(rubAmount, currency, rates), currency);
+  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubAmount, 'RUB');
   const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
 

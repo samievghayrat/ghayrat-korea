@@ -115,8 +115,8 @@ export default function CarDetailPage() {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-        {/* Left - images + detail sections */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* Gallery */}
+        <div className="lg:col-span-3 order-1">
           <div>
             <ImageGallery
               images={galleryImages}
@@ -132,14 +132,10 @@ export default function CarDetailPage() {
               </div>
             )}
           </div>
-          <CarSpecs car={car} />
-          <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
-          <Equipment items={car.equipment || []} />
-          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
         </div>
 
-        {/* Right - info & price (sticky on scroll) */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Price panel - right on desktop, right after gallery on mobile */}
+        <div className="lg:col-span-2 order-2 lg:order-3 space-y-4">
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             {/* Title + Favorite */}
             <div className="flex items-start justify-between gap-3">
@@ -258,6 +254,14 @@ export default function CarDetailPage() {
               </a>
             </div>
           </div>
+        </div>
+
+        {/* Detail sections - below gallery on desktop (left col), below price on mobile */}
+        <div className="lg:col-span-3 order-3 lg:order-2 space-y-6">
+          <CarSpecs car={car} />
+          <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
+          <Equipment items={car.equipment || []} />
+          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
         </div>
 
       </div>

@@ -244,9 +244,13 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const usdToRub = EXCHANGE_RATES.USD;
   const destination = input.destination || 'russia';
 
+  const fuelLower = input.fuel.toLowerCase();
   const isElectric =
-    input.fuel.toLowerCase().includes('электро') ||
-    input.fuel.toLowerCase().includes('electric');
+    fuelLower.includes('электро') ||
+    fuelLower.includes('electric');
+  const isHybrid =
+    fuelLower.includes('гибрид') ||
+    fuelLower.includes('hybrid');
 
   // 1. Car price in RUB
   const carPrice = input.priceRub;
@@ -290,7 +294,10 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const customsFee = calculateCustomsFee(carPrice);
 
   // 4. Utilization fee (Постановление No 1713)
-  const hp = input.hp || 0;
+  // For hybrids, Russian customs uses combined system power (engine + electric motor).
+  // Typical Korean hybrid electric motors add ~40-50hp to the engine output.
+  const engineHp = input.hp || 0;
+  const hp = isHybrid ? Math.round(engineHp * 1.3) : engineHp;
   const { fee: utilizationFee, details: utilizationWarning } =
     calculateUtilizationFee(input.displacement, hp, ageYears, isElectric);
 

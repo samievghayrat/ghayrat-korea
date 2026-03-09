@@ -71,6 +71,7 @@ export interface CarFilters {
   model?: string;
   modelVariant?: string;
   badge?: string;
+  badgeDetail?: string;
   yearFrom?: number;
   yearTo?: number;
   monthFrom?: number;

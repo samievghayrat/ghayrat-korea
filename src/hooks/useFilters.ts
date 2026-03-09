@@ -14,6 +14,7 @@ export function useFilters() {
     model: searchParams.get('model') || undefined,
     modelVariant: searchParams.get('modelVariant') || undefined,
     badge: searchParams.get('badge') || undefined,
+    badgeDetail: searchParams.get('badgeDetail') || undefined,
     yearFrom: searchParams.get('yearFrom') ? parseInt(searchParams.get('yearFrom')!) : undefined,
     yearTo: searchParams.get('yearTo') ? parseInt(searchParams.get('yearTo')!) : undefined,
     monthFrom: searchParams.get('monthFrom') ? parseInt(searchParams.get('monthFrom')!) : undefined,

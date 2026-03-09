@@ -348,8 +348,14 @@ function buildSearchQuery(filters: CarFilters): string {
     parts.push(`ModelGroup.${koreanModel || filters.model}`);
   }
 
-  if (filters.badge) {
+  // Badge values with '.' break Encar's query parser (e.g. "2.0 TDI")
+  // Only include badge in query if it has no periods; otherwise filter post-fetch
+  if (filters.badge && !filters.badge.includes('.')) {
     parts.push(`Badge.${filters.badge}`);
+  }
+
+  if (filters.badgeDetail) {
+    parts.push(`BadgeDetail.${filters.badgeDetail}`);
   }
 
   if (filters.fuel) {
@@ -631,6 +637,8 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
   const page = filters.page || 1;
   const limit = filters.limit || 20;
   const hasOptionFilter = filters.options && filters.options.length > 0;
+  // Badge with '.' can't be sent to Encar query — needs post-fetch filtering
+  const hasBadgePostFilter = filters.badge && filters.badge.includes('.');
   const cacheKey = JSON.stringify(filters);
 
   // Check cache
@@ -673,9 +681,16 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
       const matchingIds = await filterByOptions(carIds, filters.options!);
 
       // Filter search results to only matching cars
-      const matchedResults = searchResults.filter((item) =>
+      let matchedResults = searchResults.filter((item) =>
         matchingIds.has(String(item.Id || ''))
       );
+
+      // Also apply badge post-filter if needed
+      if (hasBadgePostFilter) {
+        matchedResults = matchedResults.filter(
+          (item) => (item.Badge as string) === filters.badge
+        );
+      }
 
       // Estimate total matching cars based on hit rate
       const hitRate = carIds.length > 0 ? matchingIds.size / carIds.length : 0;
@@ -696,7 +711,54 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
       return result;
     }
 
-    // Normal mode (no option filtering)
+    // Badge post-filter mode: over-fetch and filter by Badge field
+    if (hasBadgePostFilter) {
+      const batchSize = OPTION_FILTER_BATCH;
+      const offset = (page - 1) * batchSize;
+      const sr = `|${sortField}|${offset}|${batchSize}`;
+
+      const queryString = new URLSearchParams({
+        count: 'true',
+        q: searchQuery,
+        sr,
+      }).toString();
+
+      const response = await fetch(`${ENCAR_API_BASE}?${queryString}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        cache: 'no-store',
+      });
+
+      if (!response.ok) throw new Error(`Encar API error: ${response.status}`);
+
+      const data = await response.json();
+      const searchResults: Record<string, unknown>[] = data.SearchResults || [];
+      const encarTotal = data.Count || 0;
+
+      // Filter by badge post-fetch
+      const matchedResults = searchResults.filter(
+        (item) => (item.Badge as string) === filters.badge
+      );
+
+      const hitRate = searchResults.length > 0 ? matchedResults.length / searchResults.length : 0;
+      const estimatedTotal = Math.round(encarTotal * hitRate);
+
+      const pageResults = matchedResults.slice(0, limit);
+      const cars = await transformSearchResults(pageResults);
+
+      const result: CatalogResponse = {
+        cars,
+        total: estimatedTotal,
+        page,
+        totalPages: Math.ceil(estimatedTotal / limit),
+      };
+
+      catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return result;
+    }
+
+    // Normal mode (no option filtering, no badge post-filter)
     const offset = (page - 1) * limit;
     const sr = `|${sortField}|${offset}|${limit}`;
 

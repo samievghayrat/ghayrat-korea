@@ -193,7 +193,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
 
   const [modelList, setModelList] = useState<{ name: string; nameKo?: string; count: number }[]>([]);
   const [modelLoading, setModelLoading] = useState(false);
-  const [badgeList, setBadgeList] = useState<{ name: string; count: number }[]>([]);
+  const [badgeList, setBadgeList] = useState<{ name: string; count: number; badgeDetails?: { name: string; count: number }[] }[]>([]);
   const [badgeLoading, setBadgeLoading] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
 
@@ -258,32 +258,32 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
     : undefined;
 
   const handleBrandSelect = (brand: string) => {
-    onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
+    onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setBrandOpen(false);
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const handleModelSelect = (model: string) => {
-    onChange({ ...filters, model, modelVariant: undefined, badge: undefined, page: 1 });
+    onChange({ ...filters, model, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const handleGenSelect = (variant?: string) => {
-    onChange({ ...filters, modelVariant: variant, badge: undefined, page: 1 });
+    onChange({ ...filters, modelVariant: variant, badge: undefined, badgeDetail: undefined, page: 1 });
     setGenOpen(false);
   };
 
   const clearBrand = () => {
-    onChange({ ...filters, brand: undefined, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
+    onChange({ ...filters, brand: undefined, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setBrandOpen(false);
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const clearModel = () => {
-    onChange({ ...filters, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
+    onChange({ ...filters, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setModelOpen(false);
     setGenOpen(false);
   };
@@ -460,7 +460,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
               {(showAllBadges ? badgeList : badgeList.slice(0, 5)).map((b) => (
                 <button
                   key={b.name}
-                  onClick={() => onChange({ ...filters, badge: filters.badge === b.name ? undefined : b.name, page: 1 })}
+                  onClick={() => onChange({ ...filters, badge: filters.badge === b.name ? undefined : b.name, badgeDetail: undefined, page: 1 })}
                   className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
                     filters.badge === b.name
                       ? 'bg-primary/10 text-primary font-medium'
@@ -483,6 +483,34 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
           )}
         </div>
       )}
+
+      {/* Badge Detail / Trim tier selector — shown when badge is selected and has details */}
+      {filters.badge && (() => {
+        const selectedBadge = badgeList.find(b => b.name === filters.badge);
+        const details = selectedBadge?.badgeDetails || [];
+        if (details.length === 0) return null;
+        return (
+          <div className="px-4 py-3 border-t border-gray-100">
+            <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.trim')}</label>
+            <div className="space-y-1">
+              {details.map((d) => (
+                <button
+                  key={d.name}
+                  onClick={() => onChange({ ...filters, badgeDetail: filters.badgeDetail === d.name ? undefined : d.name, page: 1 })}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
+                    filters.badgeDetail === d.name
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="truncate">{translateModel(d.name)}</span>
+                  <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Filter sections */}
       <div className={`border-t border-gray-100 ${compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}`}>

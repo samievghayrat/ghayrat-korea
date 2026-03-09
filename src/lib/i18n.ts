@@ -26,6 +26,7 @@ const t = {
 
   // Filter sections
   'filter.type': { ru: 'Тип', en: 'Type', tj: 'Навъ', uz: 'Turi' },
+  'filter.trim': { ru: 'Комплектация', en: 'Trim', tj: 'Комплектатсия', uz: 'Komplektatsiya' },
   'filter.showMore': { ru: 'Показать ещё', en: 'Show more', tj: 'Бештар нишон диҳед', uz: 'Yana ko\'rsatish' },
   'filter.year': { ru: 'Год', en: 'Year', tj: 'Сол', uz: 'Yil' },
   'filter.price': { ru: 'Цена', en: 'Price', tj: 'Нарх', uz: 'Narx' },

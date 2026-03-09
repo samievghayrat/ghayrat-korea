@@ -57,12 +57,30 @@ export async function GET(request: NextRequest) {
       const scale = results.length > 0 && total > results.length ? total / results.length : 1;
 
       const badgeCounts = new Map<string, number>();
+      const badgeDetailCounts = new Map<string, Map<string, number>>();
       for (const item of results) {
         const badge = (item.Badge as string) || '';
-        if (badge) badgeCounts.set(badge, (badgeCounts.get(badge) || 0) + 1);
+        if (badge) {
+          badgeCounts.set(badge, (badgeCounts.get(badge) || 0) + 1);
+          // Collect BadgeDetail (trim tier) per badge
+          const detail = (item.BadgeDetail as string) || '';
+          if (detail) {
+            if (!badgeDetailCounts.has(badge)) badgeDetailCounts.set(badge, new Map());
+            const detailMap = badgeDetailCounts.get(badge)!;
+            detailMap.set(detail, (detailMap.get(detail) || 0) + 1);
+          }
+        }
       }
       const badges = Array.from(badgeCounts.entries())
-        .map(([name, count]) => ({ name, count: Math.round(count * scale) }))
+        .map(([name, count]) => {
+          const details = badgeDetailCounts.get(name);
+          const badgeDetails = details
+            ? Array.from(details.entries())
+                .map(([dName, dCount]) => ({ name: dName, count: Math.round(dCount * scale) }))
+                .sort((a, b) => b.count - a.count)
+            : [];
+          return { name, count: Math.round(count * scale), badgeDetails };
+        })
         .sort((a, b) => b.count - a.count);
 
       const result = { badges, total };

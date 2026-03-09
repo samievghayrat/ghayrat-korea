@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     model: params.get('model') || undefined,
     modelVariant: params.get('modelVariant') || undefined,
     badge: params.get('badge') || undefined,
+    badgeDetail: params.get('badgeDetail') || undefined,
     yearFrom: params.get('yearFrom') ? parseInt(params.get('yearFrom')!) : undefined,
     yearTo: params.get('yearTo') ? parseInt(params.get('yearTo')!) : undefined,
     monthFrom: params.get('monthFrom') ? parseInt(params.get('monthFrom')!) : undefined,

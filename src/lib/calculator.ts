@@ -290,7 +290,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     ageYears,
     isElectric,
   );
-  const customsDuty = Math.round(dutyEur * eurToRub);
+  const customsDuty = Math.round(dutyEur * eurToRub) + 20000;
 
   // 3. Customs processing fee (таможенный сбор за оформление)
   const customsFee = calculateCustomsFee(carPrice);

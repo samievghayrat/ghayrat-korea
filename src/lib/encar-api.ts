@@ -571,7 +571,7 @@ async function transformSearchResults(
       const carId = String(item.Id || '');
       const priceKrw = ((item.Price as number) || 0) * 10000;
       const [priceRub, priceUsd] = await Promise.all([
-        convertKrwToRub(priceKrw),
+        convertKrwToRub(priceKrw, 1.03),
         convertKrwToUsd(priceKrw),
       ]);
 
@@ -929,7 +929,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     const priceKrw = price * 10000;
     const [priceRub, priceUsd] = await Promise.all([
-      convertKrwToRub(priceKrw),
+      convertKrwToRub(priceKrw, 1.03),
       convertKrwToUsd(priceKrw),
     ]);
 

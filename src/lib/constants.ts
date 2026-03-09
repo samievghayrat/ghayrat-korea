@@ -134,7 +134,7 @@ export const DEFAULT_SETTINGS = {
   contactTelegram: 'ghayrat_korea',
   contactWhatsApp: '+821099221601',
   aboutText: '',
-  exchangeRateMarkup: 1.02,
+  exchangeRateMarkup: 1.03,
 };
 
 // Exchange rates (would be fetched from API in production)

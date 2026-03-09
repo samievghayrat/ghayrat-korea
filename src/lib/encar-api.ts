@@ -1,5 +1,5 @@
 import { translateBrand, translateModel, translateFuel, translateColor, reverseTranslateBrand, reverseTranslateModel } from './translations';
-import { convertKrwToRub, convertKrwToUsd } from './currency';
+import { convertKrwToRub, convertKrwToUsd, getEurToRub } from './currency';
 import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
@@ -478,9 +478,27 @@ async function fetchDisplacementFromReadside(carId: string): Promise<number> {
   }
 }
 
+// Cached live EUR rate for use in transformSearchResults
+let liveEurRate: number | undefined;
+let eurRateFetchedAt = 0;
+
+async function getLiveEurRate(): Promise<number | undefined> {
+  if (liveEurRate && Date.now() - eurRateFetchedAt < 60 * 60 * 1000) return liveEurRate;
+  try {
+    liveEurRate = await getEurToRub();
+    eurRateFetchedAt = Date.now();
+    return liveEurRate;
+  } catch {
+    return undefined;
+  }
+}
+
 async function transformSearchResults(
   searchResults: Record<string, unknown>[]
 ): Promise<CarListing[]> {
+  // Fetch live EUR rate for customs calculations
+  const eurRate = await getLiveEurRate();
+
   // Step 1: For cars with displacement=0, try local ENGINE_FALLBACK first (instant),
   // then readside API only for the remaining misses (limited to avoid timeout)
   const needsReadside: { index: number; id: string }[] = [];
@@ -598,12 +616,12 @@ async function transformSearchResults(
       const displacement = (item.Displacement as number) || 0 || engineData.cc || 0;
       const fuel = translateFuel((item.FuelType as string) || '');
 
-      // Pre-calculate turnkey prices on server with accurate HP
+      // Pre-calculate turnkey prices on server with accurate HP and live rates
       const russiaBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia',
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'tajikistan',
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'tajikistan', eurRate,
       });
 
       return {
@@ -1050,14 +1068,15 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     const carYear = parseInt(yearMonth.substring(0, 4)) || 0;
     const carMonth = parseInt(yearMonth.substring(4, 6)) || undefined;
 
-    // Pre-calculate turnkey prices on server with accurate data
+    // Pre-calculate turnkey prices on server with accurate data and live rates
+    const detailEurRate = await getLiveEurRate();
     const russiaBreakdown = calculateImportCost({
       priceKrw, priceRub, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia',
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia', eurRate: detailEurRate,
     });
     const tjBreakdown = calculateImportCost({
       priceKrw, priceRub, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'tajikistan',
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'tajikistan', eurRate: detailEurRate,
     });
 
     return {

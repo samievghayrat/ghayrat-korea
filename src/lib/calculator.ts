@@ -10,6 +10,8 @@ interface CalcInput {
   fuel: string;
   hp?: number;
   destination?: 'russia' | 'tajikistan';
+  eurRate?: number; // live EUR/RUB rate, falls back to EXCHANGE_RATES.EUR
+  usdRate?: number; // live USD/RUB rate, falls back to EXCHANGE_RATES.USD
 }
 
 // --- tks.ru customs duty rate tables ---
@@ -240,8 +242,8 @@ function calculateUtilizationFee(
 }
 
 export function calculateImportCost(input: CalcInput): PriceBreakdownData {
-  const eurToRub = EXCHANGE_RATES.EUR;
-  const usdToRub = EXCHANGE_RATES.USD;
+  const eurToRub = input.eurRate || EXCHANGE_RATES.EUR;
+  const usdToRub = input.usdRate || EXCHANGE_RATES.USD;
   const destination = input.destination || 'russia';
 
   const fuelLower = input.fuel.toLowerCase();
@@ -288,7 +290,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     ageYears,
     isElectric,
   );
-  const customsDuty = Math.round(dutyEur * eurToRub) + 20000;
+  const customsDuty = Math.round(dutyEur * eurToRub);
 
   // 3. Customs processing fee (таможенный сбор за оформление)
   const customsFee = calculateCustomsFee(carPrice);

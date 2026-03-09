@@ -133,7 +133,7 @@ export default function CarDetailPage() {
         </div>
 
         {/* Right - info & price (sticky on scroll) */}
-        <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <div className="lg:col-span-2 space-y-4">
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             {/* Title + Favorite */}
             <div className="flex items-start justify-between gap-3">

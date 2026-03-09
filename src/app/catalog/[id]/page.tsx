@@ -135,7 +135,7 @@ export default function CarDetailPage() {
         </div>
 
         {/* Price panel - right on desktop, right after gallery on mobile */}
-        <div className="lg:col-span-2 order-2 lg:order-3 space-y-4">
+        <div className="lg:col-span-2 order-2 lg:row-start-1 lg:col-start-4 space-y-4">
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             {/* Title + Favorite */}
             <div className="flex items-start justify-between gap-3">

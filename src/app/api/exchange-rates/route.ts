@@ -11,8 +11,8 @@ async function fetchRates(): Promise<Record<string, number>> {
     if (res.ok) {
       const data = await res.json();
       return {
-        USD: 1 / (data.rates?.USD ? 1 / data.rates.USD : 87.5),
-        EUR: 1 / (data.rates?.EUR ? 1 / data.rates.EUR : 95.2),
+        USD: data.rates?.USD ? 1 / data.rates.USD : 87.5,
+        EUR: data.rates?.EUR ? 1 / data.rates.EUR : 95.2,
         KRW: data.rates?.KRW ? 1 / data.rates.KRW : 0.062,
       };
     }

@@ -254,13 +254,14 @@ export default function CarDetailPage() {
           </div>
         </div>
 
-        {/* Detail sections — left column, below images */}
-        <div className="lg:col-span-3 space-y-6">
-          <CarSpecs car={car} />
-          <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
-          <Equipment items={car.equipment || []} />
-          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
-        </div>
+      </div>
+
+      {/* Detail sections — full width, below the grid */}
+      <div className="space-y-6 mt-6">
+        <CarSpecs car={car} />
+        <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
+        <Equipment items={car.equipment || []} />
+        <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
       </div>
     </div>
   );

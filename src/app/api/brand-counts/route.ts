@@ -118,10 +118,11 @@ export async function GET() {
     return NextResponse.json(cache.data);
   }
 
-  // Batch in groups of 8 to avoid Vercel timeout
+  // Batch in groups of 4 with delays to avoid Encar rate limiting
   const counts: { name: string; nameKo: string; count: number }[] = [];
-  const batchSize = 8;
+  const batchSize = 4;
   for (let i = 0; i < ALL_BRANDS.length; i += batchSize) {
+    if (i > 0) await new Promise(r => setTimeout(r, 800)); // delay between batches
     const batch = ALL_BRANDS.slice(i, i + batchSize);
     const batchResults = await Promise.all(
       batch.map(async (brand) => {

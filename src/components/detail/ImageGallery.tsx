@@ -144,8 +144,8 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
     );
   };
 
-  // Show up to 8 thumbnails on desktop, scrollable
-  const maxThumbnails = 8;
+  // Show 4 big thumbnails, last one shows "+N фото" overlay
+  const maxThumbnails = 4;
 
   return (
     <>
@@ -208,15 +208,15 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
         )}
       </div>
 
-      {/* Thumbnail strip - desktop */}
+      {/* Thumbnail strip - desktop: 4 big thumbnails, last shows "+N фото" */}
       {images.length > 1 && (
         <div
           ref={thumbnailContainerRef}
-          className="hidden sm:flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-thin"
+          className="hidden sm:grid grid-cols-4 gap-2 mt-3"
         >
           {images.slice(0, maxThumbnails).map((img, i) => {
             const isLast = i === maxThumbnails - 1 && images.length > maxThumbnails;
-            const extraCount = images.length - maxThumbnails;
+            const extraCount = images.length - maxThumbnails + 1;
             return (
               <button
                 key={i}
@@ -229,16 +229,16 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                     setActiveIndex(i);
                   }
                 }}
-                className={`relative flex-shrink-0 w-[72px] h-[50px] rounded-lg overflow-hidden border-2 transition-all ${
+                className={`relative aspect-[16/10] rounded-xl overflow-hidden border-2 transition-all ${
                   i === activeIndex
                     ? 'border-primary ring-1 ring-primary/30'
                     : 'border-transparent hover:border-gray-300'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="72px" unoptimized />
+                <Image src={img} alt="" fill className="object-cover" sizes="25vw" unoptimized />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">+{extraCount}</span>
+                    <span className="text-white font-bold text-sm">+ {extraCount} фото</span>
                   </div>
                 )}
               </button>

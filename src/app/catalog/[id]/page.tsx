@@ -53,6 +53,7 @@ export default function CarDetailPage() {
         setApiLoaded(true);
         setLoading(false);
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Use server-calculated turnkey price (available immediately from session car)
@@ -131,8 +132,8 @@ export default function CarDetailPage() {
           )}
         </div>
 
-        {/* Right - info & price */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Right - info & price (sticky on scroll) */}
+        <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-4 lg:self-start">
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             {/* Title + Favorite */}
             <div className="flex items-start justify-between gap-3">
@@ -252,14 +253,14 @@ export default function CarDetailPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Full-width sections */}
-      <div className="mt-6 space-y-6">
-        <CarSpecs car={car} />
-        <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
-        <Equipment items={car.equipment || []} />
-        <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
+        {/* Detail sections — left column, below images */}
+        <div className="lg:col-span-3 space-y-6">
+          <CarSpecs car={car} />
+          <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
+          <Equipment items={car.equipment || []} />
+          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
+        </div>
       </div>
     </div>
   );

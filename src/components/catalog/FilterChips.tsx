@@ -1,7 +1,7 @@
 'use client';
 
 import type { CarFilters } from '@/types';
-import { translateGenerationName } from '@/lib/translations';
+import { translateGenerationName, translateModel } from '@/lib/translations';
 import { useApp } from '@/contexts/AppContext';
 import type { TranslationKey } from '@/lib/i18n';
 
@@ -45,10 +45,13 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
   const chips: { label: string; key: keyof CarFilters }[] = [];
 
   if (filters.brand) chips.push({ label: filters.brand, key: 'brand' });
-  if (filters.model) chips.push({ label: `${t('chip.model')} ${filters.model}`, key: 'model' });
+  if (filters.model) chips.push({ label: `${t('chip.model')} ${translateModel(filters.model)}`, key: 'model' });
   if (filters.modelVariant) {
     const translated = translateGenerationName(filters.modelVariant);
     chips.push({ label: `${t('chip.generation')} ${translated}`, key: 'modelVariant' });
+  }
+  if (filters.badge) {
+    chips.push({ label: translateModel(filters.badge), key: 'badge' });
   }
   if (filters.fuel) {
     const key = fuelMap[filters.fuel];
@@ -100,8 +103,9 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
           <button
             onClick={() => {
               const newFilters = { ...filters, [chip.key]: undefined, page: 1 };
-              if (chip.key === 'brand') { newFilters.model = undefined; newFilters.modelVariant = undefined; }
-              if (chip.key === 'model') newFilters.modelVariant = undefined;
+              if (chip.key === 'brand') { newFilters.model = undefined; newFilters.modelVariant = undefined; newFilters.badge = undefined; }
+              if (chip.key === 'model') { newFilters.modelVariant = undefined; newFilters.badge = undefined; }
+              if (chip.key === 'modelVariant') newFilters.badge = undefined;
               onChange(newFilters);
             }}
             className="hover:text-red-500 transition-colors ml-0.5"

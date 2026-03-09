@@ -25,6 +25,8 @@ const t = {
   'search.moreFilters': { ru: 'Ещё фильтры', en: 'More filters', tj: 'Филтрҳои бештар', uz: 'Ko\'proq filtrlar' },
 
   // Filter sections
+  'filter.type': { ru: 'Тип', en: 'Type', tj: 'Навъ', uz: 'Turi' },
+  'filter.showMore': { ru: 'Показать ещё', en: 'Show more', tj: 'Бештар нишон диҳед', uz: 'Yana ko\'rsatish' },
   'filter.year': { ru: 'Год', en: 'Year', tj: 'Сол', uz: 'Yil' },
   'filter.price': { ru: 'Цена', en: 'Price', tj: 'Нарх', uz: 'Narx' },
   'filter.mileage': { ru: 'Пробег', en: 'Mileage', tj: 'Масофа', uz: 'Yurgan masofasi' },

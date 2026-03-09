@@ -33,15 +33,6 @@ function rubToTarget(rubAmount: number, currency: Currency, rates: ExchangeRates
   }
 }
 
-function krwToTarget(krwAmount: number, currency: Currency, rates: ExchangeRates): number {
-  switch (currency) {
-    case 'KRW': return krwAmount;
-    case 'RUB': return Math.round(krwAmount * rates.KRW);
-    case 'USD': return Math.round(krwAmount * rates.KRW / rates.USD);
-    case 'EUR': return Math.round(krwAmount * rates.KRW / rates.EUR);
-  }
-}
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('ru');
   const [currency, setCurrencyState] = useState<Currency>('RUB');
@@ -89,8 +80,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: TranslationKey) => getTranslation(key, lang);
 
   const convertPrice = (rubAmount: number) => rubToTarget(rubAmount, currency, rates);
-  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubToTarget(rubAmount, currency, rates), currency);
-  const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
+  // Turnkey price always in rubles
+  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubAmount, 'RUB');
+  const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwAmount, 'KRW');
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
 
   return (

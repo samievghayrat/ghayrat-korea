@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BRAND_MODELS, YEAR_OPTIONS } from '@/lib/constants';
-import { translateGenerationName } from '@/lib/translations';
+import { YEAR_OPTIONS } from '@/lib/constants';
+import { translateGenerationName, translateModel } from '@/lib/translations';
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 
@@ -191,9 +191,25 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
     { code: '091', label: t('opt.091') },
   ];
 
-  const modelList = filters.brand
-    ? (BRAND_MODELS[filters.brand] || []).sort((a, b) => a.localeCompare(b))
-    : [];
+  const [modelList, setModelList] = useState<{ name: string; nameKo?: string; count: number }[]>([]);
+  const [modelLoading, setModelLoading] = useState(false);
+  const [badgeList, setBadgeList] = useState<{ name: string; count: number }[]>([]);
+  const [badgeLoading, setBadgeLoading] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+
+  // Fetch models dynamically from Encar API when brand changes
+  useEffect(() => {
+    if (!filters.brand) {
+      setModelList([]);
+      return;
+    }
+    setModelLoading(true);
+    fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}`)
+      .then(res => res.json())
+      .then(data => setModelList(data.models || []))
+      .catch(() => setModelList([]))
+      .finally(() => setModelLoading(false));
+  }, [filters.brand]);
 
   const fetchGenerations = useCallback(async (brand: string, model: string) => {
     setGenerationLoading(true);
@@ -219,6 +235,21 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
     }
   }, [filters.brand, filters.model, fetchGenerations]);
 
+  // Fetch badges/trims when a generation variant is selected
+  useEffect(() => {
+    if (filters.brand && filters.model && filters.modelVariant) {
+      setBadgeLoading(true);
+      setShowAllBadges(false);
+      fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(filters.model)}&variant=${encodeURIComponent(filters.modelVariant)}`)
+        .then(res => res.json())
+        .then(data => setBadgeList(data.badges || []))
+        .catch(() => setBadgeList([]))
+        .finally(() => setBadgeLoading(false));
+    } else {
+      setBadgeList([]);
+    }
+  }, [filters.brand, filters.model, filters.modelVariant]);
+
   const selectedBrandCount = brandCounts?.find(b => b.name === filters.brand)?.count;
   const totalGenCount = generationTotal || generationVariants.reduce((sum, v) => sum + v.count, 0);
 
@@ -227,32 +258,32 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
     : undefined;
 
   const handleBrandSelect = (brand: string) => {
-    onChange({ ...filters, brand, model: undefined, modelVariant: undefined, page: 1 });
+    onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
     setBrandOpen(false);
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const handleModelSelect = (model: string) => {
-    onChange({ ...filters, model, modelVariant: undefined, page: 1 });
+    onChange({ ...filters, model, modelVariant: undefined, badge: undefined, page: 1 });
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const handleGenSelect = (variant?: string) => {
-    onChange({ ...filters, modelVariant: variant, page: 1 });
+    onChange({ ...filters, modelVariant: variant, badge: undefined, page: 1 });
     setGenOpen(false);
   };
 
   const clearBrand = () => {
-    onChange({ ...filters, brand: undefined, model: undefined, modelVariant: undefined, page: 1 });
+    onChange({ ...filters, brand: undefined, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
     setBrandOpen(false);
     setModelOpen(false);
     setGenOpen(false);
   };
 
   const clearModel = () => {
-    onChange({ ...filters, model: undefined, modelVariant: undefined, page: 1 });
+    onChange({ ...filters, model: undefined, modelVariant: undefined, badge: undefined, page: 1 });
     setModelOpen(false);
     setGenOpen(false);
   };
@@ -311,29 +342,43 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
       {filters.brand && (
         <SelectBox
           label=""
-          value={filters.model}
+          value={modelList.find(m => m.name === filters.model || m.nameKo === filters.model)?.name || filters.model}
           count={totalGenCount || undefined}
           placeholder={t('search.allModels')}
           open={modelOpen}
           onToggle={() => { setModelOpen(!modelOpen); setBrandOpen(false); setGenOpen(false); }}
           onClear={filters.model ? clearModel : undefined}
         >
-          <div className="py-1">
-            {modelList.map((m) => (
-              <button
-                key={m}
-                onClick={() => handleModelSelect(m)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
-                  filters.model === m ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
-                }`}
-              >
-                <span className="text-sm">{m}</span>
-              </button>
-            ))}
-            {modelList.length === 0 && (
-              <p className="px-3 py-2 text-sm text-gray-400">{t('search.noModels')}</p>
-            )}
-          </div>
+          {modelLoading ? (
+            <div className="flex items-center gap-2 px-3 py-4 justify-center">
+              <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm text-gray-400">{t('search.loading')}</span>
+            </div>
+          ) : (
+            <div className="py-1">
+              {modelList.map((m) => {
+                const modelValue = m.nameKo || m.name;
+                return (
+                  <button
+                    key={m.name}
+                    onClick={() => handleModelSelect(modelValue)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                      filters.model === modelValue ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
+                    }`}
+                  >
+                    <span className="text-sm">{m.name}</span>
+                    <span className="text-sm text-gray-400 tabular-nums">{m.count.toLocaleString('ru-RU')}</span>
+                  </button>
+                );
+              })}
+              {modelList.length === 0 && (
+                <p className="px-3 py-2 text-sm text-gray-400">{t('search.noModels')}</p>
+              )}
+            </div>
+          )}
         </SelectBox>
       )}
 
@@ -397,6 +442,46 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
             </div>
           )}
         </SelectBox>
+      )}
+
+      {/* Type / Trim (Badge) selector — shown after generation is selected */}
+      {filters.modelVariant && badgeList.length > 0 && (
+        <div className="px-4 py-3 border-t border-gray-100">
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.type')}</label>
+          {badgeLoading ? (
+            <div className="flex items-center gap-2 py-2 justify-center">
+              <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {(showAllBadges ? badgeList : badgeList.slice(0, 5)).map((b) => (
+                <button
+                  key={b.name}
+                  onClick={() => onChange({ ...filters, badge: filters.badge === b.name ? undefined : b.name, page: 1 })}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
+                    filters.badge === b.name
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="truncate">{translateModel(b.name)}</span>
+                  <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
+                </button>
+              ))}
+              {badgeList.length > 5 && !showAllBadges && (
+                <button
+                  onClick={() => setShowAllBadges(true)}
+                  className="text-xs text-primary hover:underline px-2.5 py-1"
+                >
+                  {t('filter.showMore')} {badgeList.length - 5}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Filter sections */}

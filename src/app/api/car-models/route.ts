@@ -29,16 +29,47 @@ export async function GET(request: NextRequest) {
   const koreanBrand = reverseTranslateBrand(brand) || brand;
 
   const model = request.nextUrl.searchParams.get('model');
+  const variant = request.nextUrl.searchParams.get('variant'); // specific generation/variant name (Korean)
   // Use Korean name if available, otherwise use original (for models like ES, RX, X5, etc.)
   const koreanModel = model ? (reverseTranslateModel(model) || model) : undefined;
 
-  const cacheKey = koreanModel ? `${koreanBrand}:${koreanModel}` : `${koreanBrand}:_models`;
+  const cacheKey = variant
+    ? `${koreanBrand}:${koreanModel}:${variant}:badges`
+    : koreanModel ? `${koreanBrand}:${koreanModel}` : `${koreanBrand}:_models`;
   const cached = variantsCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return NextResponse.json(cached.data);
   }
 
   try {
+    // If variant is specified, return badge/trim data for that specific generation
+    if (variant && koreanModel) {
+      const q = `(And.Hidden.N._.Manufacturer.${koreanBrand}._.Model.${variant}.)`;
+      const params = new URLSearchParams({ count: 'true', q, sr: '|ModifiedDate|0|500' });
+      const res = await fetch(`${ENCAR_API_BASE}?${params.toString()}`, {
+        cache: 'no-store',
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      });
+      if (!res.ok) return NextResponse.json({ badges: [] });
+      const data = await res.json();
+      const results = data.SearchResults || [];
+      const total = data.Count || results.length;
+      const scale = results.length > 0 && total > results.length ? total / results.length : 1;
+
+      const badgeCounts = new Map<string, number>();
+      for (const item of results) {
+        const badge = (item.Badge as string) || '';
+        if (badge) badgeCounts.set(badge, (badgeCounts.get(badge) || 0) + 1);
+      }
+      const badges = Array.from(badgeCounts.entries())
+        .map(([name, count]) => ({ name, count: Math.round(count * scale) }))
+        .sort((a, b) => b.count - a.count);
+
+      const result = { badges, total };
+      variantsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return NextResponse.json(result);
+    }
+
     const searchQuery = koreanModel
       ? `(And.Hidden.N._.Manufacturer.${koreanBrand}._.ModelGroup.${koreanModel}.)`
       : `(And.Hidden.N._.Manufacturer.${koreanBrand}.)`;
@@ -102,19 +133,25 @@ export async function GET(request: NextRequest) {
 
     // No model specified — return model-group level counts sorted by popularity
     // Group Korean model names into base model groups, then translate to English
-    const groupCounts = new Map<string, number>();
+    const groupCounts = new Map<string, { count: number; nameKo: string }>();
     for (const item of searchResults) {
       const m = item.Model as string;
       if (!m) continue;
       const base = getBaseModelName(m);
       const translated = translateModel(base);
-      groupCounts.set(translated, (groupCounts.get(translated) || 0) + 1);
+      const existing = groupCounts.get(translated);
+      if (existing) {
+        existing.count++;
+      } else {
+        groupCounts.set(translated, { count: 1, nameKo: base });
+      }
     }
 
     const models = Array.from(groupCounts.entries())
-      .map(([name, count]) => ({
+      .map(([name, data]) => ({
         name,
-        count: Math.round(count * scale),
+        nameKo: data.nameKo,
+        count: Math.round(data.count * scale),
       }))
       .sort((a, b) => b.count - a.count);
 

@@ -2,6 +2,7 @@ import { translateBrand, translateModel, translateFuel, translateColor, reverseT
 import { convertKrwToRub, convertKrwToUsd } from './currency';
 import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
+import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
@@ -75,16 +76,102 @@ async function fetchDataFromVin(vin: string): Promise<VinData> {
   }
 }
 
-// Parse displacement from badge string like "가솔린 1.6 터보 2WD" → 1600
-function parseDisplacementFromBadge(badge: string): number {
-  if (!badge) return 0;
-  const match = badge.match(/(\d+\.\d+)/);
-  if (match) {
-    const liters = parseFloat(match[1]);
-    if (liters > 0 && liters < 10) return Math.round(liters * 1000);
+// Strip generation info from Korean model name to get base model
+// e.g. "K3 2세대" → "K3", "쏘렌토 4세대" → "쏘렌토", "모닝 (JA)" → "모닝"
+// e.g. "더 뉴 K5" → "K5", "올 뉴 투싼" → "투싼"
+// e.g. "그랜저 HG" → "그랜저", "투싼 NX4" → "투싼"
+function getBaseModelName(model: string): string {
+  let base = model;
+  // Strip generation prefixes
+  const prefixes = ['디 올 뉴 ', '더 뉴 ', '올 뉴 ', '더뉴 ', '올뉴 ', '뉴 '];
+  for (const p of prefixes) {
+    if (base.startsWith(p)) { base = base.slice(p.length); break; }
   }
-  return 0;
+  // Strip generation suffixes: "N세대", "(XX)", "(신형)", "(구형)"
+  base = base.replace(/\s*\d+세대.*$/, '');
+  base = base.replace(/\s*\([^)]*\)\s*$/, '');
+  base = base.replace(/\s*(신형|구형)$/, '');
+  // Strip " Hybrid", " 하이브리드" etc. since fuel type is separate
+  base = base.replace(/\s*(Hybrid|하이브리드|EV|전기|PHEV)$/i, '');
+  // Strip Encar generation/chassis codes: "그랜저 HG" → "그랜저", "투싼 NX4" → "투싼"
+  // Only strip if the base model starts with Korean chars (so we don't strip from "K5", "GV70" etc.)
+  base = base.replace(/^([가-힣]+(?:\s[가-힣]+)*)\s+[A-Za-z0-9]{2,}$/, '$1');
+  return base.trim();
 }
+
+// Generate model name variants to try for lookup (most specific → least specific)
+function getModelVariants(model: string): string[] {
+  const variants = [model];
+  const base = getBaseModelName(model);
+  if (base !== model) variants.push(base);
+  // Also try stripping the last word if it looks like a generation code
+  // e.g. "그랜저 HG 240" → "그랜저 HG" → "그랜저"
+  const words = model.split(/\s+/);
+  for (let i = words.length - 1; i >= 1; i--) {
+    const shorter = words.slice(0, i).join(' ');
+    if (!variants.includes(shorter)) variants.push(shorter);
+    const shorterBase = getBaseModelName(shorter);
+    if (shorterBase !== shorter && !variants.includes(shorterBase)) variants.push(shorterBase);
+  }
+  return variants;
+}
+
+// Try multiple displacement values to account for rounding (e.g. 2500 vs 2497)
+function getDisplacementVariants(displacement: number): number[] {
+  if (!displacement) return [0];
+  const variants = [displacement];
+  // Try ±10cc for rounding differences (e.g. Encar returns 2500, actual is 2497)
+  for (let delta = -10; delta <= 10; delta++) {
+    if (delta !== 0) variants.push(displacement + delta);
+  }
+  return variants;
+}
+
+// Look up HP and displacement from local data
+// Returns { hp, cc } — cc is only set if we inferred it (displacement was 0)
+function lookupEngine(brand: string, model: string, displacement: number, fuel: string): { hp?: number; cc?: number } {
+  const displacements = getDisplacementVariants(displacement);
+  const models = getModelVariants(model);
+
+  // 1. Try HP_DATA with exact displacement (when displacement is known)
+  if (displacement > 0) {
+    for (const m of models) {
+      for (const d of displacements) {
+        const key = `${brand}|${m}|${d}|${fuel}`;
+        if (HP_DATA[key]) return { hp: HP_DATA[key] };
+      }
+    }
+  }
+
+  // 2. Try ENGINE_FALLBACK: brand|model|fuel → { hp, cc }
+  // This handles displacement=0 AND fills in missing displacement
+  for (const m of models) {
+    const fbKey = `${brand}|${m}|${fuel}`;
+    if (ENGINE_FALLBACK[fbKey]) {
+      const fb = ENGINE_FALLBACK[fbKey];
+      return {
+        hp: fb.hp,
+        cc: displacement === 0 ? fb.cc : undefined, // only override cc if it was missing
+      };
+    }
+  }
+
+  // 3. For known displacement but no match, try HP_DATA scan (unambiguous only)
+  if (displacement === 0) {
+    for (const m of models) {
+      const matches = new Set<number>();
+      for (const [key, hp] of Object.entries(HP_DATA)) {
+        const [kb, km, , kf] = key.split('|');
+        if (kb === brand && km === m && kf === fuel) matches.add(hp);
+      }
+      if (matches.size === 1) return { hp: matches.values().next().value };
+    }
+  }
+
+  return {};
+}
+
+// Parse displacement from badge string like "가솔린 1.6 터보 2WD" → 1600
 
 // Fetch HP from pan-auto.ru API (they maintain HP lookup tables for Encar cars)
 async function fetchHpFromPanAuto(carId: string): Promise<number | undefined> {
@@ -240,8 +327,10 @@ async function resolveOptionCodes(codes: string[]): Promise<string[]> {
 function buildSearchQuery(filters: CarFilters): string {
   const parts: string[] = [];
 
-  // Required base: Hidden.N (active listings only)
+  // Required base: Hidden.N (active listings only), SellType.일반 (exclude lease/rent)
+  // CarType.Y = domestic, CarType.N = foreign — omit to show both
   parts.push('Hidden.N');
+  parts.push('SellType.일반');
 
   if (filters.brand) {
     const koreanBrand = reverseTranslateBrand(filters.brand);
@@ -257,6 +346,10 @@ function buildSearchQuery(filters: CarFilters): string {
     const koreanModel = reverseTranslateModel(filters.model);
     // Use Korean name if available, otherwise use the original (for models like ES, RX, X5, etc.)
     parts.push(`ModelGroup.${koreanModel || filters.model}`);
+  }
+
+  if (filters.badge) {
+    parts.push(`Badge.${filters.badge}`);
   }
 
   if (filters.fuel) {
@@ -360,11 +453,122 @@ const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 // How many Encar results to fetch per batch when option filtering is active
 const OPTION_FILTER_BATCH = 200;
 
+// In-memory caches (persist across requests in same serverless instance)
+const hpCache = new Map<string, number>();
+const displacementCache = new Map<string, number>();
+
+// Lightweight readside fetch to get displacement for a single car
+async function fetchDisplacementFromReadside(carId: string): Promise<number> {
+  try {
+    const res = await fetch(
+      `https://api.encar.com/v1/readside/vehicle/${carId}?include=SPEC`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(2000) }
+    );
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data?.spec?.displacement || 0;
+  } catch {
+    return 0;
+  }
+}
+
 async function transformSearchResults(
   searchResults: Record<string, unknown>[]
 ): Promise<CarListing[]> {
+  // Step 1: For cars with displacement=0, try local ENGINE_FALLBACK first (instant),
+  // then readside API only for the remaining misses (limited to avoid timeout)
+  const needsReadside: { index: number; id: string }[] = [];
+  for (let i = 0; i < searchResults.length; i++) {
+    const item = searchResults[i];
+    const displacement = (item.Displacement as number) || 0;
+    if (!displacement) {
+      const id = String(item.Id || '');
+      if (!id) continue;
+
+      // Check displacement cache first
+      const cached = displacementCache.get(id);
+      if (cached) {
+        (item as Record<string, unknown>).Displacement = cached;
+        continue;
+      }
+
+      // Try ENGINE_FALLBACK locally (instant)
+      const manufacturer = (item.Manufacturer as string) || '';
+      const fuelType = (item.FuelType as string) || '';
+      const modelName = (item.Model as string) || '';
+      const models = getModelVariants(modelName);
+      let found = false;
+      for (const m of models) {
+        const fbKey = `${manufacturer}|${m}|${fuelType}`;
+        if (ENGINE_FALLBACK[fbKey]) {
+          (item as Record<string, unknown>).Displacement = ENGINE_FALLBACK[fbKey].cc;
+          displacementCache.set(id, ENGINE_FALLBACK[fbKey].cc);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        needsReadside.push({ index: i, id });
+      }
+    }
+  }
+
+  // Fetch from readside API only for cars not covered by ENGINE_FALLBACK (max 8 to avoid timeout)
+  const readsideBatch = needsReadside.slice(0, 8);
+  if (readsideBatch.length > 0) {
+    const results = await Promise.all(
+      readsideBatch.map(({ id }) => fetchDisplacementFromReadside(id))
+    );
+    for (let i = 0; i < readsideBatch.length; i++) {
+      const cc = results[i];
+      if (cc) {
+        displacementCache.set(readsideBatch[i].id, cc);
+        (searchResults[readsideBatch[i].index] as Record<string, unknown>).Displacement = cc;
+      }
+    }
+  }
+
+  // Step 2: Resolve HP for each car using local lookup, then pan-auto.ru for misses
+  const needsPanAuto: { index: number; id: string }[] = [];
+  const engineResults: { hp?: number; cc?: number }[] = searchResults.map((item, i) => {
+    const searchHp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
+    if (searchHp) return { hp: searchHp };
+
+    const id = String(item.Id || '');
+    if (hpCache.has(id)) return { hp: hpCache.get(id) };
+
+    const displacement = (item.Displacement as number) || 0;
+    const manufacturer = (item.Manufacturer as string) || '';
+    const modelName = (item.Model as string) || '';
+    const fuelType = (item.FuelType as string) || '';
+    const engine = lookupEngine(manufacturer, modelName, displacement, fuelType);
+    if (engine.hp) {
+      hpCache.set(id, engine.hp);
+      return engine;
+    }
+
+    // Need to fetch from pan-auto.ru
+    if (id) needsPanAuto.push({ index: i, id });
+    return {};
+  });
+
+  // Fetch HP from pan-auto.ru only for cars not in local lookup (parallel)
+  if (needsPanAuto.length > 0) {
+    const panAutoResults = await Promise.all(
+      needsPanAuto.map(({ id }) => fetchHpFromPanAuto(id))
+    );
+    for (let i = 0; i < needsPanAuto.length; i++) {
+      const hp = panAutoResults[i];
+      if (hp) {
+        hpCache.set(needsPanAuto[i].id, hp);
+        engineResults[needsPanAuto[i].index] = { ...engineResults[needsPanAuto[i].index], hp };
+      }
+    }
+  }
+
   return Promise.all(
-    searchResults.map(async (item: Record<string, unknown>) => {
+    searchResults.map(async (item: Record<string, unknown>, idx: number) => {
+      const carId = String(item.Id || '');
       const priceKrw = ((item.Price as number) || 0) * 10000;
       const [priceRub, priceUsd] = await Promise.all([
         convertKrwToRub(priceKrw),
@@ -382,11 +586,13 @@ async function transformSearchResults(
         ? `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
         : '/images/no-image.svg';
 
-      const hp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
-      const displacement = (item.Displacement as number) || parseDisplacementFromBadge((item.Badge as string) || '');
+      const engineData = engineResults[idx] || {};
+      const hp = engineData.hp || 0;
+      // Use Encar displacement first, then fallback to ENGINE_FALLBACK cc from local lookup
+      const displacement = (item.Displacement as number) || 0 || engineData.cc || 0;
       const fuel = translateFuel((item.FuelType as string) || '');
 
-      // Pre-calculate turnkey prices on server
+      // Pre-calculate turnkey prices on server with accurate HP
       const russiaBreakdown = calculateImportCost({
         priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia',
       });
@@ -395,7 +601,7 @@ async function transformSearchResults(
       });
 
       return {
-        id: String(item.Id || ''),
+        id: carId,
         source: 'encar' as const,
         brand,
         model,
@@ -714,7 +920,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     const yearMonth = String(cat.yearMonth || searchItem?.Year || '');
     const mileage = spec.mileage || (searchItem?.Mileage as number) || 0;
     const fuelName = spec.fuelName || (searchItem?.FuelType as string) || '';
-    const displacement = spec.displacement || (searchItem?.Displacement as number) || parseDisplacementFromBadge((searchItem?.Badge as string) || '');
+    const displacement = spec.displacement || (searchItem?.Displacement as number) || 0;
     const colorName = spec.colorName || (searchItem?.Color as string) || '';
     const bodyName = spec.bodyName || (searchItem?.BodyType as string) || '';
     const transmissionName = spec.transmissionName || (searchItem?.Transmission as string) || '';
@@ -774,8 +980,10 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       : undefined;
     const trim = gradeName ? (cat.gradeEnglishName || translateModel(gradeName)) : undefined;
 
-    const finalDisplacement = displacement || vinData.displacement || 0;
-    const finalHp = vinData.hp || panAutoHp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined;
+    const engineLookup = lookupEngine(manufacturer, modelGroupName, displacement, fuelName);
+    const finalDisplacement = displacement || engineLookup.cc || vinData.displacement || 0;
+    // HP priority: pan-auto.ru → local lookup (using Korean names) → VIN decoder → Encar search fields
+    const finalHp = panAutoHp || engineLookup.hp || vinData.hp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined;
     const finalFuel = translateFuel(fuelName);
     const carYear = parseInt(yearMonth.substring(0, 4)) || 0;
     const carMonth = parseInt(yearMonth.substring(4, 6)) || undefined;

@@ -8,9 +8,10 @@ interface PriceBreakdownProps {
   priceKrw: number;
   priceUsd?: number;
   destination?: 'russia' | 'tajikistan';
+  totalOverride?: number;
 }
 
-export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destination = 'russia' }: PriceBreakdownProps) {
+export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destination = 'russia', totalOverride }: PriceBreakdownProps) {
   const { t, formatPrice } = useApp();
   const isRussia = destination === 'russia';
 
@@ -88,7 +89,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destinat
 
   const totalLabel = isRussia ? t('price.totalTurnkey') : t('price.totalDelivered');
   const totalSublabel = isRussia ? t('price.inVladivostok') : t('price.inTajikistan');
-  const totalValue = breakdown.total;
+  const totalValue = totalOverride || breakdown.total;
 
   return (
     <div className="space-y-3 pt-4">

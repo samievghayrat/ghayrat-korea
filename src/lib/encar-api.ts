@@ -7,6 +7,7 @@ import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
 const ENCAR_OPTIONS_API = 'https://api.encar.com/v1/readside/vehicles/car/options/standard';
+const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 const transmissionMap: Record<string, string> = {
   '오토': 'Автомат',
@@ -330,7 +331,7 @@ function buildSearchQuery(filters: CarFilters): string {
   // Required base: Hidden.N (active listings only), SellType.일반 (exclude lease/rent)
   // CarType.Y = domestic, CarType.N = foreign — omit to show both
   parts.push('Hidden.N');
-  parts.push('SellType.일반');
+  parts.push(`SellType.${NORMAL_SELL_TYPE}`);
 
   if (filters.brand) {
     const koreanBrand = reverseTranslateBrand(filters.brand);
@@ -609,8 +610,13 @@ async function transformSearchResults(
     }
   }
 
+  const normalSaleResults = searchResults.map((item, index) => ({ item, index })).filter(({ item }) => {
+    const sellType = item.SellType;
+    return !sellType || sellType === NORMAL_SELL_TYPE;
+  });
+
   return Promise.all(
-    searchResults.map(async (item: Record<string, unknown>, idx: number) => {
+    normalSaleResults.map(async ({ item, index: idx }) => {
       const carId = String(item.Id || '');
       const priceKrw = ((item.Price as number) || 0) * 10000;
       const [priceRub, priceUsd] = await Promise.all([
@@ -986,7 +992,7 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
 export async function getCarDetail(carId: string): Promise<CarListing | null> {
   try {
     // Fetch readside and search API in parallel for faster loading
-    const searchQuery = `(And.Hidden.N._.CarId.${carId}.)`;
+    const searchQuery = `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.CarId.${carId}.)`;
     const [readRes, searchRes] = await Promise.all([
       fetch(
         `https://api.encar.com/v1/readside/vehicle/${carId}`,
@@ -1168,4 +1174,3 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 export function getProxiedImageUrl(originalUrl: string): string {
   return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
 }
-

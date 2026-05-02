@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reverseTranslateBrand, reverseTranslateModel, translateModel } from '@/lib/translations';
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
+const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 // In-memory cache
 const variantsCache: Map<string, { data: unknown; timestamp: number }> = new Map();
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
   try {
     // If variant is specified, return badge/trim data for that specific generation
     if (variant && koreanModel) {
-      const q = `(And.Hidden.N._.Manufacturer.${koreanBrand}._.Model.${variant}.)`;
+      const q = `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.Manufacturer.${koreanBrand}._.Model.${variant}.)`;
       const params = new URLSearchParams({ count: 'true', q, sr: '|ModifiedDate|0|500' });
       const res = await fetch(`${ENCAR_API_BASE}?${params.toString()}`, {
         cache: 'no-store',
@@ -134,8 +135,8 @@ export async function GET(request: NextRequest) {
     }
 
     const searchQuery = koreanModel
-      ? `(And.Hidden.N._.Manufacturer.${koreanBrand}._.ModelGroup.${koreanModel}.)`
-      : `(And.Hidden.N._.Manufacturer.${koreanBrand}.)`;
+      ? `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.Manufacturer.${koreanBrand}._.ModelGroup.${koreanModel}.)`
+      : `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.Manufacturer.${koreanBrand}.)`;
 
     const params = new URLSearchParams({
       count: 'true',

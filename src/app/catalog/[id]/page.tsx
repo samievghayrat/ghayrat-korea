@@ -54,7 +54,7 @@ export default function CarDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { t, formatPrice } = useApp();
+  const { t, formatPrice, formatKrwPrice } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -130,9 +130,8 @@ export default function CarDetailPage() {
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
 
-  // Keep the headline price aligned with the expanded breakdown after it loads.
-  const displayPrice = breakdown?.total || turnkeyPrice;
-  const displayKoreaPrice = breakdown?.carPrice || car.price_rub;
+  // Keep the headline stable with the server-calculated price shown on catalog cards.
+  const displayPrice = turnkeyPrice || breakdown?.total;
   const fullTitle = buildCarTitle(car);
 
   return (
@@ -276,7 +275,7 @@ export default function CarDetailPage() {
                     </div>
                     <div className="text-sm text-white/65 mt-1">{priceLabel}</div>
                     <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                      {t('price.priceInKorea')} <span className="font-semibold text-white">{formatPrice(displayKoreaPrice)}</span>
+                      {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
                     </div>
                   </>
                 ) : (
@@ -326,14 +325,26 @@ export default function CarDetailPage() {
                 </button>
 
                 {showBreakdown && (
-                  <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} priceUsd={car.price_usd} destination={destination} />
+                  <PriceBreakdown
+                    breakdown={breakdown}
+                    priceKrw={car.price_krw}
+                    priceUsd={car.price_usd}
+                    destination={destination}
+                    totalOverride={turnkeyPrice}
+                  />
                 )}
               </>
             )}
 
             {/* Tajikistan breakdown - always visible */}
             {breakdown && destination === 'tajikistan' && (
-              <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} priceUsd={car.price_usd} destination={destination} />
+              <PriceBreakdown
+                breakdown={breakdown}
+                priceKrw={car.price_krw}
+                priceUsd={car.price_usd}
+                destination={destination}
+                totalOverride={turnkeyPrice}
+              />
             )}
 
             {/* How to buy link */}

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export const maxDuration = 60;
 
 const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
+const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 const ALL_BRANDS = [
   // Domestic
@@ -90,7 +91,7 @@ const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 async function fetchBrandCount(nameKo: string): Promise<number> {
   try {
-    const q = `(And.Hidden.N._.Manufacturer.${nameKo}.)`;
+    const q = `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.Manufacturer.${nameKo}.)`;
     const params = new URLSearchParams({
       count: 'true',
       q,

@@ -163,7 +163,6 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 60vw"
           priority
-          unoptimized
         />
 
         {/* Navigation arrows - desktop */}
@@ -235,7 +234,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                     : 'border-transparent hover:border-gray-300'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="25vw" unoptimized />
+                <Image src={img} alt="" fill className="object-cover" sizes="25vw" />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">+ {extraCount} фото</span>
@@ -298,7 +297,6 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                 fill
                 className="object-contain"
                 sizes="90vw"
-                unoptimized
               />
             </div>
           </div>
@@ -315,7 +313,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                     : 'border-transparent opacity-50 hover:opacity-80'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="48px" unoptimized />
+                <Image src={img} alt="" fill className="object-cover" sizes="48px" />
               </button>
             ))}
           </div>

@@ -8,9 +8,10 @@ import { useApp } from '@/contexts/AppContext';
 
 interface CarCardProps {
   car: CarListing;
+  priority?: boolean;
 }
 
-export default function CarCard({ car }: CarCardProps) {
+export default function CarCard({ car, priority = false }: CarCardProps) {
   const { t, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
@@ -36,7 +37,7 @@ export default function CarCard({ car }: CarCardProps) {
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          unoptimized
+          priority={priority}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-60" />
         <div className="absolute top-2.5 right-2.5">

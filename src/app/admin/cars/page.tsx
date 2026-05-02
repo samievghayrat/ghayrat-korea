@@ -65,7 +65,7 @@ export default function AdminCarsPage() {
                   <td className="px-4 py-3">
                     <div className="relative w-16 h-12 rounded overflow-hidden bg-gray-100">
                       {car.imageUrl && car.imageUrl !== '/images/no-image.svg' ? (
-                        <Image src={car.imageUrl} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                        <Image src={car.imageUrl} alt="" fill className="object-cover" sizes="64px" />
                       ) : (
                         <div className="flex items-center justify-center h-full text-gray-300 text-xs">Нет</div>
                       )}

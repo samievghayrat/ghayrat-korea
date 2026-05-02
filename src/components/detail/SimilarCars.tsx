@@ -52,7 +52,6 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
                 fill
                 className="object-cover"
                 sizes="256px"
-                unoptimized
               />
               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-md">
                 {car.year}

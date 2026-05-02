@@ -1,5 +1,6 @@
 import type { PriceBreakdownData } from '@/types';
 import { EXCHANGE_RATES } from './constants';
+import { TJ_MIN_PRICES } from './tj-min-prices';
 
 interface CalcInput {
   priceKrw: number;
@@ -9,6 +10,8 @@ interface CalcInput {
   month?: number;
   fuel: string;
   hp?: number;
+  brand?: string;
+  model?: string;
   destination?: 'russia' | 'tajikistan';
   eurRate?: number; // live EUR/RUB rate, falls back to EXCHANGE_RATES.EUR
   usdRate?: number; // live USD/RUB rate, falls back to EXCHANGE_RATES.USD
@@ -241,6 +244,51 @@ function calculateUtilizationFee(
   return { fee, details };
 }
 
+// Brand name mapping: our system → rastamojka.tj keys
+const TJ_BRAND_MAP: Record<string, string> = {
+  'Mercedes-Benz': 'Mercede Benz',
+  'SsangYong': 'Ssang Yong',
+  'Chevrolet': 'Chevrolet (Корея)',
+  'Land Rover': 'Land Rover',
+  'Rolls-Royce': 'Rolls-Royce',
+  'Alfa Romeo': 'Alfa Romeo',
+};
+
+function lookupTjMinPrice(brand: string, model: string, year: number): number | undefined {
+  const tjBrand = TJ_BRAND_MAP[brand] || brand;
+  const brandData = TJ_MIN_PRICES[tjBrand];
+  if (!brandData) return undefined;
+
+  // Try exact model match first
+  if (brandData[model]) {
+    const price = brandData[model][String(year)];
+    if (price) return Number(price);
+  }
+
+  // Fuzzy match: find a model key that contains or is contained in our model name
+  const modelLower = model.toLowerCase();
+  for (const [tjModel, years] of Object.entries(brandData)) {
+    const tjLower = tjModel.toLowerCase();
+    if (tjLower.includes(modelLower) || modelLower.includes(tjLower)) {
+      const price = years[String(year)];
+      if (price) return Number(price);
+    }
+  }
+
+  // Try matching first word of model (e.g., "Sportage" from "Sportage 5th Gen")
+  const firstWord = model.split(' ')[0].toLowerCase();
+  if (firstWord.length >= 3) {
+    for (const [tjModel, years] of Object.entries(brandData)) {
+      if (tjModel.toLowerCase().startsWith(firstWord)) {
+        const price = years[String(year)];
+        if (price) return Number(price);
+      }
+    }
+  }
+
+  return undefined;
+}
+
 export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const eurToRub = input.eurRate || EXCHANGE_RATES.EUR;
   const usdToRub = input.usdRate || EXCHANGE_RATES.USD;
@@ -258,21 +306,72 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const carPrice = input.priceRub;
 
   if (destination === 'tajikistan') {
-    // Tajikistan: no customs, no util, no broker — just $3,000 shipping
-    const serviceFeeUsd = 3000;
-    const serviceFee = Math.round(serviceFeeUsd * usdToRub);
-    const total = carPrice + serviceFee;
+    // Tajikistan customs calculation (all in USD)
+    // Based on rastamojka.tj formulas (Tax Code of Tajikistan)
+    const actualPriceUsd = Math.round(carPrice / usdToRub);
+
+    // Use minimum customs value from rastamojka.tj database
+    const minPrice = lookupTjMinPrice(input.brand || '', input.model || '', input.year);
+    const priceUsd = minPrice && minPrice > actualPriceUsd ? minPrice : actualPriceUsd;
+
+    // 1. Customs duty: 10% of car price (0% for CIS-manufactured)
+    const customsDutyRate = 0.10;
+    const customsDutyUsd = Math.round(priceUsd * customsDutyRate);
+
+    // 2. Excise tax: MAX(excise by price, excise by engine displacement)
+    // Excise by price: 14% of (price + duty)
+    const exciseByPrice = Math.round((priceUsd + customsDutyUsd) * 0.14);
+    // Excise by engine: displacement_cc × 0.15 EUR, converted to USD
+    const eurToUsd = eurToRub / usdToRub; // EUR/USD cross rate
+    const exciseByEngine = isElectric
+      ? 0
+      : Math.round(input.displacement * 0.15 * eurToUsd);
+    const exciseTaxUsd = Math.max(exciseByPrice, exciseByEngine);
+    const exciseDetails = exciseByEngine > exciseByPrice
+      ? `${input.displacement} cc × 0.15 EUR`
+      : `14% × ($${(priceUsd + customsDutyUsd).toLocaleString('en-US')})`;
+
+    // 3. VAT: 14% of (price + duty + excise)
+    const vatUsd = Math.round((priceUsd + customsDutyUsd + exciseTaxUsd) * 0.14);
+
+    // 4. Procedure fee (by price bracket in USD)
+    let procedureFeeUsd = 70;
+    if (priceUsd <= 5000) procedureFeeUsd = 10;
+    else if (priceUsd <= 10000) procedureFeeUsd = 20;
+    else if (priceUsd <= 50000) procedureFeeUsd = 70;
+    else if (priceUsd <= 100000) procedureFeeUsd = 150;
+    else procedureFeeUsd = 450;
+
+    // 5. Utilization fee: 144 × 78 somoni ≈ ~$1,030 (11,232 TJS / ~10.9 TJS/USD)
+    const utilizationUsd = 1030;
+
+    // 6. Delivery: Korea → Vladivostok ($700) + Vladivostok → Khujand (~$3,000)
+    const deliveryVladivostok = 700;
+    const deliveryKhujand = 3000;
+    const serviceFeeUsd = deliveryVladivostok + deliveryKhujand;
+
+    // Customs total (duty + excise + VAT + procedure + utilization)
+    const customsTotal = customsDutyUsd + exciseTaxUsd + vatUsd + procedureFeeUsd + utilizationUsd;
+
+    const totalUsd = priceUsd + customsTotal + serviceFeeUsd;
 
     return {
-      carPrice,
-      customsDuty: 0,
+      carPrice: priceUsd,
+      customsDuty: customsDutyUsd,
+      customsDutyDetails: `10% × $${priceUsd.toLocaleString('en-US')}`,
       customsFee: 0,
-      utilizationFee: 0,
-      serviceFee,
+      exciseTax: exciseTaxUsd,
+      exciseTaxDetails: exciseDetails,
+      vatTax: vatUsd,
+      procedureFee: procedureFeeUsd,
+      utilizationFee: utilizationUsd,
+      deliveryVladivostok,
+      deliveryKhujand,
+      serviceFee: serviceFeeUsd,
       serviceFeeUsd,
       brokerFee: 0,
-      total,
-      currency: 'RUB',
+      total: totalUsd,
+      currency: 'USD',
     };
   }
 

@@ -11,7 +11,7 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car }: CarCardProps) {
-  const { t, formatPrice, formatKrwPrice, formatMileage } = useApp();
+  const { t, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -42,41 +42,41 @@ export default function CarCard({ car }: CarCardProps) {
         <div className="absolute top-2.5 right-2.5">
           <FavoriteButton carId={car.id} size="sm" />
         </div>
-        {car.source === 'own' && (
-          <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 flex gap-1.5">
+          {car.source === 'own' && (
             <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
               {t('card.inStock')}
             </span>
-          </div>
-        )}
+          )}
+          {car.reservationStatus === 'reserved' && (
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
+              {t('card.reserved')}
+            </span>
+          )}
+          {car.reservationStatus === 'sold' && (
+            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
+              {t('card.sold')}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
         <h3 className="font-bold text-gray-900 text-[15px] leading-tight group-hover:text-primary transition-colors">
           {car.brand} <span className="text-gray-600 font-semibold">{displayModel}</span>
         </h3>
-        {car.trim && (
-          <p className="text-[11px] text-gray-400 mt-0.5 truncate">{car.trim}</p>
+        {(car.badge || car.trim) && (
+          <p className="text-[11px] text-gray-400 mt-0.5 truncate">{car.badge || car.trim}</p>
         )}
         <div className="text-[12px] text-gray-500 mt-2">
           {yearLabel} · {formatMileage(car.mileage)} · {car.fuel}
         </div>
         <div className="flex-1 min-h-2" />
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-lg font-extrabold text-primary leading-tight">
-                {formatKrwPrice(car.price_krw)}
-              </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{t('card.priceInKorea')}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[13px] font-bold text-gray-700">
-                {formatPrice(car.price_turnkey_russia || 0)}
-              </div>
-              <div className="text-[10px] text-gray-400">{t('card.turnkeyVladivostok')}</div>
-            </div>
+          <div className="text-lg font-extrabold text-primary leading-tight">
+            {formatKrwPrice(car.price_krw)}
           </div>
+          <div className="text-[10px] text-gray-400 mt-0.5">{t('card.priceInKorea')}</div>
         </div>
       </div>
     </Link>

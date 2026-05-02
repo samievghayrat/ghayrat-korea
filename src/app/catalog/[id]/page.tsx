@@ -72,6 +72,8 @@ export default function CarDetailPage() {
       month: car.month,
       fuel: car.fuel,
       hp: car.hp,
+      brand: car.brand,
+      model: car.model,
       destination,
     });
   }, [car, destination, apiLoaded]);
@@ -141,7 +143,7 @@ export default function CarDetailPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 leading-tight">
-                  {car.brand} {car.model} {car.engine} {car.trim || ''}
+                  {car.brand} {car.model} {car.badge || ''}
                 </h1>
                 <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-400 flex-wrap">
                   <span>{yearMonth} г.</span>
@@ -163,6 +165,19 @@ export default function CarDetailPage() {
               </div>
               <FavoriteButton carId={car.id} />
             </div>
+
+            {/* Reservation status badge */}
+            {car.reservationStatus && (
+              <div className="mt-3">
+                <span className={`inline-block text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wide ${
+                  car.reservationStatus === 'sold'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {car.reservationStatus === 'sold' ? t('card.sold') : t('card.reserved')}
+                </span>
+              </div>
+            )}
 
             {/* Destination toggle */}
             <div className="flex mt-5 bg-gray-100 rounded-xl p-1">
@@ -190,22 +205,34 @@ export default function CarDetailPage() {
 
             {/* Total price - shows immediately from server-calculated value */}
             <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
-              {displayPrice ? (
+              {destination === 'russia' ? (
+                displayPrice ? (
+                  <>
+                    <div className="text-3xl font-extrabold text-gray-900">
+                      {formatPrice(displayPrice)}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-pulse space-y-2">
+                    <div className="h-9 w-48 bg-gray-200 rounded" />
+                    <div className="h-4 w-36 bg-gray-200 rounded" />
+                    <div className="h-3 w-44 bg-gray-200 rounded" />
+                  </div>
+                )
+              ) : (
                 <>
                   <div className="text-3xl font-extrabold text-gray-900">
-                    {formatPrice(displayPrice)}
+                    ${(car.price_usd || 0).toLocaleString('en-US')}
                   </div>
-                  <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
+                  <div className="text-sm text-gray-500 mt-0.5">{t('price.priceInKorea')}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
+                    {car.price_krw.toLocaleString()} KRW
                   </div>
                 </>
-              ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-9 w-48 bg-gray-200 rounded" />
-                  <div className="h-4 w-36 bg-gray-200 rounded" />
-                  <div className="h-3 w-44 bg-gray-200 rounded" />
-                </div>
               )}
             </div>
 
@@ -223,7 +250,7 @@ export default function CarDetailPage() {
             </a>
 
             {/* Toggle breakdown - only available after API loads */}
-            {breakdown && (
+            {breakdown && destination === 'russia' && (
               <>
                 <button
                   onClick={() => setShowBreakdown(!showBreakdown)}
@@ -236,9 +263,14 @@ export default function CarDetailPage() {
                 </button>
 
                 {showBreakdown && (
-                  <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} destination={destination} />
+                  <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} priceUsd={car.price_usd} destination={destination} />
                 )}
               </>
+            )}
+
+            {/* Tajikistan breakdown - always visible */}
+            {breakdown && destination === 'tajikistan' && (
+              <PriceBreakdown breakdown={breakdown} priceKrw={car.price_krw} priceUsd={car.price_usd} destination={destination} />
             )}
 
             {/* How to buy link */}

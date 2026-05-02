@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { YEAR_OPTIONS } from '@/lib/constants';
-import { translateGenerationName, translateModel } from '@/lib/translations';
+import { translateGenerationName, translateBadgeDetail } from '@/lib/translations';
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import BottomSheet from '@/components/shared/BottomSheet';
 
 interface BrandCount {
   name: string;
@@ -76,8 +77,21 @@ function FilterSection({ title, defaultOpen = true, children, count }: {
   );
 }
 
+// Hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
+
 // Dropdown select box component (like Encar's brand/model/generation selectors)
-function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, children }: {
+// On mobile: opens a BottomSheet. On desktop: shows inline dropdown.
+function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, sheetTitle, showResultsLabel, children }: {
   label: string;
   value?: string;
   count?: number;
@@ -85,9 +99,12 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   open: boolean;
   onToggle: () => void;
   onClear?: () => void;
+  sheetTitle?: string;
+  showResultsLabel?: string;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   return (
     <div className="px-4 py-3" ref={ref}>
@@ -95,11 +112,15 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
       <div className="relative">
         <button
           onClick={onToggle}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 flex items-center justify-between bg-white hover:border-gray-300 transition-colors text-left"
+          className={`w-full border rounded-lg px-3 py-2.5 flex items-center justify-between transition-colors text-left ${
+            value
+              ? 'border-primary bg-primary/5 hover:border-primary/70'
+              : 'border-gray-200 bg-white hover:border-gray-300'
+          }`}
         >
           {value ? (
             <>
-              <span className="font-medium text-gray-900 text-sm truncate">{value}</span>
+              <span className="font-semibold text-primary text-sm truncate">{value}</span>
               <span className="flex items-center gap-2 flex-shrink-0 ml-2">
                 {count !== undefined && (
                   <span className="text-sm text-gray-400 tabular-nums">{count.toLocaleString('ru-RU')}</span>
@@ -117,17 +138,40 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
             </>
           )}
         </button>
-        {open && (
+
+        {/* Desktop: inline dropdown */}
+        {open && !isMobile && (
           <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[280px] overflow-y-auto">
             {children}
           </div>
+        )}
+
+        {/* Mobile: bottom sheet */}
+        {isMobile && (
+          <BottomSheet
+            open={open}
+            onClose={onToggle}
+            title={sheetTitle || placeholder}
+            footer={showResultsLabel ? (
+              <button
+                onClick={onToggle}
+                className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors hover:bg-gray-800"
+              >
+                {showResultsLabel}
+              </button>
+            ) : undefined}
+          >
+            <div className="py-2">
+              {children}
+            </div>
+          </BottomSheet>
         )}
       </div>
     </div>
   );
 }
 
-export default function EncarSearch({ filters, onChange, brandCounts, compact }: EncarSearchProps) {
+export default function EncarSearch({ filters, onChange, brandCounts, totalCars, compact }: EncarSearchProps) {
   const { t } = useApp();
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
@@ -194,8 +238,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
   const [modelList, setModelList] = useState<{ name: string; nameKo?: string; count: number }[]>([]);
   const [modelLoading, setModelLoading] = useState(false);
   const [badgeList, setBadgeList] = useState<{ name: string; count: number; badgeDetails?: { name: string; count: number }[] }[]>([]);
+  const [badgeTree, setBadgeTree] = useState<{ fuel: string; drivetrain: string; count: number; badges: { name: string; count: number; badgeDetails: { name: string; count: number }[] }[] }[]>([]);
   const [badgeLoading, setBadgeLoading] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [expandedBadge, setExpandedBadge] = useState<string | null>(null);
 
   // Fetch models dynamically from Encar API when brand changes
   useEffect(() => {
@@ -240,13 +287,19 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
     if (filters.brand && filters.model && filters.modelVariant) {
       setBadgeLoading(true);
       setShowAllBadges(false);
+      setExpandedGroup(null);
+      setExpandedBadge(null);
       fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(filters.model)}&variant=${encodeURIComponent(filters.modelVariant)}`)
         .then(res => res.json())
-        .then(data => setBadgeList(data.badges || []))
-        .catch(() => setBadgeList([]))
+        .then(data => {
+          setBadgeList(data.badges || []);
+          setBadgeTree(data.badgeTree || []);
+        })
+        .catch(() => { setBadgeList([]); setBadgeTree([]); })
         .finally(() => setBadgeLoading(false));
     } else {
       setBadgeList([]);
+      setBadgeTree([]);
     }
   }, [filters.brand, filters.model, filters.modelVariant]);
 
@@ -295,6 +348,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
   const activeFilterCount = [
     filters.fuel, filters.yearFrom, filters.yearTo,
     filters.monthFrom, filters.monthTo,
+    filters.hpFrom, filters.hpTo,
     filters.priceFrom, filters.priceTo,
     filters.mileageTo, filters.mileageFrom, filters.transmission,
     filters.drivetrain, filters.color,
@@ -313,6 +367,8 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
         open={brandOpen}
         onToggle={() => { setBrandOpen(!brandOpen); setModelOpen(false); setGenOpen(false); }}
         onClear={filters.brand ? clearBrand : undefined}
+        sheetTitle={t('search.chooseBrand')}
+        showResultsLabel={totalCars ? `${t('search.showResults')} ${totalCars.toLocaleString('ru-RU')} ${t('search.cars')}` : undefined}
       >
         {brandCounts && brandCounts.length > 0 ? (
           <div className="py-1">
@@ -320,12 +376,12 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
               <button
                 key={b.name}
                 onClick={() => handleBrandSelect(b.name)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
                   filters.brand === b.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                 }`}
               >
-                <span className="text-sm">{b.name}</span>
-                <span className="text-sm text-gray-400 tabular-nums">{b.count.toLocaleString('ru-RU')}</span>
+                <span className="text-base lg:text-sm">{b.name}</span>
+                <span className="text-base lg:text-sm text-gray-400 tabular-nums">{b.count.toLocaleString('ru-RU')}</span>
               </button>
             ))}
           </div>
@@ -348,6 +404,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
           open={modelOpen}
           onToggle={() => { setModelOpen(!modelOpen); setBrandOpen(false); setGenOpen(false); }}
           onClear={filters.model ? clearModel : undefined}
+          sheetTitle={t('search.chooseModel')}
         >
           {modelLoading ? (
             <div className="flex items-center gap-2 px-3 py-4 justify-center">
@@ -365,17 +422,17 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                   <button
                     key={m.name}
                     onClick={() => handleModelSelect(modelValue)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                    className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
                       filters.model === modelValue ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                     }`}
                   >
-                    <span className="text-sm">{m.name}</span>
-                    <span className="text-sm text-gray-400 tabular-nums">{m.count.toLocaleString('ru-RU')}</span>
+                    <span className="text-base lg:text-sm">{m.name}</span>
+                    <span className="text-base lg:text-sm text-gray-400 tabular-nums">{m.count.toLocaleString('ru-RU')}</span>
                   </button>
                 );
               })}
               {modelList.length === 0 && (
-                <p className="px-3 py-2 text-sm text-gray-400">{t('search.noModels')}</p>
+                <p className="px-4 py-2 text-base lg:text-sm text-gray-400">{t('search.noModels')}</p>
               )}
             </div>
           )}
@@ -394,6 +451,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
           open={genOpen}
           onToggle={() => { setGenOpen(!genOpen); setBrandOpen(false); setModelOpen(false); }}
           onClear={filters.modelVariant ? () => handleGenSelect(undefined) : undefined}
+          sheetTitle={t('search.chooseGeneration')}
         >
           {generationLoading ? (
             <div className="flex items-center gap-2 px-3 py-4 justify-center">
@@ -408,12 +466,12 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
               {/* "All" option */}
               <button
                 onClick={() => handleGenSelect(undefined)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
                   !filters.modelVariant ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                 }`}
               >
-                <span className="text-sm">{t('search.all')}</span>
-                <span className="text-sm text-gray-400 tabular-nums">{totalGenCount.toLocaleString('ru-RU')}</span>
+                <span className="text-base lg:text-sm">{t('search.all')}</span>
+                <span className="text-base lg:text-sm text-gray-400 tabular-nums">{totalGenCount.toLocaleString('ru-RU')}</span>
               </button>
               {/* Generation variants */}
               {generationVariants.map(v => {
@@ -425,15 +483,15 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                   <button
                     key={v.name}
                     onClick={() => handleGenSelect(v.name)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 transition-all text-left hover:bg-gray-50 ${
+                    className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
                       filters.modelVariant === v.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                     }`}
                   >
-                    <span className="text-sm">
+                    <span className="text-base lg:text-sm">
                       {translated}
                       {yearRange && <span className="text-gray-400 ml-1">{yearRange}</span>}
                     </span>
-                    <span className="text-sm text-gray-400 tabular-nums ml-2 flex-shrink-0">
+                    <span className="text-base lg:text-sm text-gray-400 tabular-nums ml-2 flex-shrink-0">
                       {v.count.toLocaleString('ru-RU')}
                     </span>
                   </button>
@@ -444,8 +502,8 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
         </SelectBox>
       )}
 
-      {/* Type / Trim (Badge) selector — shown after generation is selected */}
-      {filters.modelVariant && badgeList.length > 0 && (
+      {/* Hierarchical Badge Tree: Fuel+Drivetrain → Engine Badge → Trim */}
+      {filters.modelVariant && (badgeTree.length > 0 || badgeLoading) && (
         <div className="px-4 py-3 border-t border-gray-100">
           <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.type')}</label>
           {badgeLoading ? (
@@ -455,62 +513,163 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </div>
+          ) : badgeTree.length > 1 ? (
+            /* Multi-group tree: show Fuel+Drivetrain → Badge → BadgeDetail */
+            <div className="space-y-0.5">
+              {badgeTree.map((group) => {
+                const groupKey = `${group.fuel}|${group.drivetrain}`;
+                const groupLabel = [translateBadgeDetail(group.fuel), group.drivetrain].filter(Boolean).join(' ');
+                const isGroupExpanded = expandedGroup === groupKey;
+                const isGroupSelected = filters.badge && group.badges.some(b => b.name === filters.badge);
+
+                return (
+                  <div key={groupKey}>
+                    {/* Level 1: Fuel + Drivetrain group */}
+                    <button
+                      onClick={() => {
+                        setExpandedGroup(isGroupExpanded ? null : groupKey);
+                        if (!isGroupExpanded) setExpandedBadge(null);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
+                        isGroupSelected
+                          ? 'bg-primary/5 text-primary font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${isGroupExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="truncate">{groupLabel || t('filter.type')}</span>
+                      </span>
+                      <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{group.count}</span>
+                    </button>
+
+                    {/* Level 2: Engine badges within group */}
+                    {isGroupExpanded && (
+                      <div className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                        {group.badges.map((b) => {
+                          const isBadgeSelected = filters.badge === b.name;
+                          const isBadgeExpanded = expandedBadge === b.name;
+
+                          return (
+                            <div key={b.name}>
+                              <button
+                                onClick={() => {
+                                  if (isBadgeSelected) {
+                                    onChange({ ...filters, badge: undefined, badgeDetail: undefined, page: 1 });
+                                    setExpandedBadge(null);
+                                  } else {
+                                    onChange({ ...filters, badge: b.name, badgeDetail: undefined, page: 1 });
+                                    setExpandedBadge(b.badgeDetails.length > 0 ? b.name : null);
+                                  }
+                                }}
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-all text-left ${
+                                  isBadgeSelected
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : 'text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                <span className="flex items-center gap-1.5 truncate">
+                                  {b.badgeDetails.length > 0 && (
+                                    <svg className={`w-3 h-3 text-gray-400 transition-transform flex-shrink-0 ${isBadgeExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  )}
+                                  <span className="truncate">{translateBadgeDetail(b.name)}</span>
+                                </span>
+                                <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
+                              </button>
+
+                              {/* Level 3: Trim tiers */}
+                              {isBadgeSelected && isBadgeExpanded && b.badgeDetails.length > 0 && (
+                                <div className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                                  {b.badgeDetails.map((d) => (
+                                    <button
+                                      key={d.name}
+                                      onClick={() => onChange({ ...filters, badgeDetail: filters.badgeDetail === d.name ? undefined : d.name, page: 1 })}
+                                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all text-left ${
+                                        filters.badgeDetail === d.name
+                                          ? 'bg-primary/10 text-primary font-medium'
+                                          : 'text-gray-500 hover:bg-gray-50'
+                                      }`}
+                                    >
+                                      <span className="truncate">{translateBadgeDetail(d.name)}</span>
+                                      <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <div className="space-y-1">
-              {(showAllBadges ? badgeList : badgeList.slice(0, 5)).map((b) => (
-                <button
-                  key={b.name}
-                  onClick={() => onChange({ ...filters, badge: filters.badge === b.name ? undefined : b.name, badgeDetail: undefined, page: 1 })}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
-                    filters.badge === b.name
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="truncate">{translateModel(b.name)}</span>
-                  <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
-                </button>
-              ))}
-              {badgeList.length > 5 && !showAllBadges && (
+            /* Single group or no fuel data: show flat badge list (fallback) */
+            <div className="space-y-0.5">
+              {(showAllBadges ? badgeList : badgeList.slice(0, 8)).map((b) => {
+                const isBadgeSelected = filters.badge === b.name;
+                const details = b.badgeDetails || [];
+                return (
+                  <div key={b.name}>
+                    <button
+                      onClick={() => {
+                        if (isBadgeSelected) {
+                          onChange({ ...filters, badge: undefined, badgeDetail: undefined, page: 1 });
+                          setExpandedBadge(null);
+                        } else {
+                          onChange({ ...filters, badge: b.name, badgeDetail: undefined, page: 1 });
+                          setExpandedBadge(details.length > 0 ? b.name : null);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
+                        isBadgeSelected
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="truncate">{translateBadgeDetail(b.name)}</span>
+                      <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
+                    </button>
+                    {/* Trim tiers for flat list */}
+                    {isBadgeSelected && expandedBadge === b.name && details.length > 0 && (
+                      <div className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                        {details.map((d) => (
+                          <button
+                            key={d.name}
+                            onClick={() => onChange({ ...filters, badgeDetail: filters.badgeDetail === d.name ? undefined : d.name, page: 1 })}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all text-left ${
+                              filters.badgeDetail === d.name
+                                ? 'bg-primary/10 text-primary font-medium'
+                                : 'text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span className="truncate">{translateBadgeDetail(d.name)}</span>
+                            <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {badgeList.length > 8 && !showAllBadges && (
                 <button
                   onClick={() => setShowAllBadges(true)}
                   className="text-xs text-primary hover:underline px-2.5 py-1"
                 >
-                  {t('filter.showMore')} {badgeList.length - 5}
+                  {t('filter.showMore')} {badgeList.length - 8}
                 </button>
               )}
             </div>
           )}
         </div>
       )}
-
-      {/* Badge Detail / Trim tier selector — shown when badge is selected and has details */}
-      {filters.badge && (() => {
-        const selectedBadge = badgeList.find(b => b.name === filters.badge);
-        const details = selectedBadge?.badgeDetails || [];
-        if (details.length === 0) return null;
-        return (
-          <div className="px-4 py-3 border-t border-gray-100">
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.trim')}</label>
-            <div className="space-y-1">
-              {details.map((d) => (
-                <button
-                  key={d.name}
-                  onClick={() => onChange({ ...filters, badgeDetail: filters.badgeDetail === d.name ? undefined : d.name, page: 1 })}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
-                    filters.badgeDetail === d.name
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="truncate">{translateModel(d.name)}</span>
-                  <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Filter sections */}
       <div className={`border-t border-gray-100 ${compact && !showMoreFilters ? '' : 'max-h-[500px] overflow-y-auto'}`}>
@@ -557,6 +716,26 @@ export default function EncarSearch({ filters, onChange, brandCounts, compact }:
                 </select>
               )}
             </div>
+          </div>
+        </FilterSection>
+
+        {/* Horsepower */}
+        <FilterSection title={t('filter.hp')} defaultOpen={false} count={(filters.hpFrom || filters.hpTo) ? 1 : 0}>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={filters.hpFrom || ''}
+              onChange={(e) => update('hpFrom', e.target.value ? parseInt(e.target.value) : undefined)}
+              placeholder={t('filter.hpFrom')}
+              className="input-field"
+            />
+            <input
+              type="number"
+              value={filters.hpTo || ''}
+              onChange={(e) => update('hpTo', e.target.value ? parseInt(e.target.value) : undefined)}
+              placeholder={t('filter.hpTo')}
+              className="input-field"
+            />
           </div>
         </FilterSection>
 

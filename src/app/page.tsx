@@ -4,11 +4,12 @@ import { useEffect, useState, Suspense } from 'react';
 import { useFilters } from '@/hooks/useFilters';
 import type { CarListing } from '@/types';
 import CarGrid from '@/components/catalog/CarGrid';
-import FilterChips from '@/components/catalog/FilterChips';
 import Pagination from '@/components/catalog/Pagination';
 import SortSelect from '@/components/catalog/SortSelect';
 import EncarSearch from '@/components/catalog/EncarSearch';
 import { useApp } from '@/contexts/AppContext';
+
+type SourceTab = 'encar' | 'auction' | 'forSale';
 
 interface BrandCount {
   name: string;
@@ -18,6 +19,7 @@ interface BrandCount {
 
 function CatalogContent() {
   const { t } = useApp();
+  const [activeTab, setActiveTab] = useState<SourceTab>('encar');
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -25,6 +27,11 @@ function CatalogContent() {
   const [loading, setLoading] = useState(true);
   const [brandCounts, setBrandCounts] = useState<BrandCount[]>([]);
   const [totalCars, setTotalCars] = useState(0);
+
+  // Own cars state
+  const [ownCars, setOwnCars] = useState<CarListing[]>([]);
+  const [ownLoading, setOwnLoading] = useState(false);
+
   // Fetch brand counts once on mount
   useEffect(() => {
     fetch('/api/brand-counts')
@@ -36,7 +43,21 @@ function CatalogContent() {
       .catch(() => {});
   }, []);
 
+  // Fetch own cars when For Sale tab is active
   useEffect(() => {
+    if (activeTab !== 'forSale') return;
+    setOwnLoading(true);
+    fetch('/api/own-cars')
+      .then(res => res.json())
+      .then(data => {
+        setOwnCars((data.cars || []).filter((c: CarListing) => c.isActive !== false));
+        setOwnLoading(false);
+      })
+      .catch(() => setOwnLoading(false));
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'encar') return;
     setLoading(true);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -58,12 +79,58 @@ function CatalogContent() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [filters]);
+  }, [filters, activeTab]);
+
+  const tabs: { key: SourceTab; label: string }[] = [
+    { key: 'encar', label: t('tab.encar') },
+    { key: 'auction', label: t('tab.auction') },
+    { key: 'forSale', label: t('tab.forSale') },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
 
-      <FilterChips filters={filters} onChange={setFilters} />
+      {/* Source tabs */}
+      <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => { setActiveTab(tab.key); }}
+            className={`flex-1 min-w-0 text-sm font-semibold py-2.5 px-4 rounded-lg transition-all whitespace-nowrap ${
+              activeTab === tab.key
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Auction tab - coming soon */}
+      {activeTab === 'auction' && (
+        <div className="text-center py-20">
+          <div className="text-5xl mb-4">🏷️</div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Kcar Auction</h2>
+          <p className="text-gray-500">{t('search.comingSoon')}</p>
+        </div>
+      )}
+
+      {/* For Sale tab - own cars */}
+      {activeTab === 'forSale' && (
+        <div>
+          <CarGrid cars={ownCars} loading={ownLoading} />
+          {!ownLoading && ownCars.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-gray-500">{t('search.noCars')}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Encar tab - main catalog */}
+      {activeTab === 'encar' && (
+        <>
 
       {/* Mobile: compact inline filters */}
       <div className="lg:hidden">
@@ -146,6 +213,8 @@ function CatalogContent() {
           />
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

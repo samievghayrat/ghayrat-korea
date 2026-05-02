@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchCars } from '@/lib/encar-api';
 import type { CarFilters } from '@/types';
+import dbConnect from '@/lib/mongodb';
+import Reservation from '@/models/Reservation';
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -21,6 +23,8 @@ export async function GET(request: NextRequest) {
     bodyType: params.get('bodyType') || undefined,
     mileageFrom: params.get('mileageFrom') ? parseInt(params.get('mileageFrom')!) : undefined,
     mileageTo: params.get('mileageTo') ? parseInt(params.get('mileageTo')!) : undefined,
+    hpFrom: params.get('hpFrom') ? parseInt(params.get('hpFrom')!) : undefined,
+    hpTo: params.get('hpTo') ? parseInt(params.get('hpTo')!) : undefined,
     transmission: params.get('transmission') || undefined,
     drivetrain: params.get('drivetrain') || undefined,
     color: params.get('color') || undefined,
@@ -32,5 +36,22 @@ export async function GET(request: NextRequest) {
   };
 
   const result = await searchCars(filters);
+
+  // Inject reservation statuses
+  try {
+    await dbConnect();
+    const carIds = result.cars.map((c: { id: string }) => c.id);
+    if (carIds.length > 0) {
+      const reservations = await Reservation.find({ carId: { $in: carIds } }).lean();
+      const statusMap = new Map(reservations.map((r) => [r.carId, r.status]));
+      for (const car of result.cars) {
+        const status = statusMap.get(car.id);
+        if (status) car.reservationStatus = status;
+      }
+    }
+  } catch {
+    // Don't fail the response if reservation lookup fails
+  }
+
   return NextResponse.json(result);
 }

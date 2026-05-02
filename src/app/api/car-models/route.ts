@@ -58,19 +58,40 @@ export async function GET(request: NextRequest) {
 
       const badgeCounts = new Map<string, number>();
       const badgeDetailCounts = new Map<string, Map<string, number>>();
+
+      // Build tree: FuelType+Drivetrain → Badge → count
+      // Key: "FuelType|Drivetrain"
+      const treeData = new Map<string, Map<string, number>>();
+      const groupCounts = new Map<string, number>();
+
       for (const item of results) {
         const badge = (item.Badge as string) || '';
         if (badge) {
           badgeCounts.set(badge, (badgeCounts.get(badge) || 0) + 1);
-          // Collect BadgeDetail (trim tier) per badge
           const detail = (item.BadgeDetail as string) || '';
           if (detail) {
             if (!badgeDetailCounts.has(badge)) badgeDetailCounts.set(badge, new Map());
             const detailMap = badgeDetailCounts.get(badge)!;
             detailMap.set(detail, (detailMap.get(detail) || 0) + 1);
           }
+
+          // Extract fuel type and drivetrain for tree
+          const fuelType = (item.FuelType as string) || '';
+          // Drivetrain is typically the last token in Badge (2WD, 4WD, AWD)
+          const badgeParts = badge.split(' ');
+          const lastPart = badgeParts[badgeParts.length - 1];
+          const drivetrain = /^(2WD|4WD|AWD)$/i.test(lastPart) ? lastPart.toUpperCase() : '';
+          const groupKey = `${fuelType}|${drivetrain}`;
+
+          groupCounts.set(groupKey, (groupCounts.get(groupKey) || 0) + 1);
+
+          if (!treeData.has(groupKey)) treeData.set(groupKey, new Map());
+          const badgeMap = treeData.get(groupKey)!;
+          badgeMap.set(badge, (badgeMap.get(badge) || 0) + 1);
+          // We reuse badgeDetailCounts for detail data
         }
       }
+
       const badges = Array.from(badgeCounts.entries())
         .map(([name, count]) => {
           const details = badgeDetailCounts.get(name);
@@ -83,7 +104,31 @@ export async function GET(request: NextRequest) {
         })
         .sort((a, b) => b.count - a.count);
 
-      const result = { badges, total };
+      // Build badgeTree array
+      const badgeTree = Array.from(treeData.entries())
+        .map(([groupKey, badgeMap]) => {
+          const [fuel, drivetrain] = groupKey.split('|');
+          const groupBadges = Array.from(badgeMap.entries())
+            .map(([bName, bCount]) => {
+              const details = badgeDetailCounts.get(bName);
+              const badgeDetails = details
+                ? Array.from(details.entries())
+                    .map(([dName, dCount]) => ({ name: dName, count: Math.round(dCount * scale) }))
+                    .sort((a, b) => b.count - a.count)
+                : [];
+              return { name: bName, count: Math.round(bCount * scale), badgeDetails };
+            })
+            .sort((a, b) => b.count - a.count);
+          return {
+            fuel,
+            drivetrain,
+            count: Math.round((groupCounts.get(groupKey) || 0) * scale),
+            badges: groupBadges,
+          };
+        })
+        .sort((a, b) => b.count - a.count);
+
+      const result = { badges, badgeTree, total };
       variantsCache.set(cacheKey, { data: result, timestamp: Date.now() });
       return NextResponse.json(result);
     }

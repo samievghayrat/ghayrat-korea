@@ -5,6 +5,7 @@ export interface CarListing {
   model: string;
   generation?: string;
   trim?: string;
+  badge?: string;
   year: number;
   month?: number;
   mileage: number;
@@ -18,8 +19,9 @@ export interface CarListing {
   price_krw: number;
   price_rub: number;
   price_usd?: number;
-  price_turnkey_russia?: number;    // server-calculated turnkey price in RUB
-  price_turnkey_tajikistan?: number; // server-calculated turnkey price in RUB
+  price_turnkey_russia?: number;      // server-calculated turnkey price in RUB
+  price_turnkey_russia_usd?: number;  // server-calculated turnkey price in USD
+  price_turnkey_tajikistan?: number;  // server-calculated turnkey price in USD
   imageUrl: string;
   images: string[];
   photoCount?: number;
@@ -30,6 +32,7 @@ export interface CarListing {
   inspectionData?: InspectionData;
   displacement?: number;
   seatCount?: number;
+  reservationStatus?: 'reserved' | 'sold';
   isActive?: boolean;
   createdAt?: string;
 }
@@ -82,6 +85,8 @@ export interface CarFilters {
   bodyType?: string;
   mileageFrom?: number;
   mileageTo?: number;
+  hpFrom?: number;
+  hpTo?: number;
   transmission?: string;
   drivetrain?: string;
   color?: string;
@@ -102,6 +107,13 @@ export interface PriceBreakdownData {
   serviceFee: number; // $1,600 converted to RUB
   serviceFeeUsd: number; // raw USD amount
   brokerFee: number; // 100,000 RUB
+  // Tajikistan-specific fields (all in USD)
+  exciseTax?: number;
+  exciseTaxDetails?: string;
+  vatTax?: number;
+  procedureFee?: number;
+  deliveryVladivostok?: number; // Korea → Vladivostok
+  deliveryKhujand?: number;    // Vladivostok → Khujand
   total: number;
   currency: 'RUB' | 'USD';
 }

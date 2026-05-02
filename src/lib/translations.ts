@@ -347,6 +347,68 @@ export function translateModel(korean: string): string {
   return result.replace(/\s+/g, ' ').trim();
 }
 
+// Korean badge/trim word translations
+const badgeWordMap: Record<string, string> = {
+  '시그니처': 'Signature',
+  '프리미엄': 'Premium',
+  '프레스티지': 'Prestige',
+  '노블레스': 'Noblesse',
+  '인스퍼레이션': 'Inspiration',
+  '캘리그래피': 'Calligraphy',
+  '익스클루시브': 'Exclusive',
+  '모던': 'Modern',
+  '트렌디': 'Trendy',
+  '스마트': 'Smart',
+  '럭셔리': 'Luxury',
+  '그래비티': 'Gravity',
+  '마스터즈': 'Masters',
+  '스페셜': 'Special',
+  '클래식': 'Classic',
+  '스포츠': 'Sports',
+  '어반': 'Urban',
+  '컴포트': 'Comfort',
+  '에디션': 'Edition',
+  '롱레인지': 'Long Range',
+  '스탠다드': 'Standard',
+  '익스트림': 'Extreme',
+  '어드밴스드': 'Advanced',
+  '터보': 'Turbo',
+  '인승': 'seat',
+  '디럭스': 'Deluxe',
+  '하이테크': 'Hi-Tech',
+  '레저': 'Leisure',
+  '비즈니스': 'Business',
+  '어시스트': 'Assist',
+  '이그제큐티브': 'Executive',
+  '셀렉션': 'Selection',
+  '밴': 'Van',
+  '왜건': 'Wagon',
+  '쿠페': 'Coupe',
+  '카브리올레': 'Cabriolet',
+  '컨버터블': 'Convertible',
+  '초이스': 'Choice',
+  '플러스': 'Plus',
+  '라이트': 'Light',
+  '센시블': 'Sensible',
+  '가솔린': 'Бензин',
+  '디젤': 'Дизель',
+  '하이브리드': 'Гибрид',
+  '가솔린+전기': 'Гибрид',
+  '디젤+전기': 'Гибрид',
+  '전기': 'Электро',
+};
+
+export function translateBadgeDetail(korean: string): string {
+  if (!korean) return korean;
+  let result = korean;
+  // Replace longest keys first
+  const sortedKeys = Object.keys(badgeWordMap).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    result = result.replaceAll(key, badgeWordMap[key]);
+  }
+  return result.trim();
+}
+
 export function translateFuel(korean: string): string {
   if (!korean) return korean;
   return fuelMap[korean] || korean;

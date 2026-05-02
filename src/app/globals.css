@@ -136,3 +136,22 @@ body {
 .animate-in {
   animation: slideInFromBottom 0.2s ease-out;
 }
+
+/* Bottom sheet slide-up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Safe area padding for bottom sheet footer on iOS */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/admin', label: 'Дашборд', icon: '📊' },
   { href: '/admin/cars', label: 'Автомобили', icon: '🚗' },
+  { href: '/admin/reservations', label: 'Бронирование', icon: '📋' },
   { href: '/admin/messages', label: 'Сообщения', icon: '📩' },
   { href: '/admin/settings', label: 'Настройки', icon: '⚙️' },
 ];

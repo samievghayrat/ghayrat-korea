@@ -1,5 +1,5 @@
-import { translateBrand, translateModel, translateFuel, translateColor, reverseTranslateBrand, reverseTranslateModel } from './translations';
-import { convertKrwToRub, convertKrwToUsd, getEurToRub } from './currency';
+import { translateBrand, translateModel, translateFuel, translateColor, translateBadgeDetail, reverseTranslateBrand, reverseTranslateModel } from './translations';
+import { convertKrwToRub, convertKrwToUsd, getEurToRub, getUsdToRub } from './currency';
 import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
@@ -400,6 +400,12 @@ function buildSearchQuery(filters: CarFilters): string {
     parts.push(`Mileage.range(${from}..${to})`);
   }
 
+  if (filters.hpFrom || filters.hpTo) {
+    const from = filters.hpFrom || 0;
+    const to = filters.hpTo || 9999;
+    parts.push(`PowerPs.range(${from}..${to})`);
+  }
+
   // Join with _.  separator and wrap in (And. ... .)
   return '(And.' + parts.join('._.') + '.)';
 }
@@ -481,6 +487,8 @@ async function fetchDisplacementFromReadside(carId: string): Promise<number> {
 // Cached live EUR rate for use in transformSearchResults
 let liveEurRate: number | undefined;
 let eurRateFetchedAt = 0;
+let liveUsdRate: number | undefined;
+let usdRateFetchedAt = 0;
 
 async function getLiveEurRate(): Promise<number | undefined> {
   if (liveEurRate && Date.now() - eurRateFetchedAt < 60 * 60 * 1000) return liveEurRate;
@@ -493,11 +501,22 @@ async function getLiveEurRate(): Promise<number | undefined> {
   }
 }
 
+async function getLiveUsdRate(): Promise<number | undefined> {
+  if (liveUsdRate && Date.now() - usdRateFetchedAt < 60 * 60 * 1000) return liveUsdRate;
+  try {
+    liveUsdRate = await getUsdToRub();
+    usdRateFetchedAt = Date.now();
+    return liveUsdRate;
+  } catch {
+    return undefined;
+  }
+}
+
 async function transformSearchResults(
   searchResults: Record<string, unknown>[]
 ): Promise<CarListing[]> {
-  // Fetch live EUR rate for customs calculations
-  const eurRate = await getLiveEurRate();
+  // Fetch live rates for customs calculations
+  const [eurRate, usdRate] = await Promise.all([getLiveEurRate(), getLiveUsdRate()]);
 
   // Step 1: For cars with displacement=0, try local ENGINE_FALLBACK first (instant),
   // then readside API only for the remaining misses (limited to avoid timeout)
@@ -618,11 +637,24 @@ async function transformSearchResults(
 
       // Pre-calculate turnkey prices on server with accurate HP and live rates
       const russiaBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate,
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'tajikistan', eurRate,
+        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
       });
+
+      // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
+      const rawBadge = (item.Badge as string) || '';
+      const rawBadgeDetail = (item.BadgeDetail as string) || '';
+      const translatedBadge = rawBadge
+        .replace(/가솔린\+전기/g, translateFuel('가솔린+전기'))
+        .replace(/디젤\+전기/g, translateFuel('디젤+전기'))
+        .replace(/가솔린/g, translateFuel('가솔린'))
+        .replace(/디젤/g, translateFuel('디젤'))
+        .replace(/하이브리드/g, translateFuel('하이브리드'))
+        .replace(/전기/g, translateFuel('전기'));
+      const badgeParts = [translatedBadge, translateBadgeDetail(rawBadgeDetail)].filter(Boolean);
+      const badge = badgeParts.join(' ') || undefined;
 
       return {
         id: carId,
@@ -636,6 +668,7 @@ async function transformSearchResults(
         engine: displacement ? `${(displacement / 1000).toFixed(1)}L` : '',
         displacement,
         hp: hp || undefined,
+        badge,
         color: translateColor((item.Color as string) || ''),
         bodyType: translateBodyType((item.BodyType as string) || ''),
         transmission: translateTransmission((item.Transmission as string) || ''),
@@ -643,6 +676,7 @@ async function transformSearchResults(
         price_rub: priceRub,
         price_usd: priceUsd,
         price_turnkey_russia: russiaBreakdown.total,
+        price_turnkey_russia_usd: priceRub > 0 ? Math.round(russiaBreakdown.total * priceUsd / priceRub) : 0,
         price_turnkey_tajikistan: tjBreakdown.total,
         imageUrl,
         images: [],
@@ -1060,6 +1094,19 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       : undefined;
     const trim = gradeName ? (cat.gradeEnglishName || translateModel(gradeName)) : undefined;
 
+    // Build badge from search item (e.g. "2.5 가솔린 2WD" + "프리미엄")
+    const rawDetailBadge = (searchItem?.Badge as string) || '';
+    const rawDetailBadgeDetail = (searchItem?.BadgeDetail as string) || '';
+    const translatedDetailBadge = rawDetailBadge
+      .replace(/가솔린\+전기/g, translateFuel('가솔린+전기'))
+      .replace(/디젤\+전기/g, translateFuel('디젤+전기'))
+      .replace(/가솔린/g, translateFuel('가솔린'))
+      .replace(/디젤/g, translateFuel('디젤'))
+      .replace(/하이브리드/g, translateFuel('하이브리드'))
+      .replace(/전기/g, translateFuel('전기'));
+    const detailBadgeParts = [translatedDetailBadge, translateBadgeDetail(rawDetailBadgeDetail)].filter(Boolean);
+    const detailBadge = detailBadgeParts.join(' ') || undefined;
+
     const engineLookup = lookupEngine(manufacturer, modelGroupName, displacement, fuelName);
     const finalDisplacement = displacement || engineLookup.cc || vinData.displacement || 0;
     // HP priority: pan-auto.ru → local lookup (using Korean names) → VIN decoder → Encar search fields
@@ -1069,14 +1116,14 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     const carMonth = parseInt(yearMonth.substring(4, 6)) || undefined;
 
     // Pre-calculate turnkey prices on server with accurate data and live rates
-    const detailEurRate = await getLiveEurRate();
+    const [detailEurRate, detailUsdRate] = await Promise.all([getLiveEurRate(), getLiveUsdRate()]);
     const russiaBreakdown = calculateImportCost({
       priceKrw, priceRub, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia', eurRate: detailEurRate,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
     const tjBreakdown = calculateImportCost({
       priceKrw, priceRub, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'tajikistan', eurRate: detailEurRate,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
 
     return {
@@ -1086,6 +1133,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       model,
       generation: generation || undefined,
       trim: trim || undefined,
+      badge: detailBadge,
       year: carYear,
       month: carMonth,
       mileage,
@@ -1102,6 +1150,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       price_rub: priceRub,
       price_usd: priceUsd,
       price_turnkey_russia: russiaBreakdown.total,
+      price_turnkey_russia_usd: priceRub > 0 ? Math.round(russiaBreakdown.total * priceUsd / priceRub) : 0,
       price_turnkey_tajikistan: tjBreakdown.total,
       imageUrl: imageUrls[0] || '/images/no-image.svg',
       images: imageUrls,

@@ -13,7 +13,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="leading-tight">
-                <div className="text-white font-bold text-lg">Ghayrat Korea</div>
+                <div className="text-white font-bold text-lg">GHAYRAT KOREA</div>
               </div>
             </div>
             <p className="text-sm leading-relaxed mb-4">

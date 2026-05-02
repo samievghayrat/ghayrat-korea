@@ -11,7 +11,11 @@ const FALLBACK_KRW_TO_RUB = 0.068;
 const FALLBACK_KRW_TO_USD = 0.00073;
 const FALLBACK_KRW_TO_EUR = 0.00065;
 
+// +2% markup on exchange rate (buy/sell spread)
+const MARKUP = 1.02;
+
 async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate: number }> {
+  // Primary: Google Finance compatible rate via exchangerate-api
   try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/KRW', {
       next: { revalidate: 3600 },
@@ -19,9 +23,9 @@ async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate
     if (res.ok) {
       const data = await res.json();
       return {
-        rubRate: data.rates?.RUB || FALLBACK_KRW_TO_RUB,
-        usdRate: data.rates?.USD || FALLBACK_KRW_TO_USD,
-        eurRate: data.rates?.EUR || FALLBACK_KRW_TO_EUR,
+        rubRate: (data.rates?.RUB || FALLBACK_KRW_TO_RUB) * MARKUP,
+        usdRate: (data.rates?.USD || FALLBACK_KRW_TO_USD) * MARKUP,
+        eurRate: (data.rates?.EUR || FALLBACK_KRW_TO_EUR) * MARKUP,
       };
     }
   } catch { /* try fallback */ }
@@ -31,14 +35,18 @@ async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate
     if (res.ok) {
       const data = await res.json();
       return {
-        rubRate: data.rates?.RUB || FALLBACK_KRW_TO_RUB,
-        usdRate: data.rates?.USD || FALLBACK_KRW_TO_USD,
-        eurRate: data.rates?.EUR || FALLBACK_KRW_TO_EUR,
+        rubRate: (data.rates?.RUB || FALLBACK_KRW_TO_RUB) * MARKUP,
+        usdRate: (data.rates?.USD || FALLBACK_KRW_TO_USD) * MARKUP,
+        eurRate: (data.rates?.EUR || FALLBACK_KRW_TO_EUR) * MARKUP,
       };
     }
   } catch { /* use fallback */ }
 
-  return { rubRate: FALLBACK_KRW_TO_RUB, usdRate: FALLBACK_KRW_TO_USD, eurRate: FALLBACK_KRW_TO_EUR };
+  return {
+    rubRate: FALLBACK_KRW_TO_RUB * MARKUP,
+    usdRate: FALLBACK_KRW_TO_USD * MARKUP,
+    eurRate: FALLBACK_KRW_TO_EUR * MARKUP,
+  };
 }
 
 async function getRates(): Promise<RateCache> {
@@ -69,6 +77,12 @@ export async function convertKrwToEur(amount: number): Promise<number> {
 export async function getEurToRub(): Promise<number> {
   const { rate, eurRate } = await getRates();
   return rate / eurRate;
+}
+
+/** Get USD→RUB rate (derived from KRW rates) */
+export async function getUsdToRub(): Promise<number> {
+  const { rate, usdRate } = await getRates();
+  return rate / usdRate;
 }
 
 export function formatPrice(price: number, currency: 'RUB' | 'USD' | 'KRW' = 'RUB'): string {

@@ -31,15 +31,16 @@ export default function CarSpecs({ car }: CarSpecsProps) {
   ].filter(s => s.value);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8">
-      <h2 className="text-lg font-bold text-gray-900">{fullName}</h2>
-      <p className="text-sm text-gray-400 mt-0.5 mb-6">{t('spec.generalData')}</p>
-      <div className="flex flex-col gap-4">
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+      <div className="mb-5">
+        <p className="text-sm font-semibold text-primary">{t('spec.generalData')}</p>
+        <h2 className="mt-1 text-xl font-bold text-gray-950 leading-tight">{fullName}</h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {specs.map((spec) => (
-          <div key={spec.label} className="flex items-baseline gap-2">
-            <span className="text-gray-500 text-[15px] shrink-0">{spec.label}</span>
-            <span className="flex-1 border-b border-dotted border-gray-300 min-w-[2rem] translate-y-[-3px]" />
-            <span className="font-semibold text-gray-900 text-[15px] shrink-0">{spec.value}</span>
+          <div key={spec.label} className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-100">
+            <div className="text-xs font-medium text-gray-400">{spec.label}</div>
+            <div className="mt-1 text-[15px] font-semibold text-gray-900 break-words">{spec.value}</div>
           </div>
         ))}
       </div>

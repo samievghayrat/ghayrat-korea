@@ -104,11 +104,19 @@ export default function CarDetailPage() {
 
   // Display price: use server-calculated turnkey, fall back to breakdown total
   const displayPrice = turnkeyPrice || breakdown?.total;
+  const fullTitle = [car.brand, car.model, car.generation, car.badge || car.trim].filter(Boolean).join(' ');
+  const keyFacts = [
+    { label: t('spec.date'), value: yearMonth },
+    { label: t('spec.mileage'), value: car.mileage ? `${car.mileage.toLocaleString()} km` : null },
+    { label: t('spec.engine'), value: car.displacement ? `${(car.displacement / 1000).toFixed(1)}L` : car.engine || null },
+    { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
+  ].filter((item): item is { label: string; value: string } => Boolean(item.value));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-5">
+      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-4">
         <a href="/" className="hover:text-primary transition-colors">{t('nav.catalog')}</a>
         <span>/</span>
         <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="hover:text-primary transition-colors">{car.brand}</a>
@@ -116,10 +124,50 @@ export default function CarDetailPage() {
         <span className="text-gray-700 font-medium">{car.model}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      <div className="mb-5 lg:mb-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
+                Encar ID {car.id}
+              </span>
+              {car.source === 'own' && (
+                <span className="inline-flex items-center rounded-md bg-primary px-2.5 py-1 text-xs font-bold text-white">
+                  {t('card.inStock')}
+                </span>
+              )}
+              {car.reservationStatus && (
+                <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ${
+                  car.reservationStatus === 'sold'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {car.reservationStatus === 'sold' ? t('card.sold') : t('card.reserved')}
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 leading-tight">
+              {fullTitle}
+            </h1>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {keyFacts.map((fact) => (
+                <div key={fact.label} className="rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
+                  <div className="text-[11px] text-gray-400 leading-none">{fact.label}</div>
+                  <div className="mt-1 text-sm font-semibold text-gray-900">{fact.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hidden lg:block">
+            <FavoriteButton carId={car.id} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Gallery */}
-        <div className="lg:col-span-3 order-1">
-          <div>
+        <div className="lg:col-span-8 order-1">
+          <div className="bg-white rounded-2xl border border-gray-200 p-2 sm:p-3 shadow-sm">
             <ImageGallery
               images={galleryImages}
               alt={`${car.brand} ${car.model}`}
@@ -137,10 +185,10 @@ export default function CarDetailPage() {
         </div>
 
         {/* Price panel - right on desktop, right after gallery on mobile */}
-        <div className="lg:col-span-2 order-2 lg:row-start-1 lg:col-start-4 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 space-y-4 lg:sticky lg:top-24">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
             {/* Title + Favorite */}
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-3 lg:hidden">
               <div>
                 <h1 className="text-xl font-bold text-gray-900 leading-tight">
                   {car.brand} {car.model} {car.badge || ''}
@@ -168,7 +216,7 @@ export default function CarDetailPage() {
 
             {/* Reservation status badge */}
             {car.reservationStatus && (
-              <div className="mt-3">
+              <div className="mt-3 lg:hidden">
                 <span className={`inline-block text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wide ${
                   car.reservationStatus === 'sold'
                     ? 'bg-red-100 text-red-700'
@@ -180,7 +228,7 @@ export default function CarDetailPage() {
             )}
 
             {/* Destination toggle */}
-            <div className="flex mt-5 bg-gray-100 rounded-xl p-1">
+            <div className="flex mt-5 lg:mt-0 bg-gray-100 rounded-xl p-1">
               <button
                 onClick={() => setDestination('russia')}
                 className={`flex-1 text-sm font-medium py-2 px-3 rounded-lg transition-all ${
@@ -204,16 +252,16 @@ export default function CarDetailPage() {
             </div>
 
             {/* Total price - shows immediately from server-calculated value */}
-            <div className="mt-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-xl">
+            <div className="mt-4 rounded-2xl bg-gray-950 p-4 text-white">
               {destination === 'russia' ? (
                 displayPrice ? (
                   <>
-                    <div className="text-3xl font-extrabold text-gray-900">
+                    <div className="text-3xl font-extrabold">
                       {formatPrice(displayPrice)}
                     </div>
-                    <div className="text-sm text-gray-500 mt-0.5">{priceLabel}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {t('price.priceInKorea')} <span className="font-semibold text-gray-500">{formatKrwPrice(car.price_krw)}</span>
+                    <div className="text-sm text-white/65 mt-1">{priceLabel}</div>
+                    <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
+                      {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
                     </div>
                   </>
                 ) : (
@@ -225,11 +273,11 @@ export default function CarDetailPage() {
                 )
               ) : (
                 <>
-                  <div className="text-3xl font-extrabold text-gray-900">
+                  <div className="text-3xl font-extrabold">
                     ${(car.price_usd || 0).toLocaleString('en-US')}
                   </div>
-                  <div className="text-sm text-gray-500 mt-0.5">{t('price.priceInKorea')}</div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-sm text-white/65 mt-1">{t('price.priceInKorea')}</div>
+                  <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
                     {car.price_krw.toLocaleString()} KRW
                   </div>
                 </>
@@ -277,7 +325,7 @@ export default function CarDetailPage() {
             <div className="mt-4 pt-4 border-t border-gray-100">
               <a
                 href="/how-to-buy"
-                className="text-xs text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+                className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
               >
                 {t('detail.howToBuy')}
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,13 +337,14 @@ export default function CarDetailPage() {
         </div>
 
         {/* Detail sections - below gallery on desktop (left col), below price on mobile */}
-        <div className="lg:col-span-3 order-3 lg:order-2 space-y-6">
+        <div className="lg:col-span-8 order-3 lg:order-2 space-y-5">
           <CarSpecs car={car} />
           <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
           <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
         </div>
 
+      </div>
       </div>
     </div>
   );

@@ -22,6 +22,34 @@ function getSessionCar(id: string): CarListing | null {
   return null;
 }
 
+function formatModelName(value?: string): string | undefined {
+  if (!value) return value;
+  return value
+    .replace(/\b(\d+)\s*Series\b/g, '$1 Series')
+    .replace(/\b([A-Z])\s*Class\b/g, '$1-Class')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildCarTitle(car: CarListing): string {
+  const model = formatModelName(car.model) || car.model;
+  let generation = formatModelName(car.generation);
+
+  if (generation && model) {
+    const normalizedGeneration = generation.toLowerCase();
+    const normalizedModel = model.toLowerCase();
+    if (normalizedGeneration === normalizedModel) {
+      generation = undefined;
+    } else if (normalizedGeneration.startsWith(`${normalizedModel} `)) {
+      generation = generation.slice(model.length).trim();
+    }
+  }
+
+  return [car.brand, model, generation, car.badge || car.trim]
+    .filter(Boolean)
+    .join(' ');
+}
+
 export default function CarDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -104,7 +132,7 @@ export default function CarDetailPage() {
 
   // Display price: use server-calculated turnkey, fall back to breakdown total
   const displayPrice = turnkeyPrice || breakdown?.total;
-  const fullTitle = [car.brand, car.model, car.generation, car.badge || car.trim].filter(Boolean).join(' ');
+  const fullTitle = buildCarTitle(car);
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -447,7 +447,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
 
       {/* Brand selector */}
       <SelectBox

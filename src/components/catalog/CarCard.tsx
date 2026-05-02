@@ -12,7 +12,7 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
-  const { t, formatKrwPrice, formatMileage } = useApp();
+  const { t, formatPrice, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -20,7 +20,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     } catch {}
   };
 
-  const displayModel = car.generation
+  const displayModel = car.generation && !car.generation.toLowerCase().startsWith(car.model.toLowerCase())
     ? `${car.model} ${car.generation}`
     : car.model;
 
@@ -29,7 +29,11 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     : `${car.year}`;
 
   return (
-    <Link href={`/catalog/${car.id}`} onClick={handleClick} className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
+    <Link
+      href={`/catalog/${car.id}`}
+      onClick={handleClick}
+      className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 flex flex-col shadow-sm"
+    >
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
         <Image
           src={car.imageUrl || '/images/no-image.svg'}
@@ -39,7 +43,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           priority={priority}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-70" />
         <div className="absolute top-2.5 right-2.5">
           <FavoriteButton carId={car.id} size="sm" />
         </div>
@@ -63,21 +67,40 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
-        <h3 className="font-bold text-gray-900 text-[15px] leading-tight group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-gray-950 text-[15px] leading-tight group-hover:text-primary transition-colors">
           {car.brand} <span className="text-gray-600 font-semibold">{displayModel}</span>
         </h3>
         {(car.badge || car.trim) && (
           <p className="text-[11px] text-gray-400 mt-0.5 truncate">{car.badge || car.trim}</p>
         )}
-        <div className="text-[12px] text-gray-500 mt-2">
-          {yearLabel} · {formatMileage(car.mileage)} · {car.fuel}
+        <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
+          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
+            <div className="text-[10px] text-gray-400 leading-none">Year</div>
+            <div className="mt-1 text-[11px] font-semibold text-gray-800">{yearLabel}</div>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
+            <div className="text-[10px] text-gray-400 leading-none">Km</div>
+            <div className="mt-1 text-[11px] font-semibold text-gray-800 truncate">{formatMileage(car.mileage)}</div>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
+            <div className="text-[10px] text-gray-400 leading-none">Fuel</div>
+            <div className="mt-1 text-[11px] font-semibold text-gray-800 truncate">{car.fuel}</div>
+          </div>
         </div>
         <div className="flex-1 min-h-2" />
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <div className="text-lg font-extrabold text-primary leading-tight">
-            {formatKrwPrice(car.price_krw)}
+        <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+          {car.price_turnkey_russia && (
+            <div>
+              <div className="text-lg font-extrabold text-gray-950 leading-tight">
+                {formatPrice(car.price_turnkey_russia)}
+              </div>
+              <div className="text-[10px] text-gray-400 mt-0.5">{t('card.turnkeyVladivostok')}</div>
+            </div>
+          )}
+          <div className={car.price_turnkey_russia ? 'flex items-center justify-between text-xs' : ''}>
+            <span className="text-gray-400">{t('card.priceInKorea')}</span>
+            <span className="font-bold text-primary">{formatKrwPrice(car.price_krw)}</span>
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">{t('card.priceInKorea')}</div>
         </div>
       </div>
     </Link>

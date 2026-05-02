@@ -88,18 +88,48 @@ function CatalogContent() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
+      <section className="mb-5 rounded-2xl bg-gray-950 px-4 py-5 sm:px-6 lg:px-7 text-white overflow-hidden">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-2 inline-flex items-center rounded-md bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/75">
+              Encar Korea · turnkey pricing
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">
+              Cars from Korea with live prices
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-white/65">
+              Search Korean listings, compare key specs, and check estimated delivery and customs costs.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
+            <div className="rounded-xl bg-white/10 px-3 py-3">
+              <div className="text-lg font-bold">{totalCars ? totalCars.toLocaleString('ru-RU') : '...'}</div>
+              <div className="text-[11px] text-white/55">live cars</div>
+            </div>
+            <div className="rounded-xl bg-white/10 px-3 py-3">
+              <div className="text-lg font-bold">KRW</div>
+              <div className="text-[11px] text-white/55">Korea price</div>
+            </div>
+            <div className="rounded-xl bg-white/10 px-3 py-3">
+              <div className="text-lg font-bold">RUB</div>
+              <div className="text-[11px] text-white/55">turnkey</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Source tabs */}
-      <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 overflow-x-auto">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => { setActiveTab(tab.key); }}
-            className={`flex-1 min-w-0 text-sm font-semibold py-2.5 px-4 rounded-lg transition-all whitespace-nowrap ${
+            className={`min-w-fit text-sm font-semibold py-2.5 px-4 rounded-xl border transition-all whitespace-nowrap ${
               activeTab === tab.key
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-gray-950 border-gray-200 shadow-sm'
+                : 'bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-white'
             }`}
           >
             {tab.label}
@@ -170,7 +200,7 @@ function CatalogContent() {
 
       <div className="flex gap-6">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:block lg:w-[300px] flex-shrink-0">
+        <aside className="hidden lg:block lg:w-[320px] flex-shrink-0">
           <div className="lg:sticky lg:top-[104px] space-y-4">
             <EncarSearch
               filters={filters}
@@ -186,7 +216,7 @@ function CatalogContent() {
         {/* Car grid */}
         <div className="flex-1 min-w-0">
           {/* Desktop controls bar */}
-          <div className="hidden lg:flex mb-4 items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3">
+          <div className="hidden lg:flex mb-4 items-center justify-between bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
             <div className="text-sm text-gray-500">
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -215,6 +245,7 @@ function CatalogContent() {
       </div>
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default function CarGrid({ cars, loading }: CarGridProps) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {[...Array(12)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
+          <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-200 animate-pulse shadow-sm">
             <div className="aspect-[16/10] bg-gray-200" />
             <div className="p-4 space-y-3">
               <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -35,7 +35,7 @@ export default function CarGrid({ cars, loading }: CarGridProps) {
   if (cars.length === 0) {
     return (
       <div className="text-center py-20">
-        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center mb-5">
+        <div className="w-20 h-20 mx-auto bg-white border border-gray-200 rounded-2xl flex items-center justify-center mb-5">
           <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

@@ -105,12 +105,6 @@ export default function CarDetailPage() {
   // Display price: use server-calculated turnkey, fall back to breakdown total
   const displayPrice = turnkeyPrice || breakdown?.total;
   const fullTitle = [car.brand, car.model, car.generation, car.badge || car.trim].filter(Boolean).join(' ');
-  const keyFacts = [
-    { label: t('spec.date'), value: yearMonth },
-    { label: t('spec.mileage'), value: car.mileage ? `${car.mileage.toLocaleString()} km` : null },
-    { label: t('spec.engine'), value: car.displacement ? `${(car.displacement / 1000).toFixed(1)}L` : car.engine || null },
-    { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
-  ].filter((item): item is { label: string; value: string } => Boolean(item.value));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,14 +143,6 @@ export default function CarDetailPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 leading-tight">
               {fullTitle}
             </h1>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {keyFacts.map((fact) => (
-                <div key={fact.label} className="rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
-                  <div className="text-[11px] text-gray-400 leading-none">{fact.label}</div>
-                  <div className="mt-1 text-sm font-semibold text-gray-900">{fact.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
           <div className="hidden lg:block">
             <FavoriteButton carId={car.id} />

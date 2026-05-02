@@ -45,7 +45,8 @@ export function useFilters() {
         }
       }
     });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [router, pathname]);
 
   const resetFilters = useCallback(() => {

@@ -30,6 +30,40 @@ interface ModelVariant {
   yearTo: number;
 }
 
+interface ModelOption {
+  name: string;
+  nameKo?: string;
+  count: number;
+}
+
+interface BadgeOption {
+  name: string;
+  count: number;
+  badgeDetails?: { name: string; count: number }[];
+}
+
+interface BadgeTreeGroup {
+  fuel: string;
+  drivetrain: string;
+  count: number;
+  badges: {
+    name: string;
+    count: number;
+    badgeDetails: { name: string; count: number }[];
+  }[];
+}
+
+const clientCache = new Map<string, unknown>();
+
+async function fetchCachedJson<T>(key: string, url: string): Promise<T> {
+  const cached = clientCache.get(key);
+  if (cached) return cached as T;
+  const res = await fetch(url);
+  const data = await res.json();
+  clientCache.set(key, data);
+  return data as T;
+}
+
 const MONTHS = [
   { value: 1, label: '01' }, { value: 2, label: '02' }, { value: 3, label: '03' },
   { value: 4, label: '04' }, { value: 5, label: '05' }, { value: 6, label: '06' },
@@ -235,10 +269,10 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     { code: '091', label: t('opt.091') },
   ];
 
-  const [modelList, setModelList] = useState<{ name: string; nameKo?: string; count: number }[]>([]);
+  const [modelList, setModelList] = useState<ModelOption[]>([]);
   const [modelLoading, setModelLoading] = useState(false);
-  const [badgeList, setBadgeList] = useState<{ name: string; count: number; badgeDetails?: { name: string; count: number }[] }[]>([]);
-  const [badgeTree, setBadgeTree] = useState<{ fuel: string; drivetrain: string; count: number; badges: { name: string; count: number; badgeDetails: { name: string; count: number }[] }[] }[]>([]);
+  const [badgeList, setBadgeList] = useState<BadgeOption[]>([]);
+  const [badgeTree, setBadgeTree] = useState<BadgeTreeGroup[]>([]);
   const [badgeLoading, setBadgeLoading] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
@@ -250,19 +284,43 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       setModelList([]);
       return;
     }
+    const cacheKey = `models:${filters.brand}`;
+    const cached = clientCache.get(cacheKey) as { models?: ModelOption[] } | undefined;
+    if (cached) {
+      setModelList(cached.models || []);
+      setModelLoading(false);
+      return;
+    }
+
+    let cancelled = false;
     setModelLoading(true);
-    fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}`)
-      .then(res => res.json())
-      .then(data => setModelList(data.models || []))
-      .catch(() => setModelList([]))
-      .finally(() => setModelLoading(false));
+    fetchCachedJson<{ models?: ModelOption[] }>(
+      cacheKey,
+      `/api/car-models?brand=${encodeURIComponent(filters.brand)}`
+    )
+      .then(data => { if (!cancelled) setModelList(data.models || []); })
+      .catch(() => { if (!cancelled) setModelList([]); })
+      .finally(() => { if (!cancelled) setModelLoading(false); });
+
+    return () => { cancelled = true; };
   }, [filters.brand]);
 
   const fetchGenerations = useCallback(async (brand: string, model: string) => {
+    const cacheKey = `generations:${brand}:${model}`;
+    const cached = clientCache.get(cacheKey) as { models?: ModelVariant[]; total?: number } | undefined;
+    if (cached) {
+      setGenerationVariants(cached.models || []);
+      setGenerationTotal(cached.total || 0);
+      setGenerationLoading(false);
+      return;
+    }
+
     setGenerationLoading(true);
     try {
-      const res = await fetch(`/api/car-models?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`);
-      const data = await res.json();
+      const data = await fetchCachedJson<{ models?: ModelVariant[]; total?: number }>(
+        cacheKey,
+        `/api/car-models?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`
+      );
       setGenerationVariants(data.models || []);
       setGenerationTotal(data.total || 0);
     } catch {
@@ -285,18 +343,33 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   // Fetch badges/trims when a generation variant is selected
   useEffect(() => {
     if (filters.brand && filters.model && filters.modelVariant) {
+      const cacheKey = `badges:${filters.brand}:${filters.model}:${filters.modelVariant}`;
+      const cached = clientCache.get(cacheKey) as { badges?: BadgeOption[]; badgeTree?: BadgeTreeGroup[] } | undefined;
+      if (cached) {
+        setBadgeList(cached.badges || []);
+        setBadgeTree(cached.badgeTree || []);
+        setBadgeLoading(false);
+        return;
+      }
+
+      let cancelled = false;
       setBadgeLoading(true);
       setShowAllBadges(false);
       setExpandedGroup(null);
       setExpandedBadge(null);
-      fetch(`/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(filters.model)}&variant=${encodeURIComponent(filters.modelVariant)}`)
-        .then(res => res.json())
+      fetchCachedJson<{ badges?: BadgeOption[]; badgeTree?: BadgeTreeGroup[] }>(
+        cacheKey,
+        `/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(filters.model)}&variant=${encodeURIComponent(filters.modelVariant)}`
+      )
         .then(data => {
+          if (cancelled) return;
           setBadgeList(data.badges || []);
           setBadgeTree(data.badgeTree || []);
         })
-        .catch(() => { setBadgeList([]); setBadgeTree([]); })
-        .finally(() => setBadgeLoading(false));
+        .catch(() => { if (!cancelled) { setBadgeList([]); setBadgeTree([]); } })
+        .finally(() => { if (!cancelled) setBadgeLoading(false); });
+
+      return () => { cancelled = true; };
     } else {
       setBadgeList([]);
       setBadgeTree([]);
@@ -313,14 +386,32 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   const handleBrandSelect = (brand: string) => {
     onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setBrandOpen(false);
-    setModelOpen(false);
+    setModelOpen(true);
     setGenOpen(false);
+
+    const cacheKey = `models:${brand}`;
+    if (!clientCache.has(cacheKey)) {
+      fetchCachedJson<{ models?: ModelOption[] }>(
+        cacheKey,
+        `/api/car-models?brand=${encodeURIComponent(brand)}`
+      ).catch(() => undefined);
+    }
   };
 
   const handleModelSelect = (model: string) => {
     onChange({ ...filters, model, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setModelOpen(false);
-    setGenOpen(false);
+    setGenOpen(true);
+
+    if (filters.brand) {
+      const cacheKey = `generations:${filters.brand}:${model}`;
+      if (!clientCache.has(cacheKey)) {
+        fetchCachedJson<{ models?: ModelVariant[]; total?: number }>(
+          cacheKey,
+          `/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(model)}`
+        ).catch(() => undefined);
+      }
+    }
   };
 
   const handleGenSelect = (variant?: string) => {

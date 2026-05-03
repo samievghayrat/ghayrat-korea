@@ -10,6 +10,7 @@ import EncarSearch from '@/components/catalog/EncarSearch';
 import { useApp } from '@/contexts/AppContext';
 
 type SourceTab = 'encar' | 'auction' | 'forSale';
+type DeliveryDestination = 'russia' | 'tajikistan';
 
 interface BrandCount {
   name: string;
@@ -20,6 +21,7 @@ interface BrandCount {
 function CatalogContent() {
   const { t } = useApp();
   const [activeTab, setActiveTab] = useState<SourceTab>('encar');
+  const [deliveryDestination, setDeliveryDestination] = useState<DeliveryDestination>('russia');
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -149,13 +151,37 @@ function CatalogContent() {
           ))}
         </div>
         {activeTab === 'encar' && (
-          <div className="inline-flex w-fit items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 shadow-sm">
-            {loading ? t('search.searching') : (
-              <>
-                <span className="font-bold text-gray-900">{total.toLocaleString('ru-RU')}</span>
-                <span className="ml-1">{t('search.cars')}</span>
-              </>
-            )}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+              <button
+                onClick={() => setDeliveryDestination('russia')}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  deliveryDestination === 'russia'
+                    ? 'bg-gray-950 text-white'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                🇷🇺 {t('country.russia')}
+              </button>
+              <button
+                onClick={() => setDeliveryDestination('tajikistan')}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  deliveryDestination === 'tajikistan'
+                    ? 'bg-gray-950 text-white'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                🇹🇯 {t('country.tajikistan')}
+              </button>
+            </div>
+            <div className="inline-flex w-fit items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 shadow-sm">
+              {loading ? t('search.searching') : (
+                <>
+                  <span className="font-bold text-gray-900">{total.toLocaleString('ru-RU')}</span>
+                  <span className="ml-1">{t('search.cars')}</span>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -172,7 +198,7 @@ function CatalogContent() {
       {/* For Sale tab - own cars */}
       {activeTab === 'forSale' && (
         <div>
-          <CarGrid cars={ownCars} loading={ownLoading} />
+          <CarGrid cars={ownCars} loading={ownLoading} destination={deliveryDestination} />
           {!ownLoading && ownCars.length === 0 && (
             <div className="text-center py-20">
               <p className="text-gray-500">{t('search.noCars')}</p>
@@ -246,7 +272,7 @@ function CatalogContent() {
               onChange={(sort) => setFilters({ ...filters, sort: sort as typeof filters.sort, page: 1 })}
             />
           </div>
-          <CarGrid cars={cars} loading={loading} />
+          <CarGrid cars={cars} loading={loading} destination={deliveryDestination} />
           <Pagination
             currentPage={filters.page || 1}
             totalPages={totalPages}

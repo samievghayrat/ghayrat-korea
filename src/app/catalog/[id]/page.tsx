@@ -125,13 +125,16 @@ export default function CarDetailPage() {
   const priceLabel = destination === 'russia'
     ? t('card.turnkeyVladivostok')
     : t('card.turnkeyTajikistan');
+  // Keep the headline stable with the server-calculated price shown on catalog cards.
+  const displayPrice = turnkeyPrice || breakdown?.total;
+  const displayPriceLabel = destination === 'russia'
+    ? displayPrice ? formatPrice(displayPrice) : ''
+    : displayPrice ? `$${displayPrice.toLocaleString('en-US')}` : '';
 
   const galleryImages = car.images && car.images.length > 0
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
 
-  // Keep the headline stable with the server-calculated price shown on catalog cards.
-  const displayPrice = turnkeyPrice || breakdown?.total;
   const fullTitle = buildCarTitle(car);
 
   return (
@@ -251,7 +254,7 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Russia
+                🇷🇺 {t('country.russia')}
               </button>
               <button
                 onClick={() => setDestination('tajikistan')}
@@ -261,40 +264,33 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Tajikistan
+                🇹🇯 {t('country.tajikistan')}
               </button>
             </div>
 
             {/* Total price - shows immediately from server-calculated value */}
             <div className="mt-4 rounded-2xl bg-gray-950 p-4 text-white">
-              {destination === 'russia' ? (
-                displayPrice ? (
-                  <>
-                    <div className="text-3xl font-extrabold">
-                      {formatPrice(displayPrice)}
-                    </div>
-                    <div className="text-sm text-white/65 mt-1">{priceLabel}</div>
-                    <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                      {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-9 w-48 bg-gray-200 rounded" />
-                    <div className="h-4 w-36 bg-gray-200 rounded" />
-                    <div className="h-3 w-44 bg-gray-200 rounded" />
-                  </div>
-                )
-              ) : (
+              {displayPrice ? (
                 <>
+                  <div className="rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
+                    {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
+                  </div>
                   <div className="text-3xl font-extrabold">
-                    ${(car.price_usd || 0).toLocaleString('en-US')}
+                    {displayPriceLabel}
                   </div>
-                  <div className="text-sm text-white/65 mt-1">{t('price.priceInKorea')}</div>
-                  <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                    {car.price_krw.toLocaleString()} KRW
-                  </div>
+                  <div className="text-sm text-white/65 mt-1">{priceLabel}</div>
+                  {destination === 'tajikistan' && (
+                    <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
+                      {car.price_krw.toLocaleString()} KRW
+                    </div>
+                  )}
                 </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-9 w-48 bg-gray-200 rounded" />
+                  <div className="h-4 w-36 bg-gray-200 rounded" />
+                  <div className="h-3 w-44 bg-gray-200 rounded" />
+                </div>
               )}
             </div>
 

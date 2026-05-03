@@ -9,9 +9,10 @@ import { useApp } from '@/contexts/AppContext';
 interface CarCardProps {
   car: CarListing;
   priority?: boolean;
+  destination?: 'russia' | 'tajikistan';
 }
 
-export default function CarCard({ car, priority = false }: CarCardProps) {
+export default function CarCard({ car, priority = false, destination = 'russia' }: CarCardProps) {
   const { t, formatPrice, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
@@ -27,6 +28,15 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
+  const turnkeyPrice = destination === 'russia'
+    ? car.price_turnkey_russia
+    : car.price_turnkey_tajikistan;
+  const turnkeyLabel = destination === 'russia'
+    ? t('card.turnkeyVladivostok')
+    : t('card.turnkeyTajikistan');
+  const formattedTurnkeyPrice = destination === 'russia'
+    ? turnkeyPrice ? formatPrice(turnkeyPrice) : ''
+    : turnkeyPrice ? `$${turnkeyPrice.toLocaleString('en-US')}` : '';
 
   return (
     <Link
@@ -86,16 +96,16 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         </div>
         <div className="flex-1 min-h-2" />
         <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-          <div className={car.price_turnkey_russia ? 'flex items-center justify-between text-xs' : ''}>
+          <div className={turnkeyPrice ? 'flex items-center justify-between text-xs' : ''}>
             <span className="text-gray-400">{t('card.priceInKorea')}</span>
             <span className="font-bold text-primary">{formatKrwPrice(car.price_krw)}</span>
           </div>
-          {car.price_turnkey_russia && (
+          {turnkeyPrice && (
             <div>
               <div className="text-lg font-extrabold text-gray-950 leading-tight">
-                {formatPrice(car.price_turnkey_russia)}
+                {formattedTurnkeyPrice}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{t('card.turnkeyVladivostok')}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">{turnkeyLabel}</div>
             </div>
           )}
         </div>

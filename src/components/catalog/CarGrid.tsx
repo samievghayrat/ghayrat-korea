@@ -4,9 +4,10 @@ import CarCard from './CarCard';
 interface CarGridProps {
   cars: CarListing[];
   loading?: boolean;
+  destination?: 'russia' | 'tajikistan';
 }
 
-export default function CarGrid({ cars, loading }: CarGridProps) {
+export default function CarGrid({ cars, loading, destination = 'russia' }: CarGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -52,7 +53,7 @@ export default function CarGrid({ cars, loading }: CarGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       {cars.map((car, index) => (
-        <CarCard key={car.id} car={car} priority={index < 6} />
+        <CarCard key={car.id} car={car} priority={index < 6} destination={destination} />
       ))}
     </div>
   );

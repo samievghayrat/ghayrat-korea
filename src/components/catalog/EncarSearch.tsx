@@ -452,6 +452,10 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange({ ...filters, [key]: value || undefined, page: 1 });
   };
 
+  const applyYearShortcut = (yearFrom: number) => {
+    onChange({ ...filters, yearFrom, yearTo: undefined, monthFrom: undefined, monthTo: undefined, page: 1 });
+  };
+
   const activeFilterCount = [
     filters.fuel, filters.yearFrom, filters.yearTo,
     filters.monthFrom, filters.monthTo,
@@ -467,6 +471,33 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="text-sm font-bold text-gray-950">{t('search.pickCarTitle')}</div>
         <div className="mt-0.5 text-xs font-medium text-gray-400">{t('search.pickCarHint')}</div>
+      </div>
+      <div className="border-b border-gray-100 px-4 py-3">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {t('search.destinationYearHint')}
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+          <button
+            onClick={() => applyYearShortcut(2021)}
+            className={`rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2021 && !filters.yearTo
+                ? 'border-gray-950 bg-gray-950 text-white shadow-sm'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+            }`}
+          >
+            {'\u{1F1F7}\u{1F1FA}'} {t('search.russiaYearFilter')}
+          </button>
+          <button
+            onClick={() => applyYearShortcut(2014)}
+            className={`rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2014 && !filters.yearTo
+                ? 'border-gray-950 bg-gray-950 text-white shadow-sm'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+            }`}
+          >
+            {'\u{1F1F9}\u{1F1EF}'} {t('search.tajikistanYearFilter')}
+          </button>
+        </div>
       </div>
 
       {/* Brand selector */}
@@ -506,7 +537,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       </SelectBox>
 
       {/* Model selector */}
-      {filters.brand && (
+      {filters.brand ? (
         <SelectBox
           label=""
           value={modelList.find(m => m.name === filters.model || m.nameKo === filters.model)?.name || filters.model}
@@ -548,6 +579,23 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
             </div>
           )}
         </SelectBox>
+      ) : (
+        <div className="px-4 py-3">
+          <button
+            disabled
+            className="flex w-full cursor-not-allowed items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-400"
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-500">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
+                </svg>
+              </span>
+              <span className="truncate">{t('search.allModels')}</span>
+            </span>
+            <span className="text-xs font-medium">{t('search.modelAfterBrand')}</span>
+          </button>
+        </div>
       )}
 
       {/* Generation selector */}

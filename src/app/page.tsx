@@ -99,9 +99,6 @@ function CatalogContent() {
       <section className="mb-5 rounded-2xl bg-gray-950 px-4 py-5 sm:px-6 lg:px-7 text-white overflow-hidden">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">
-              {t('home.heroTitle')}
-            </h1>
             <p className="mt-2 text-sm sm:text-base text-white/65">
               {t('home.heroSubtitle')}
             </p>

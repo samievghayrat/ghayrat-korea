@@ -557,47 +557,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         </SelectBox>
       ) : null}
 
-      <div className="border-t border-gray-100 px-4 py-3">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t('search.yearShortcut')}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => toggleYearShortcut(2014)}
-            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2014 && !filters.yearTo
-                ? 'bg-gray-950 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
-              filters.yearFrom === 2014 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
-            }`}>
-              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                filters.yearFrom === 2014 && !filters.yearTo ? 'translate-x-4' : ''
-              }`} />
-            </span>
-            {t('search.tajikistanYearFilter')}
-          </button>
-          <button
-            onClick={() => toggleYearShortcut(2021)}
-            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2021 && !filters.yearTo
-                ? 'bg-gray-950 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
-              filters.yearFrom === 2021 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
-            }`}>
-              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                filters.yearFrom === 2021 && !filters.yearTo ? 'translate-x-4' : ''
-              }`} />
-            </span>
-            {t('search.russiaYearFilter')}
-          </button>
-        </div>
-      </div>
 
       {/* Generation selector */}
       {showMoreFilters && filters.model && (
@@ -637,7 +596,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               {generationVariants.map(v => {
                 const translated = translateGenerationName(v.name);
                 const yearRange = v.yearFrom && v.yearTo && v.yearFrom <= v.yearTo
-                  ? `(${v.yearFrom} — ${v.yearTo})`
+                  ? `(${v.yearFrom} â€” ${v.yearTo})`
                   : '';
                 return (
                   <button
@@ -662,7 +621,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         </SelectBox>
       )}
 
-      {/* Hierarchical Badge Tree: Fuel+Drivetrain → Engine Badge → Trim */}
+      {/* Hierarchical Badge Tree: Fuel+Drivetrain â†’ Engine Badge â†’ Trim */}
       {showMoreFilters && filters.modelVariant && (badgeTree.length > 0 || badgeLoading) && (
         <div className="px-4 py-3 border-t border-gray-100">
           <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.type')}</label>
@@ -674,7 +633,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               </svg>
             </div>
           ) : badgeTree.length > 1 ? (
-            /* Multi-group tree: show Fuel+Drivetrain → Badge → BadgeDetail */
+            /* Multi-group tree: show Fuel+Drivetrain â†’ Badge â†’ BadgeDetail */
             <div className="space-y-0.5">
               {badgeTree.map((group) => {
                 const groupKey = `${group.fuel}|${group.drivetrain}`;
@@ -851,6 +810,47 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           <ChevronIcon open={showMoreFilters} />
         </span>
       </button>
+      <div className="border-t border-gray-100 px-4 py-3">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {t('search.yearShortcut')}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => toggleYearShortcut(2014)}
+            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2014 && !filters.yearTo
+                ? 'bg-gray-950 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
+              filters.yearFrom === 2014 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
+            }`}>
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                filters.yearFrom === 2014 && !filters.yearTo ? 'translate-x-4' : ''
+              }`} />
+            </span>
+            {t('search.tajikistanYearFilter')}
+          </button>
+          <button
+            onClick={() => toggleYearShortcut(2021)}
+            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2021 && !filters.yearTo
+                ? 'bg-gray-950 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
+              filters.yearFrom === 2021 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
+            }`}>
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                filters.yearFrom === 2021 && !filters.yearTo ? 'translate-x-4' : ''
+              }`} />
+            </span>
+            {t('search.russiaYearFilter')}
+          </button>
+        </div>
+      </div>
 
       {showMoreFilters && (
       <div className="border-t border-gray-100 max-h-[500px] overflow-y-auto">
@@ -960,7 +960,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           </div>
         </FilterSection>
 
-        {/* Extra filters — hidden in compact mode until "More" is tapped */}
+        {/* Extra filters â€” hidden in compact mode until "More" is tapped */}
         {(!compact || showMoreFilters) && (
           <>
             {/* Color */}

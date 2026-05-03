@@ -147,15 +147,14 @@ export default function CarDetailPage() {
         <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="hover:text-primary transition-colors">{car.brand}</a>
         <span>/</span>
         <span className="text-gray-700 font-medium">{car.model}</span>
+        <span>/</span>
+        <span className="text-gray-700 font-medium">Encar ID {car.id}</span>
       </nav>
 
       <div className="mb-5 lg:mb-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
-                Encar ID {car.id}
-              </span>
               {car.source === 'own' && (
                 <span className="inline-flex items-center rounded-md bg-primary px-2.5 py-1 text-xs font-bold text-white">
                   {t('card.inStock')}

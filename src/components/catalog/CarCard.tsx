@@ -42,72 +42,68 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
     <Link
       href={`/catalog/${car.id}`}
       onClick={handleClick}
-      className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 flex flex-col shadow-sm"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+      <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
         <Image
           src={car.imageUrl || '/images/no-image.svg'}
           alt={`${car.brand} ${car.model} ${car.year}`}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           priority={priority}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-70" />
-        <div className="absolute top-2.5 right-2.5">
+        <div className="absolute top-2 right-2">
           <FavoriteButton carId={car.id} size="sm" />
         </div>
-        <div className="absolute bottom-3 left-3 flex gap-1.5">
+        <div className="absolute bottom-2 left-2 flex gap-1.5">
           {car.source === 'own' && (
-            <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
+            <span className="rounded bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               {t('card.inStock')}
             </span>
           )}
           {car.reservationStatus === 'reserved' && (
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
+            <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               {t('card.reserved')}
             </span>
           )}
           {car.reservationStatus === 'sold' && (
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
+            <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               {t('card.sold')}
             </span>
           )}
         </div>
       </div>
 
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="font-bold text-gray-950 text-[15px] leading-tight group-hover:text-primary transition-colors">
-          {car.brand} <span className="text-gray-600 font-semibold">{displayModel}</span>
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
+          {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
         </h3>
         {(car.badge || car.trim) && (
-          <p className="text-[11px] text-gray-400 mt-0.5 truncate">{car.badge || car.trim}</p>
+          <p className="mt-1 truncate text-[12px] text-gray-500">{car.badge || car.trim}</p>
         )}
-        <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
-          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[11px] font-semibold text-gray-800">{yearLabel}</div>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[11px] font-semibold text-gray-800 truncate">{formatMileage(car.mileage)}</div>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[11px] font-semibold text-gray-800 truncate">{car.fuel}</div>
-          </div>
+
+        <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
+          <span>{yearLabel}</span>
+          <span className="text-gray-300">/</span>
+          <span>{formatMileage(car.mileage)}</span>
+          <span className="text-gray-300">/</span>
+          <span className="truncate">{car.fuel}</span>
         </div>
+
         <div className="flex-1 min-h-2" />
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-          <div>
-            <div className="text-[10px] text-gray-400">{t('card.priceInKorea')}</div>
-            <div className="text-lg font-extrabold text-primary leading-tight">
-              {formatKrwPrice(car.price_krw)}
-            </div>
+
+        <div className="mt-4 rounded-lg bg-emerald-50/70 px-3 py-3">
+          <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
+          <div className="mt-0.5 text-xl font-extrabold leading-tight text-emerald-700">
+            {formatKrwPrice(car.price_krw)}
           </div>
           {turnkeyPrice && (
-            <div>
-              <div className="text-sm font-bold text-gray-900 leading-tight">
+            <div className="mt-2 border-t border-emerald-100 pt-2">
+              <div className="text-sm font-bold leading-tight text-gray-900">
                 {formattedTurnkeyPrice}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{turnkeyLabel}</div>
+              <div className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-gray-500">{turnkeyLabel}</div>
             </div>
           )}
         </div>

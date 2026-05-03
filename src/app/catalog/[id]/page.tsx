@@ -141,14 +141,14 @@ export default function CarDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-        <a href="/" className="hover:text-primary transition-colors">{t('nav.catalog')}</a>
-        <span>/</span>
-        <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="hover:text-primary transition-colors">{car.brand}</a>
-        <span>/</span>
-        <span className="text-gray-700 font-medium">{car.model}</span>
-        <span>/</span>
-        <span className="text-gray-700 font-medium">Encar ID {car.id}</span>
+      <nav className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-400 mb-4">
+        <a href="/" className="shrink-0 hover:text-primary transition-colors">{t('nav.catalog')}</a>
+        <span className="shrink-0">/</span>
+        <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="shrink-0 hover:text-primary transition-colors">{car.brand}</a>
+        <span className="shrink-0">/</span>
+        <span className="shrink-0 text-gray-700 font-medium">{car.model}</span>
+        <span className="shrink-0">/</span>
+        <span className="shrink-0 text-gray-700 font-medium">Encar ID {car.id}</span>
       </nav>
 
       <div className="mb-5 lg:mb-6">

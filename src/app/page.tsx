@@ -98,14 +98,14 @@ function CatalogContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
-      <section className="mb-5 rounded-2xl bg-gray-950 px-4 py-5 sm:px-6 lg:px-7 text-white overflow-hidden">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="mt-2 text-sm sm:text-base font-bold text-white/80">
+      <section className="mb-5 rounded-2xl border border-gray-200 bg-white px-4 py-4 sm:px-6 shadow-sm">
+        <div className="flex flex-col gap-3">
+          <div className="max-w-3xl">
+            <p className="text-sm sm:text-base font-bold text-gray-900">
               {t('home.heroSubtitle')}
             </p>
-            <div className="mt-4">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/45">
+            <div className="mt-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <span>{t('home.deliveryTo')}</span>
                 <span className="flex items-center gap-1.5 text-base leading-none tracking-normal">
                   {deliveryCountries.map((flag) => (
@@ -113,20 +113,6 @@ function CatalogContent() {
                   ))}
                 </span>
               </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
-            <div className="rounded-xl bg-white/10 px-3 py-3">
-              <div className="text-lg font-bold">{totalCars ? totalCars.toLocaleString('ru-RU') : '...'}</div>
-              <div className="text-[11px] text-white/55">{t('home.liveCars')}</div>
-            </div>
-            <div className="rounded-xl bg-white/10 px-3 py-3">
-              <div className="text-lg font-bold">2</div>
-              <div className="text-[11px] text-white/55">{t('home.yearsInKorea')}</div>
-            </div>
-            <div className="rounded-xl bg-white/10 px-3 py-3">
-              <div className="text-lg font-bold">1000+</div>
-              <div className="text-[11px] text-white/55">{t('home.carsDelivered')}</div>
             </div>
           </div>
         </div>

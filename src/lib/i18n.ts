@@ -206,6 +206,7 @@ const t = {
   'price.deliveryKhujand': { ru: 'Доставка до Худжанда', en: 'Delivery to Khujand', tj: 'Интиқол то Хуҷанд', uz: 'Xo\'jandga yetkazish' },
   'price.deliveryKhujandDesc': { ru: '~$3,000 Владивосток → Худжанд', en: '~$3,000 Vladivostok → Khujand', tj: '~$3,000 Владивосток → Хуҷанд', uz: '~$3,000 Vladivostok → Xo\'jand' },
   'price.customsClearanceDesc': { ru: 'по данным rastamojka.tj', en: 'based on rastamojka.tj', tj: 'аз рӯи маълумоти rastamojka.tj', uz: 'rastamojka.tj ma\'lumotlari bo\'yicha' },
+  'price.customsApproxWarningTj': { ru: 'примерная стоимость. Обязательно проверьте самостоятельно перед покупкой.', en: 'approximate cost. Please verify it yourself before purchasing.', tj: 'арзиши тахминӣ. Пеш аз харид ҳатман худатон санҷед.', uz: 'taxminiy narx. Xarid qilishdan oldin albatta o‘zingiz tekshiring.' },
   'price.serviceFeeKorea': { ru: 'Расходы в Корее + услуги компании', en: 'Expenses in Korea + service fee', tj: 'Хароҷот дар Корея + хизматрасонӣ', uz: 'Koreyadagi xarajatlar + xizmat' },
   'price.serviceFeeKoreaDesc': { ru: 'документы, расходы на авто, комиссия', en: 'documents, car expenses, commission', tj: 'ҳуҷҷатҳо, хароҷоти мошин, комиссия', uz: 'hujjatlar, avto xarajatlari, komissiya' },
   'price.deliveryTj': { ru: 'Доставка до Таджикистана', en: 'Delivery to Tajikistan', tj: 'Интиқол то Тоҷикистон', uz: 'Tojikistonga yetkazish' },

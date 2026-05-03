@@ -22,6 +22,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destinat
   const vladivostokUsd = breakdown.deliveryVladivostok || 700;
   const khujandUsd = breakdown.deliveryKhujand || 3000;
   const koreaServiceUsd = 300;
+  const customsEstimateUsd = (breakdown.customsDuty || 0)
+    + (breakdown.exciseTax || 0)
+    + (breakdown.vatTax || 0)
+    + (breakdown.procedureFee || 0)
+    + (breakdown.utilizationFee || 0);
   const deliveryUsd = tjDelivery === 'vladivostok'
     ? vladivostokUsd
     : tjDelivery === 'khujand'
@@ -110,6 +115,20 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destinat
                     )}
                   </button>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-amber-900">{t('price.customsClearance')}</div>
+                <div className="mt-1 text-xs font-medium text-amber-800/75">
+                  {t('price.customsClearanceDesc')}; {t('price.customsApproxWarningTj')}
+                </div>
+              </div>
+              <div className="shrink-0 text-sm font-bold text-amber-950">
+                ~{fmtUsd(customsEstimateUsd)}
               </div>
             </div>
           </div>

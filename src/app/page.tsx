@@ -20,8 +20,8 @@ interface BrandCount {
 
 function CatalogContent() {
   const { t } = useApp();
-  const [activeTab, setActiveTab] = useState<SourceTab>('encar');
-  const [deliveryDestination, setDeliveryDestination] = useState<DeliveryDestination>('russia');
+  const [activeTab] = useState<SourceTab>('encar');
+  const [deliveryDestination] = useState<DeliveryDestination>('russia');
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -83,11 +83,6 @@ function CatalogContent() {
       .catch(() => setLoading(false));
   }, [filters, activeTab]);
 
-  const tabs: { key: SourceTab; label: string }[] = [
-    { key: 'encar', label: t('tab.encar') },
-    { key: 'auction', label: t('tab.auction') },
-    { key: 'forSale', label: t('tab.forSale') },
-  ];
   const serviceSteps = [
     t('home.serviceSelect'),
     t('home.serviceInspect'),
@@ -137,59 +132,6 @@ function CatalogContent() {
           </div>
         </div>
       </section>
-
-      {/* Source tabs */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => { setActiveTab(tab.key); }}
-              className={`min-w-fit text-sm font-semibold py-2.5 px-4 rounded-xl border transition-all whitespace-nowrap ${
-                activeTab === tab.key
-                  ? 'bg-white text-gray-950 border-gray-200 shadow-sm'
-                  : 'bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        {activeTab === 'encar' && (
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-              <button
-                onClick={() => setDeliveryDestination('russia')}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  deliveryDestination === 'russia'
-                    ? 'bg-gray-950 text-white'
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                ðŸ‡·ðŸ‡º {t('country.russia')}
-              </button>
-              <button
-                onClick={() => setDeliveryDestination('tajikistan')}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  deliveryDestination === 'tajikistan'
-                    ? 'bg-gray-950 text-white'
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                ðŸ‡¹ðŸ‡¯ {t('country.tajikistan')}
-              </button>
-            </div>
-            <div className="inline-flex w-fit items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 shadow-sm">
-              {loading ? t('search.searching') : (
-                <>
-                  <span className="font-bold text-gray-900">{total.toLocaleString('ru-RU')}</span>
-                  <span className="ml-1">{t('search.cars')}</span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Auction tab - coming soon */}
       {activeTab === 'auction' && (
@@ -260,18 +202,7 @@ function CatalogContent() {
         {/* Car grid */}
         <div className="flex-1 min-w-0">
           {/* Desktop controls bar */}
-          <div className="hidden lg:flex mb-4 items-center justify-between bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
-            <div className="text-sm text-gray-500">
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {t('search.searching')}
-                </span>
-              ) : t('tab.encar')}
-            </div>
+          <div className="hidden lg:flex mb-4 items-center justify-end bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
             <SortSelect
               value={filters.sort || 'year_desc'}
               onChange={(sort) => setFilters({ ...filters, sort: sort as typeof filters.sort, page: 1 })}

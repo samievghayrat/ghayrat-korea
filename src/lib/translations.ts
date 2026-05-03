@@ -197,6 +197,10 @@ export const modelMap: Record<string, string> = {
   '레인지로버': 'Range Rover',
   // Common trim/feature terms
   '프리미엄': 'Premium',
+  '프리미어': 'Premier',
+  '프라임': 'Prime',
+  '세이프티': 'Safety',
+  '레더 패키지': 'Leather Package',
   '시그니처': 'Signature',
   '럭셔리': 'Luxury',
   '익스클루시브': 'Exclusive',
@@ -351,6 +355,10 @@ export function translateModel(korean: string): string {
 const badgeWordMap: Record<string, string> = {
   '시그니처': 'Signature',
   '프리미엄': 'Premium',
+  '프리미어': 'Premier',
+  '프라임': 'Prime',
+  '세이프티': 'Safety',
+  '레더 패키지': 'Leather Package',
   '프레스티지': 'Prestige',
   '노블레스': 'Noblesse',
   '인스퍼레이션': 'Inspiration',

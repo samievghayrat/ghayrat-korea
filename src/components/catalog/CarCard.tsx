@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { CarListing } from '@/types';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { useApp } from '@/contexts/AppContext';
+import { translateBadgeDetail } from '@/lib/translations';
 
 interface CarCardProps {
   car: CarListing;
@@ -24,6 +25,7 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
   const displayModel = car.generation && !car.generation.toLowerCase().startsWith(car.model.toLowerCase())
     ? `${car.model} ${car.generation}`
     : car.model;
+  const displayTrim = translateBadgeDetail(car.badge || car.trim || '');
 
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
@@ -78,8 +80,8 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
       <div className="flex flex-1 flex-col p-3.5">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
           {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
-          {(car.badge || car.trim) && (
-            <span className="font-medium text-gray-500"> {car.badge || car.trim}</span>
+          {displayTrim && (
+            <span className="font-medium text-gray-500"> {displayTrim}</span>
           )}
         </h3>
 

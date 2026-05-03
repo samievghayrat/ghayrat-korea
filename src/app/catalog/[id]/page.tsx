@@ -173,7 +173,7 @@ export default function CarDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-x-6 lg:gap-y-4 items-start">
         {/* Gallery */}
         <div className="lg:col-span-8 order-1">
           <div className="bg-white rounded-2xl border border-gray-200 p-2 sm:p-3 shadow-sm">
@@ -194,7 +194,7 @@ export default function CarDetailPage() {
         </div>
 
         {/* Price panel - right on desktop, right after gallery on mobile */}
-        <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 space-y-4 lg:sticky lg:top-24">
+        <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 lg:row-span-2 space-y-4 lg:sticky lg:top-24">
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
             {/* Title + Favorite */}
             <div className="flex items-start justify-end gap-3 lg:hidden">

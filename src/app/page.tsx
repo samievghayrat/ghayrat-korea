@@ -123,12 +123,12 @@ function CatalogContent() {
               <div className="text-[11px] text-white/55">{t('home.liveCars')}</div>
             </div>
             <div className="rounded-xl bg-white/10 px-3 py-3">
-              <div className="text-lg font-bold">KRW</div>
-              <div className="text-[11px] text-white/55">{t('home.koreaPrice')}</div>
+              <div className="text-lg font-bold">2</div>
+              <div className="text-[11px] text-white/55">{t('home.yearsInKorea')}</div>
             </div>
             <div className="rounded-xl bg-white/10 px-3 py-3">
-              <div className="text-lg font-bold">RUB</div>
-              <div className="text-[11px] text-white/55">{t('home.turnkey')}</div>
+              <div className="text-lg font-bold">1000+</div>
+              <div className="text-[11px] text-white/55">{t('home.carsDelivered')}</div>
             </div>
           </div>
         </div>

@@ -24,6 +24,8 @@ const t = {
   'home.liveCars': { ru: 'авто в каталоге', en: 'live cars', tj: 'мошин дар каталог', uz: 'katalogdagi avtomobillar' },
   'home.koreaPrice': { ru: 'цена в Корее', en: 'Korea price', tj: 'нарх дар Корея', uz: 'Koreyadagi narx' },
   'home.turnkey': { ru: 'под ключ', en: 'turnkey', tj: 'тайёр', uz: 'tayyor' },
+  'home.yearsInKorea': { ru: 'года в Корее', en: 'years in Korea', tj: 'сол дар Корея', uz: 'yil Koreyada' },
+  'home.carsDelivered': { ru: 'доставлено авто', en: 'cars delivered', tj: 'мошин расонида шуд', uz: 'avtomobil yetkazildi' },
   'home.deliveryTo': { ru: 'Доставляем в страны', en: 'Delivery to these countries', tj: 'Ба ин кишварҳо мерасонем', uz: 'Ushbu mamlakatlarga yetkazamiz' },
   'country.russia': { ru: 'Россия', en: 'Russia', tj: 'Русия', uz: 'Rossiya' },
   'country.tajikistan': { ru: 'Таджикистан', en: 'Tajikistan', tj: 'Тоҷикистон', uz: 'Tojikiston' },

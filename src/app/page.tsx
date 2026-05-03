@@ -89,10 +89,10 @@ function CatalogContent() {
     { key: 'forSale', label: t('tab.forSale') },
   ];
   const deliveryCountries = [
-    { flag: '🇷🇺', label: t('country.russia') },
-    { flag: '🇹🇯', label: t('country.tajikistan') },
-    { flag: '🇺🇿', label: t('country.uzbekistan') },
-    { flag: '🇰🇿', label: t('country.kazakhstan') },
+    '🇷🇺',
+    '🇹🇯',
+    '🇺🇿',
+    '🇰🇿',
   ];
 
   return (
@@ -105,14 +105,13 @@ function CatalogContent() {
               {t('home.heroSubtitle')}
             </p>
             <div className="mt-4">
-              <div className="text-xs font-semibold uppercase tracking-wide text-white/45">{t('home.deliveryTo')}</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {deliveryCountries.map((country) => (
-                  <span key={country.label} className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white/80">
-                    <span className="text-base leading-none">{country.flag}</span>
-                    {country.label}
-                  </span>
-                ))}
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/45">
+                <span>{t('home.deliveryTo')}</span>
+                <span className="flex items-center gap-1.5 text-base leading-none tracking-normal">
+                  {deliveryCountries.map((flag) => (
+                    <span key={flag}>{flag}</span>
+                  ))}
+                </span>
               </div>
             </div>
           </div>

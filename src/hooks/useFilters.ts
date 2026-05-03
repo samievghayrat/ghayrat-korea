@@ -25,6 +25,8 @@ export function useFilters() {
     bodyType: searchParams.get('bodyType') || undefined,
     mileageFrom: searchParams.get('mileageFrom') ? parseInt(searchParams.get('mileageFrom')!) : undefined,
     mileageTo: searchParams.get('mileageTo') ? parseInt(searchParams.get('mileageTo')!) : undefined,
+    hpFrom: searchParams.get('hpFrom') ? parseInt(searchParams.get('hpFrom')!) : undefined,
+    hpTo: searchParams.get('hpTo') ? parseInt(searchParams.get('hpTo')!) : undefined,
     transmission: searchParams.get('transmission') || undefined,
     drivetrain: searchParams.get('drivetrain') || undefined,
     color: searchParams.get('color') || undefined,

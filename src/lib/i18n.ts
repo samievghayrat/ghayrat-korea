@@ -17,6 +17,19 @@ const t = {
   'tab.auction': { ru: 'Kcar Аукцион', en: 'Kcar Auction', tj: 'Kcar Аукцион', uz: 'Kcar Auktsion' },
   'tab.forSale': { ru: 'В наличии', en: 'For Sale', tj: 'Дар мавҷуд', uz: 'Sotuvda' },
 
+  // Homepage hero
+  'home.heroEyebrow': { ru: 'Авто из Кореи · расчёт под ключ', en: 'Encar Korea · turnkey pricing', tj: 'Мошинҳо аз Корея · ҳисоб тайёр', uz: 'Koreyadan avtomobillar · tayyor narx' },
+  'home.heroTitle': { ru: 'Автомобили из Кореи с живыми ценами', en: 'Cars from Korea with live prices', tj: 'Мошинҳо аз Корея бо нархҳои зинда', uz: 'Koreyadan jonli narxlardagi avtomobillar' },
+  'home.heroSubtitle': { ru: 'Ищите авто на Encar, сравнивайте характеристики и смотрите расчёт доставки и таможни.', en: 'Search Korean listings, compare key specs, and check estimated delivery and customs costs.', tj: 'Дар Encar мошин ёбед, мушаххасотро муқоиса кунед ва ҳисоби интиқолу гумрукро бинед.', uz: 'Encar eʼlonlarini qidiring, xususiyatlarni solishtiring va yetkazish hamda bojxona hisobini koʼring.' },
+  'home.liveCars': { ru: 'авто в каталоге', en: 'live cars', tj: 'мошин дар каталог', uz: 'katalogdagi avtomobillar' },
+  'home.koreaPrice': { ru: 'цена в Корее', en: 'Korea price', tj: 'нарх дар Корея', uz: 'Koreyadagi narx' },
+  'home.turnkey': { ru: 'под ключ', en: 'turnkey', tj: 'тайёр', uz: 'tayyor' },
+  'home.deliveryTo': { ru: 'Доставляем в страны', en: 'Delivery to these countries', tj: 'Ба ин кишварҳо мерасонем', uz: 'Ushbu mamlakatlarga yetkazamiz' },
+  'country.russia': { ru: 'Россия', en: 'Russia', tj: 'Русия', uz: 'Rossiya' },
+  'country.tajikistan': { ru: 'Таджикистан', en: 'Tajikistan', tj: 'Тоҷикистон', uz: 'Tojikiston' },
+  'country.uzbekistan': { ru: 'Узбекистан', en: 'Uzbekistan', tj: 'Ӯзбекистон', uz: 'Oʻzbekiston' },
+  'country.kazakhstan': { ru: 'Казахстан', en: 'Kazakhstan', tj: 'Қазоқистон', uz: 'Qozogʻiston' },
+
   // Search & Filters
   'search.brandPlaceholder': { ru: 'Марка, модель, поколение', en: 'Brand, model, generation', tj: 'Бренд, модел, насл', uz: 'Brend, model, avlod' },
   'search.allModels': { ru: 'Все модели', en: 'All models', tj: 'Ҳамаи моделҳо', uz: 'Barcha modellar' },

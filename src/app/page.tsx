@@ -86,6 +86,12 @@ function CatalogContent() {
     { key: 'auction', label: t('tab.auction') },
     { key: 'forSale', label: t('tab.forSale') },
   ];
+  const deliveryCountries = [
+    { flag: '🇷🇺', label: t('country.russia') },
+    { flag: '🇹🇯', label: t('country.tajikistan') },
+    { flag: '🇺🇿', label: t('country.uzbekistan') },
+    { flag: '🇰🇿', label: t('country.kazakhstan') },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,47 +100,70 @@ function CatalogContent() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="mb-2 inline-flex items-center rounded-md bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/75">
-              Encar Korea · turnkey pricing
+              {t('home.heroEyebrow')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">
-              Cars from Korea with live prices
+              {t('home.heroTitle')}
             </h1>
             <p className="mt-2 text-sm sm:text-base text-white/65">
-              Search Korean listings, compare key specs, and check estimated delivery and customs costs.
+              {t('home.heroSubtitle')}
             </p>
+            <div className="mt-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-white/45">{t('home.deliveryTo')}</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {deliveryCountries.map((country) => (
+                  <span key={country.label} className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white/80">
+                    <span className="text-base leading-none">{country.flag}</span>
+                    {country.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
             <div className="rounded-xl bg-white/10 px-3 py-3">
               <div className="text-lg font-bold">{totalCars ? totalCars.toLocaleString('ru-RU') : '...'}</div>
-              <div className="text-[11px] text-white/55">live cars</div>
+              <div className="text-[11px] text-white/55">{t('home.liveCars')}</div>
             </div>
             <div className="rounded-xl bg-white/10 px-3 py-3">
               <div className="text-lg font-bold">KRW</div>
-              <div className="text-[11px] text-white/55">Korea price</div>
+              <div className="text-[11px] text-white/55">{t('home.koreaPrice')}</div>
             </div>
             <div className="rounded-xl bg-white/10 px-3 py-3">
               <div className="text-lg font-bold">RUB</div>
-              <div className="text-[11px] text-white/55">turnkey</div>
+              <div className="text-[11px] text-white/55">{t('home.turnkey')}</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Source tabs */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => { setActiveTab(tab.key); }}
-            className={`min-w-fit text-sm font-semibold py-2.5 px-4 rounded-xl border transition-all whitespace-nowrap ${
-              activeTab === tab.key
-                ? 'bg-white text-gray-950 border-gray-200 shadow-sm'
-                : 'bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-white'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { setActiveTab(tab.key); }}
+              className={`min-w-fit text-sm font-semibold py-2.5 px-4 rounded-xl border transition-all whitespace-nowrap ${
+                activeTab === tab.key
+                  ? 'bg-white text-gray-950 border-gray-200 shadow-sm'
+                  : 'bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {activeTab === 'encar' && (
+          <div className="inline-flex w-fit items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 shadow-sm">
+            {loading ? t('search.searching') : (
+              <>
+                <span className="font-bold text-gray-900">{total.toLocaleString('ru-RU')}</span>
+                <span className="ml-1">{t('search.cars')}</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Auction tab - coming soon */}
@@ -176,20 +205,10 @@ function CatalogContent() {
           />
         </div>
 
-        {/* Results count + sort row */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t('search.searching')}
-              </span>
-            ) : (
-              <span className="font-bold text-gray-900 text-lg">{total.toLocaleString()} <span className="font-normal text-sm text-gray-500">{t('search.cars')}</span></span>
-            )}
+        {/* Sort row */}
+        <div className="mb-4 flex items-center justify-end">
+          <div className="sr-only" aria-live="polite">
+            {loading ? t('search.searching') : `${total.toLocaleString('ru-RU')} ${t('search.cars')}`}
           </div>
           <SortSelect
             value={filters.sort || 'year_desc'}
@@ -226,9 +245,7 @@ function CatalogContent() {
                   </svg>
                   {t('search.searching')}
                 </span>
-              ) : (
-                <>{t('search.found')} <span className="font-bold text-gray-900">{total.toLocaleString()}</span> {t('search.cars')}</>
-              )}
+              ) : t('tab.encar')}
             </div>
             <SortSelect
               value={filters.sort || 'year_desc'}

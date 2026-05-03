@@ -19,7 +19,7 @@ const t = {
 
   // Homepage hero
   'home.heroEyebrow': { ru: 'Авто из Кореи · расчёт под ключ', en: 'Encar Korea · turnkey pricing', tj: 'Мошинҳо аз Корея · ҳисоб тайёр', uz: 'Koreyadan avtomobillar · tayyor narx' },
-  'home.heroTitle': { ru: 'Автомобили из Кореи с живыми ценами', en: 'Cars from Korea with live prices', tj: 'Мошинҳо аз Корея бо нархҳои зинда', uz: 'Koreyadan jonli narxlardagi avtomobillar' },
+  'home.heroTitle': { ru: 'Авто из Кореи', en: 'Cars from Korea with live prices', tj: 'Мошинҳо аз Корея бо нархҳои зинда', uz: 'Koreyadan jonli narxlardagi avtomobillar' },
   'home.heroSubtitle': { ru: 'Выберите нужный автомобиль на сайте, а мы проверим его в Корее и надёжно доставим до вас.', en: 'Choose the car you want on the website, and we will inspect it in Korea and deliver it to you reliably.', tj: 'Мошини дилхоҳатонро дар сайт интихоб кунед, мо онро дар Корея месанҷем ва боэътимод ба шумо мерасонем.', uz: 'Saytdan kerakli avtomobilni tanlang, biz uni Koreyada tekshirib, ishonchli yetkazib beramiz.' },
   'home.liveCars': { ru: 'авто в каталоге', en: 'live cars', tj: 'мошин дар каталог', uz: 'katalogdagi avtomobillar' },
   'home.koreaPrice': { ru: 'цена в Корее', en: 'Korea price', tj: 'нарх дар Корея', uz: 'Koreyadagi narx' },

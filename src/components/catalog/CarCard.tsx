@@ -32,7 +32,7 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
     ? car.price_turnkey_russia
     : car.price_turnkey_tajikistan;
   const turnkeyLabel = destination === 'russia'
-    ? t('card.turnkeyVladivostok')
+    ? 'под ключ до Владивостока'
     : t('card.turnkeyTajikistan');
   const formattedTurnkeyPrice = destination === 'russia'
     ? turnkeyPrice ? formatPrice(turnkeyPrice) : ''
@@ -100,10 +100,12 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
           </div>
           {turnkeyPrice && (
             <div className="mt-1.5 border-t border-emerald-100 pt-1.5">
-              <div className="text-sm font-bold leading-tight text-gray-900">
-                {formattedTurnkeyPrice}
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="text-[10px] font-medium leading-snug text-gray-500">{turnkeyLabel}</div>
+                <div className="shrink-0 text-sm font-bold leading-tight text-gray-900">
+                  {formattedTurnkeyPrice}
+                </div>
               </div>
-              <div className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-gray-500">{turnkeyLabel}</div>
             </div>
           )}
         </div>

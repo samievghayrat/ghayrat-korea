@@ -87,8 +87,6 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destinat
         ];
       })();
 
-  const totalLabel = isRussia ? t('price.totalTurnkey') : t('price.totalDelivered');
-  const totalSublabel = isRussia ? t('price.inVladivostok') : t('price.inTajikistan');
   const totalValue = totalOverride || breakdown.total;
   const formattedTotal = isRussia ? formatPrice(totalValue) : fmtUsd(totalValue);
 
@@ -111,20 +109,21 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, destinat
         ))}
       </div>
 
-      {/* Total */}
-      <div className="border-t-2 border-primary/20 pt-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <span className="text-base font-bold text-gray-900">{totalLabel}</span>
-            <div className="text-[11px] text-gray-400">{totalSublabel}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xl font-bold text-primary">
-              {formattedTotal}
+      {isRussia && (
+        <div className="border-t-2 border-primary/20 pt-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="text-base font-bold text-gray-900">{t('price.totalTurnkey')}</span>
+              <div className="text-[11px] text-gray-400">{t('price.inVladivostok')}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-primary">
+                {formattedTotal}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Disclaimer */}
       <div className="bg-amber-50/50 border border-amber-100/50 rounded-lg p-3">

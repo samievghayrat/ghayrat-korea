@@ -393,7 +393,12 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   }, [filters.brand, filters.model, filters.modelVariant]);
 
   const selectedBrandCount = brandCounts?.find(b => b.name === filters.brand)?.count;
-  const totalGenCount = generationTotal || generationVariants.reduce((sum, v) => sum + v.count, 0);
+  const sortedGenerationVariants = [...generationVariants].sort((a, b) =>
+    (b.yearTo || 0) - (a.yearTo || 0)
+    || (b.yearFrom || 0) - (a.yearFrom || 0)
+    || a.name.localeCompare(b.name)
+  );
+  const totalGenCount = generationTotal || sortedGenerationVariants.reduce((sum, v) => sum + v.count, 0);
 
   const selectedGenName = filters.modelVariant
     ? translateGenerationName(filters.modelVariant)
@@ -562,11 +567,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       {showMoreFilters && filters.model && (
         <SelectBox
           label=""
-          value={selectedGenName || t('search.all')}
+          value={selectedGenName || t('search.generationPlaceholder')}
           count={filters.modelVariant
-            ? generationVariants.find(v => v.name === filters.modelVariant)?.count
+            ? sortedGenerationVariants.find(v => v.name === filters.modelVariant)?.count
             : totalGenCount || undefined}
-          placeholder={t('search.all')}
+          placeholder={t('search.generationPlaceholder')}
           open={genOpen}
           onToggle={() => { setGenOpen(!genOpen); setBrandOpen(false); setModelOpen(false); }}
           onClear={filters.modelVariant ? () => handleGenSelect(undefined) : undefined}
@@ -589,11 +594,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                   !filters.modelVariant ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
                 }`}
               >
-                <span className="text-base lg:text-sm">{t('search.all')}</span>
+                <span className="text-base lg:text-sm">{t('search.allGenerations')}</span>
                 <span className="text-base lg:text-sm text-gray-400 tabular-nums">{totalGenCount.toLocaleString('ru-RU')}</span>
               </button>
               {/* Generation variants */}
-              {generationVariants.map(v => {
+              {sortedGenerationVariants.map(v => {
                 const translated = translateGenerationName(v.name);
                 const yearRange = v.yearFrom && v.yearTo && v.yearFrom <= v.yearTo
                   ? `(${v.yearFrom} â€” ${v.yearTo})`

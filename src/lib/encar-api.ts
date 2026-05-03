@@ -401,12 +401,6 @@ function buildSearchQuery(filters: CarFilters): string {
     parts.push(`Mileage.range(${from}..${to})`);
   }
 
-  if (filters.hpFrom || filters.hpTo) {
-    const from = filters.hpFrom || 0;
-    const to = filters.hpTo || 9999;
-    parts.push(`PowerPs.range(${from}..${to})`);
-  }
-
   // Join with _.  separator and wrap in (And. ... .)
   return '(And.' + parts.join('._.') + '.)';
 }
@@ -691,12 +685,33 @@ async function transformSearchResults(
   );
 }
 
+function hasHpFilter(filters: CarFilters): boolean {
+  return filters.hpFrom !== undefined || filters.hpTo !== undefined;
+}
+
+function filterCarsByHp(cars: CarListing[], filters: CarFilters): CarListing[] {
+  if (!hasHpFilter(filters)) return cars;
+
+  const from = filters.hpFrom ?? 0;
+  const to = filters.hpTo ?? Number.MAX_SAFE_INTEGER;
+
+  return cars.filter((car) =>
+    typeof car.hp === 'number' && car.hp >= from && car.hp <= to
+  );
+}
+
+function estimatePostFilterTotal(total: number, candidateCount: number, matchedCount: number): number {
+  if (!candidateCount) return 0;
+  return Math.max(matchedCount, Math.round(total * (matchedCount / candidateCount)));
+}
+
 export async function searchCars(filters: CarFilters): Promise<CatalogResponse> {
   const page = filters.page || 1;
   const limit = filters.limit || 20;
   const hasOptionFilter = filters.options && filters.options.length > 0;
   // Badge with '.' can't be sent to Encar query — needs post-fetch filtering
   const hasBadgePostFilter = filters.badge && filters.badge.includes('.');
+  const hasHpPostFilter = hasHpFilter(filters);
   const cacheKey = JSON.stringify(filters);
 
   // Check cache
@@ -754,15 +769,18 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
       const hitRate = carIds.length > 0 ? matchingIds.size / carIds.length : 0;
       const estimatedTotal = Math.round(encarTotal * hitRate);
 
-      // Take only what fits on this page
-      const pageResults = matchedResults.slice(0, limit);
-      const cars = await transformSearchResults(pageResults);
+      const carsBeforeHp = await transformSearchResults(matchedResults);
+      const hpMatchedCars = filterCarsByHp(carsBeforeHp, filters);
+      const hpAdjustedTotal = hasHpPostFilter
+        ? estimatePostFilterTotal(estimatedTotal, carsBeforeHp.length, hpMatchedCars.length)
+        : estimatedTotal;
+      const cars = hpMatchedCars.slice(0, limit);
 
       const result: CatalogResponse = {
         cars,
-        total: estimatedTotal,
+        total: hpAdjustedTotal,
         page,
-        totalPages: Math.ceil(estimatedTotal / limit),
+        totalPages: Math.ceil(hpAdjustedTotal / limit),
       };
 
       catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -802,14 +820,18 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
       const hitRate = searchResults.length > 0 ? matchedResults.length / searchResults.length : 0;
       const estimatedTotal = Math.round(encarTotal * hitRate);
 
-      const pageResults = matchedResults.slice(0, limit);
-      const cars = await transformSearchResults(pageResults);
+      const carsBeforeHp = await transformSearchResults(matchedResults);
+      const hpMatchedCars = filterCarsByHp(carsBeforeHp, filters);
+      const hpAdjustedTotal = hasHpPostFilter
+        ? estimatePostFilterTotal(estimatedTotal, carsBeforeHp.length, hpMatchedCars.length)
+        : estimatedTotal;
+      const cars = hpMatchedCars.slice(0, limit);
 
       const result: CatalogResponse = {
         cars,
-        total: estimatedTotal,
+        total: hpAdjustedTotal,
         page,
-        totalPages: Math.ceil(estimatedTotal / limit),
+        totalPages: Math.ceil(hpAdjustedTotal / limit),
       };
 
       catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -817,8 +839,9 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
     }
 
     // Normal mode (no option filtering, no badge post-filter)
-    const offset = (page - 1) * limit;
-    const sr = `|${sortField}|${offset}|${limit}`;
+    const batchSize = hasHpPostFilter ? OPTION_FILTER_BATCH : limit;
+    const offset = (page - 1) * batchSize;
+    const sr = `|${sortField}|${offset}|${batchSize}`;
 
     const queryString = new URLSearchParams({
       count: 'true',
@@ -841,13 +864,18 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
     const searchResults = data.SearchResults || [];
     const total = data.Count || 0;
 
-    const cars = await transformSearchResults(searchResults);
+    const carsBeforeHp = await transformSearchResults(searchResults);
+    const hpMatchedCars = filterCarsByHp(carsBeforeHp, filters);
+    const totalAfterHp = hasHpPostFilter
+      ? estimatePostFilterTotal(total, carsBeforeHp.length, hpMatchedCars.length)
+      : total;
+    const cars = hasHpPostFilter ? hpMatchedCars.slice(0, limit) : carsBeforeHp;
 
     const result: CatalogResponse = {
       cars,
-      total,
+      total: totalAfterHp,
       page,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalAfterHp / limit),
     };
 
     catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });

@@ -46,6 +46,8 @@ const t = {
   'search.modelAfterBrand': { ru: 'Сначала выберите марку', en: 'Choose a brand first', tj: 'Аввал брендро интихоб кунед', uz: 'Avval brendni tanlang' },
   'search.allModels': { ru: 'Все модели', en: 'All models', tj: 'Ҳамаи моделҳо', uz: 'Barcha modellar' },
   'search.all': { ru: 'Все', en: 'All', tj: 'Ҳама', uz: 'Barchasi' },
+  'search.generationPlaceholder': { ru: 'Поколение', en: 'Generation', tj: 'Насл', uz: 'Avlod' },
+  'search.allGenerations': { ru: 'Все поколения', en: 'All generations', tj: 'Ҳамаи наслҳо', uz: 'Barcha avlodlar' },
   'search.loading': { ru: 'Загрузка...', en: 'Loading...', tj: 'Боркунӣ...', uz: 'Yuklanmoqda...' },
   'search.noModels': { ru: 'Нет моделей', en: 'No models', tj: 'Модел нест', uz: 'Modellar yo\'q' },
   'search.searching': { ru: 'Поиск...', en: 'Searching...', tj: 'Ҷустуҷӯ...', uz: 'Qidirilmoqda...' },

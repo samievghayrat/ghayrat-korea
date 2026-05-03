@@ -188,7 +188,11 @@ export async function GET(request: NextRequest) {
           yearFrom: d.minYear,
           yearTo: d.maxYear,
         }))
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) =>
+          (b.yearTo || 0) - (a.yearTo || 0)
+          || (b.yearFrom || 0) - (a.yearFrom || 0)
+          || a.name.localeCompare(b.name)
+        );
 
       const result = { models, total: totalCount };
       variantsCache.set(cacheKey, { data: result, timestamp: Date.now() });

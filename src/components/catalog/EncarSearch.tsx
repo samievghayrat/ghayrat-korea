@@ -417,7 +417,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   const handleModelSelect = (model: string) => {
     onChange({ ...filters, model, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setModelOpen(false);
-    setGenOpen(true);
+    setGenOpen(false);
 
     if (filters.brand) {
       const cacheKey = `generations:${filters.brand}:${model}`;
@@ -452,8 +452,16 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange({ ...filters, [key]: value || undefined, page: 1 });
   };
 
-  const applyYearShortcut = (yearFrom: number) => {
-    onChange({ ...filters, yearFrom, yearTo: undefined, monthFrom: undefined, monthTo: undefined, page: 1 });
+  const toggleYearShortcut = (yearFrom: number) => {
+    const enabled = filters.yearFrom === yearFrom && !filters.yearTo && !filters.monthFrom && !filters.monthTo;
+    onChange({
+      ...filters,
+      yearFrom: enabled ? undefined : yearFrom,
+      yearTo: undefined,
+      monthFrom: undefined,
+      monthTo: undefined,
+      page: 1,
+    });
   };
 
   const activeFilterCount = [
@@ -474,28 +482,42 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       </div>
       <div className="border-b border-gray-100 px-4 py-3">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t('search.destinationYearHint')}
+          {t('search.yearShortcut')}
         </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => applyYearShortcut(2021)}
-            className={`rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2021 && !filters.yearTo
-                ? 'border-gray-950 bg-gray-950 text-white shadow-sm'
-                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+            onClick={() => toggleYearShortcut(2014)}
+            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2014 && !filters.yearTo
+                ? 'bg-gray-950 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {'\u{1F1F7}\u{1F1FA}'} {t('search.russiaYearFilter')}
+            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
+              filters.yearFrom === 2014 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
+            }`}>
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                filters.yearFrom === 2014 && !filters.yearTo ? 'translate-x-4' : ''
+              }`} />
+            </span>
+            {t('search.tajikistanYearFilter')}
           </button>
           <button
-            onClick={() => applyYearShortcut(2014)}
-            className={`rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2014 && !filters.yearTo
-                ? 'border-gray-950 bg-gray-950 text-white shadow-sm'
-                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+            onClick={() => toggleYearShortcut(2021)}
+            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
+              filters.yearFrom === 2021 && !filters.yearTo
+                ? 'bg-gray-950 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {'\u{1F1F9}\u{1F1EF}'} {t('search.tajikistanYearFilter')}
+            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
+              filters.yearFrom === 2021 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
+            }`}>
+              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                filters.yearFrom === 2021 && !filters.yearTo ? 'translate-x-4' : ''
+              }`} />
+            </span>
+            {t('search.russiaYearFilter')}
           </button>
         </div>
       </div>
@@ -599,7 +621,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       )}
 
       {/* Generation selector */}
-      {filters.model && (
+      {showMoreFilters && filters.model && (
         <SelectBox
           label=""
           value={selectedGenName || t('search.all')}
@@ -662,7 +684,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       )}
 
       {/* Hierarchical Badge Tree: Fuel+Drivetrain → Engine Badge → Trim */}
-      {filters.modelVariant && (badgeTree.length > 0 || badgeLoading) && (
+      {showMoreFilters && filters.modelVariant && (badgeTree.length > 0 || badgeLoading) && (
         <div className="px-4 py-3 border-t border-gray-100">
           <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('filter.type')}</label>
           {badgeLoading ? (

@@ -13,6 +13,7 @@ import FavoriteButton from '@/components/shared/FavoriteButton';
 import { calculateImportCost } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useApp } from '@/contexts/AppContext';
+import { translateBadgeDetail } from '@/lib/translations';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -45,7 +46,7 @@ function buildCarTitle(car: CarListing): string {
     }
   }
 
-  return [car.brand, model, generation, car.badge || car.trim]
+  return [car.brand, model, generation, translateBadgeDetail(car.badge || car.trim || '')]
     .filter(Boolean)
     .join(' ');
 }
@@ -118,10 +119,6 @@ export default function CarDetailPage() {
     );
   }
 
-  const yearMonth = car.month
-    ? `${car.year}/${String(car.month).padStart(2, '0')}`
-    : `${car.year}`;
-
   const priceLabel = destination === 'russia'
     ? t('card.turnkeyVladivostok')
     : t('card.turnkeyTajikistan');
@@ -144,11 +141,7 @@ export default function CarDetailPage() {
       <nav className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-400 mb-4">
         <a href="/" className="shrink-0 hover:text-primary transition-colors">{t('nav.catalog')}</a>
         <span className="shrink-0">/</span>
-        <a href={`/?brand=${encodeURIComponent(car.brand)}`} className="shrink-0 hover:text-primary transition-colors">{car.brand}</a>
-        <span className="shrink-0">/</span>
-        <span className="shrink-0 text-gray-700 font-medium">{car.model}</span>
-        <span className="shrink-0">/</span>
-        <span className="shrink-0 text-gray-700 font-medium">Encar ID {car.id}</span>
+        <span className="shrink-0 text-gray-700 font-medium">{car.id}</span>
       </nav>
 
       <div className="mb-5 lg:mb-6">
@@ -204,29 +197,7 @@ export default function CarDetailPage() {
         <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 space-y-4 lg:sticky lg:top-24">
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
             {/* Title + Favorite */}
-            <div className="flex items-start justify-between gap-3 lg:hidden">
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">
-                  {car.brand} {car.model} {car.badge || ''}
-                </h1>
-                <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-400 flex-wrap">
-                  <span>{yearMonth} г.</span>
-                  <span>·</span>
-                  <span>{car.fuel}</span>
-                  {(car.displacement || 0) > 0 && (
-                    <>
-                      <span>·</span>
-                      <span>{car.displacement} cc</span>
-                    </>
-                  )}
-                  {car.hp && (
-                    <>
-                      <span>·</span>
-                      <span>{car.hp} {t('spec.hp')}</span>
-                    </>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-start justify-end gap-3 lg:hidden">
               <FavoriteButton carId={car.id} />
             </div>
 
@@ -253,7 +224,7 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇷🇺 {t('country.russia')}
+                {'\u{1F1F7}\u{1F1FA}'} {t('country.russia')}
               </button>
               <button
                 onClick={() => setDestination('tajikistan')}
@@ -263,7 +234,7 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇹🇯 {t('country.tajikistan')}
+                {'\u{1F1F9}\u{1F1EF}'} {t('country.tajikistan')}
               </button>
             </div>
 

@@ -7,41 +7,12 @@ interface CarSpecsProps {
   car: CarListing;
 }
 
-function formatModelName(value?: string): string | undefined {
-  if (!value) return value;
-  return value
-    .replace(/\b(\d+)\s*Series\b/g, '$1 Series')
-    .replace(/\b([A-Z])\s*Class\b/g, '$1-Class')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function buildCarTitle(car: CarListing): string {
-  const model = formatModelName(car.model) || car.model;
-  let generation = formatModelName(car.generation);
-
-  if (generation && model) {
-    const normalizedGeneration = generation.toLowerCase();
-    const normalizedModel = model.toLowerCase();
-    if (normalizedGeneration === normalizedModel) {
-      generation = undefined;
-    } else if (normalizedGeneration.startsWith(`${normalizedModel} `)) {
-      generation = generation.slice(model.length).trim();
-    }
-  }
-
-  return [car.brand, model, generation, car.trim].filter(Boolean).join(' ');
-}
-
 export default function CarSpecs({ car }: CarSpecsProps) {
   const { t, formatMileage } = useApp();
 
   const yearMonth = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')} г.`
     : `${car.year} г.`;
-
-  // Full car name: Brand Model Generation Trim
-  const fullName = buildCarTitle(car);
 
   const specs = [
     { label: t('spec.date'), value: yearMonth },
@@ -57,16 +28,15 @@ export default function CarSpecs({ car }: CarSpecsProps) {
   ].filter(s => s.value);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
-      <div className="mb-5">
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <div className="mb-3">
         <p className="text-sm font-semibold text-primary">{t('spec.generalData')}</p>
-        <h2 className="mt-1 text-xl font-bold text-gray-950 leading-tight">{fullName}</h2>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
         {specs.map((spec) => (
-          <div key={spec.label} className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-100">
+          <div key={spec.label} className="min-w-0 border-b border-gray-100 pb-2">
             <div className="text-xs font-medium text-gray-400">{spec.label}</div>
-            <div className="mt-1 text-[15px] font-semibold text-gray-900 break-words">{spec.value}</div>
+            <div className="mt-0.5 text-sm font-semibold text-gray-900 break-words">{spec.value}</div>
           </div>
         ))}
       </div>

@@ -75,15 +75,15 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3.5">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
           {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
+          {(car.badge || car.trim) && (
+            <span className="font-medium text-gray-500"> {car.badge || car.trim}</span>
+          )}
         </h3>
-        {(car.badge || car.trim) && (
-          <p className="mt-1 truncate text-[12px] text-gray-500">{car.badge || car.trim}</p>
-        )}
 
-        <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
+        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
           <span>{yearLabel}</span>
           <span className="text-gray-300">/</span>
           <span>{formatMileage(car.mileage)}</span>
@@ -91,15 +91,15 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
           <span className="truncate">{car.fuel}</span>
         </div>
 
-        <div className="flex-1 min-h-2" />
-
-        <div className="mt-4 rounded-lg bg-emerald-50/70 px-3 py-3">
-          <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
-          <div className="mt-0.5 text-xl font-extrabold leading-tight text-emerald-700">
-            {formatKrwPrice(car.price_krw)}
+        <div className="mt-3 rounded-md bg-emerald-50/70 px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
+            <div className="shrink-0 text-xl font-extrabold leading-tight text-emerald-700">
+              {formatKrwPrice(car.price_krw)}
+            </div>
           </div>
           {turnkeyPrice && (
-            <div className="mt-2 border-t border-emerald-100 pt-2">
+            <div className="mt-1.5 border-t border-emerald-100 pt-1.5">
               <div className="text-sm font-bold leading-tight text-gray-900">
                 {formattedTurnkeyPrice}
               </div>

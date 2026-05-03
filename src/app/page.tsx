@@ -92,19 +92,19 @@ function CatalogContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
-      <section className="mb-5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1fr_auto]">
-          <div className="px-4 py-4 sm:px-6">
-            <p className="text-base font-extrabold leading-snug text-gray-950 sm:text-lg">
+          <div className="px-4 py-3 sm:px-5">
+            <p className="text-sm font-extrabold leading-snug text-gray-950 sm:text-base">
               {t('home.heroSubtitle')}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {serviceSteps.map((step, index) => (
                 <span
                   key={step}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-950 text-[11px] text-white">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-950 text-[10px] text-white">
                     {index + 1}
                   </span>
                   {step}
@@ -112,21 +112,21 @@ function CatalogContent() {
               ))}
             </div>
           </div>
-          <div className="border-t border-gray-100 bg-emerald-50/60 px-4 py-4 sm:px-6 lg:min-w-[300px] lg:border-l lg:border-t-0">
+          <div className="border-t border-gray-100 bg-emerald-50/60 px-4 py-3 sm:px-5 lg:min-w-[280px] lg:border-l lg:border-t-0">
             <div className="text-xs font-bold uppercase tracking-wide text-emerald-800">
               {t('home.deliveryTo')}
             </div>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-1.5">
               {['\u{1F1F7}\u{1F1FA}', '\u{1F1F9}\u{1F1EF}', '\u{1F1FA}\u{1F1FF}', '\u{1F1F0}\u{1F1FF}'].map((flag) => (
                 <span
                   key={flag}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-xl shadow-sm ring-1 ring-emerald-100"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-base shadow-sm ring-1 ring-emerald-100"
                 >
                   {flag}
                 </span>
               ))}
             </div>
-            <div className="mt-2 text-xs font-medium text-emerald-900/70">
+            <div className="mt-1.5 text-[11px] font-medium text-emerald-900/70">
               {t('home.deliveryNote')}
             </div>
           </div>

@@ -477,10 +477,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-4 py-3">
-        <div className="text-sm font-bold text-gray-950">{t('search.pickCarTitle')}</div>
-        <div className="mt-0.5 text-xs font-medium text-gray-400">{t('search.pickCarHint')}</div>
-      </div>
-      <div className="border-b border-gray-100 px-4 py-3">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
           {t('search.yearShortcut')}
         </div>
@@ -601,24 +597,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
             </div>
           )}
         </SelectBox>
-      ) : (
-        <div className="px-4 py-3">
-          <button
-            disabled
-            className="flex w-full cursor-not-allowed items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-400"
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-500">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
-                </svg>
-              </span>
-              <span className="truncate">{t('search.allModels')}</span>
-            </span>
-            <span className="text-xs font-medium">{t('search.modelAfterBrand')}</span>
-          </button>
-        </div>
-      )}
+      ) : null}
 
       {/* Generation selector */}
       {showMoreFilters && filters.model && (

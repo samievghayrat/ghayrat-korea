@@ -146,15 +146,22 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
       <div className="relative">
         <button
           onClick={onToggle}
-          className={`w-full border rounded-lg px-3 py-2.5 flex items-center justify-between transition-colors text-left ${
+          className={`w-full border rounded-xl px-3 py-3 flex items-center justify-between gap-3 transition-all text-left shadow-sm ${
             value
-              ? 'border-primary bg-primary/5 hover:border-primary/70'
-              : 'border-gray-200 bg-white hover:border-gray-300'
+              ? 'border-primary/40 bg-primary/5 hover:border-primary/70'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow'
           }`}
         >
           {value ? (
             <>
-              <span className="font-semibold text-primary text-sm truncate">{value}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                  </svg>
+                </span>
+                <span className="font-semibold text-primary text-sm truncate">{value}</span>
+              </span>
               <span className="flex items-center gap-2 flex-shrink-0 ml-2">
                 {count !== undefined && (
                   <span className="text-sm text-gray-400 tabular-nums">{count.toLocaleString('ru-RU')}</span>
@@ -167,8 +174,17 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
             </>
           ) : (
             <>
-              <span className="text-gray-400 text-sm">{placeholder}</span>
-              <ChevronIcon open={open} />
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-950 text-white">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                  </svg>
+                </span>
+                <span className="truncate text-sm font-semibold text-gray-700">{placeholder}</span>
+              </span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                <ChevronIcon open={open} />
+              </span>
             </>
           )}
         </button>
@@ -447,7 +463,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="border-b border-gray-100 px-4 py-3">
+        <div className="text-sm font-bold text-gray-950">{t('search.pickCarTitle')}</div>
+        <div className="mt-0.5 text-xs font-medium text-gray-400">{t('search.pickCarHint')}</div>
+      </div>
 
       {/* Brand selector */}
       <SelectBox
@@ -765,16 +785,22 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       {/* Advanced filters */}
       <button
         onClick={() => setShowMoreFilters(!showMoreFilters)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+        className="flex w-full items-center justify-between border-t border-gray-100 px-4 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-        {showMoreFilters ? t('search.hideFilters') : t('search.moreFilters')}
-        {!showMoreFilters && activeFilterCount > 0 && (
-          <span className="bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{activeFilterCount}</span>
-        )}
-        <ChevronIcon open={showMoreFilters} />
+        <span className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </span>
+          {showMoreFilters ? t('search.hideFilters') : t('search.moreFilters')}
+          {!showMoreFilters && activeFilterCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">{activeFilterCount}</span>
+          )}
+        </span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+          <ChevronIcon open={showMoreFilters} />
+        </span>
       </button>
 
       {showMoreFilters && (

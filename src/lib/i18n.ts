@@ -38,6 +38,8 @@ const t = {
 
   // Search & Filters
   'search.brandPlaceholder': { ru: 'Марка, модель, поколение', en: 'Brand, model, generation', tj: 'Бренд, модел, насл', uz: 'Brend, model, avlod' },
+  'search.pickCarTitle': { ru: 'Подберите автомобиль', en: 'Find a car', tj: 'Мошинро интихоб кунед', uz: 'Avtomobil tanlang' },
+  'search.pickCarHint': { ru: 'Сначала выберите марку', en: 'Start with the brand', tj: 'Аввал брендро интихоб кунед', uz: 'Avval brendni tanlang' },
   'search.allModels': { ru: 'Все модели', en: 'All models', tj: 'Ҳамаи моделҳо', uz: 'Barcha modellar' },
   'search.all': { ru: 'Все', en: 'All', tj: 'Ҳама', uz: 'Barchasi' },
   'search.loading': { ru: 'Загрузка...', en: 'Loading...', tj: 'Боркунӣ...', uz: 'Yuklanmoqda...' },

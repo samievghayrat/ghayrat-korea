@@ -96,13 +96,15 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
         </div>
         <div className="flex-1 min-h-2" />
         <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-          <div className={turnkeyPrice ? 'flex items-center justify-between text-xs' : ''}>
-            <span className="text-gray-400">{t('card.priceInKorea')}</span>
-            <span className="font-bold text-primary">{formatKrwPrice(car.price_krw)}</span>
+          <div>
+            <div className="text-[10px] text-gray-400">{t('card.priceInKorea')}</div>
+            <div className="text-lg font-extrabold text-primary leading-tight">
+              {formatKrwPrice(car.price_krw)}
+            </div>
           </div>
           {turnkeyPrice && (
             <div>
-              <div className="text-lg font-extrabold text-gray-950 leading-tight">
+              <div className="text-sm font-bold text-gray-900 leading-tight">
                 {formattedTurnkeyPrice}
               </div>
               <div className="text-[10px] text-gray-400 mt-0.5">{turnkeyLabel}</div>

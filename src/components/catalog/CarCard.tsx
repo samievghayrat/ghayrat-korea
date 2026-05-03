@@ -75,20 +75,21 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         )}
         <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
           <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[10px] text-gray-400 leading-none">Year</div>
-            <div className="mt-1 text-[11px] font-semibold text-gray-800">{yearLabel}</div>
+            <div className="text-[11px] font-semibold text-gray-800">{yearLabel}</div>
           </div>
           <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[10px] text-gray-400 leading-none">Km</div>
-            <div className="mt-1 text-[11px] font-semibold text-gray-800 truncate">{formatMileage(car.mileage)}</div>
+            <div className="text-[11px] font-semibold text-gray-800 truncate">{formatMileage(car.mileage)}</div>
           </div>
           <div className="rounded-lg bg-gray-50 px-1.5 py-2">
-            <div className="text-[10px] text-gray-400 leading-none">Fuel</div>
-            <div className="mt-1 text-[11px] font-semibold text-gray-800 truncate">{car.fuel}</div>
+            <div className="text-[11px] font-semibold text-gray-800 truncate">{car.fuel}</div>
           </div>
         </div>
         <div className="flex-1 min-h-2" />
         <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+          <div className={car.price_turnkey_russia ? 'flex items-center justify-between text-xs' : ''}>
+            <span className="text-gray-400">{t('card.priceInKorea')}</span>
+            <span className="font-bold text-primary">{formatKrwPrice(car.price_krw)}</span>
+          </div>
           {car.price_turnkey_russia && (
             <div>
               <div className="text-lg font-extrabold text-gray-950 leading-tight">
@@ -97,10 +98,6 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
               <div className="text-[10px] text-gray-400 mt-0.5">{t('card.turnkeyVladivostok')}</div>
             </div>
           )}
-          <div className={car.price_turnkey_russia ? 'flex items-center justify-between text-xs' : ''}>
-            <span className="text-gray-400">{t('card.priceInKorea')}</span>
-            <span className="font-bold text-primary">{formatKrwPrice(car.price_krw)}</span>
-          </div>
         </div>
       </div>
     </Link>

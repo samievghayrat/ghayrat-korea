@@ -75,8 +75,9 @@ export default function Header() {
     <header className="bg-white sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12 lg:h-14">
-          <Link href="/" className="flex items-center flex-shrink-0">
+          <Link href="/" className="flex flex-col leading-tight flex-shrink-0">
             <span className="text-gray-900 font-bold text-lg tracking-wide">GHAYRAT KOREA</span>
+            <span className="text-[11px] font-medium text-gray-500">Авто из Кореи 🇰🇷</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

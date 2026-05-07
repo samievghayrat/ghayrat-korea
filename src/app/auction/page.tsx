@@ -13,7 +13,7 @@ export default async function AuctionPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-        <div className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-5">
+        <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-4 shadow-sm sm:px-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-blue-700">KCar Auction</p>

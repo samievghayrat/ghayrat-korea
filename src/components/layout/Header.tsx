@@ -64,6 +64,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
+    { href: '/auction', label: 'Auction' },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -87,7 +88,9 @@ export default function Header() {
                 href={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
-                    ? 'bg-primary/10 text-primary'
+                    ? link.href === '/auction'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >

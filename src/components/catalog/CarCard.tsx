@@ -77,7 +77,7 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-3.5">
+      <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
           {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
           {displayTrim && (
@@ -93,15 +93,15 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
           <span className="truncate">{car.fuel}</span>
         </div>
 
-        <div className="mt-3 rounded-md bg-emerald-50/70 px-3 py-2.5">
+        <div className="mt-2.5 rounded-md bg-emerald-50/70 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
-            <div className="shrink-0 text-xl font-extrabold leading-tight text-emerald-700">
+            <div className="shrink-0 text-lg font-extrabold leading-tight text-emerald-700">
               {formatKrwPrice(car.price_krw)}
             </div>
           </div>
           {turnkeyPrice && (
-            <div className="mt-1.5 border-t border-emerald-100 pt-1.5">
+            <div className="mt-1 border-t border-emerald-100 pt-1">
               <div className="flex items-baseline justify-between gap-2">
                 <div className="text-[10px] font-medium leading-snug text-gray-500">{turnkeyLabel}</div>
                 <div className="shrink-0 text-sm font-bold leading-tight text-gray-900">

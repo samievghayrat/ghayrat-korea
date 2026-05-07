@@ -10,7 +10,7 @@ interface CarGridProps {
 export default function CarGrid({ cars, loading, destination = 'russia' }: CarGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...Array(12)].map((_, i) => (
           <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-200 animate-pulse shadow-sm">
             <div className="aspect-[16/10] bg-gray-200" />
@@ -51,7 +51,7 @@ export default function CarGrid({ cars, loading, destination = 'russia' }: CarGr
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {cars.map((car, index) => (
         <CarCard key={car.id} car={car} priority={index < 6} destination={destination} />
       ))}

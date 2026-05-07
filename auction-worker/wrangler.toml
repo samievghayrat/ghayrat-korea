@@ -1,0 +1,17 @@
+name = "kcar-bidding-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-05"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kcar-db"
+database_id = "aca4b095-bbc0-43a6-b4e2-c7b22e6d6c37"
+migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "kcar-images"
+
+[triggers]
+crons = ["0 0,4,8,12,16,20 * * *"]

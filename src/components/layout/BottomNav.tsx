@@ -34,9 +34,11 @@ export default function BottomNav() {
 
   const isHome = pathname === '/' || pathname === '/catalog';
   const isFav = pathname === '/favorites';
+  const isAuction = pathname.startsWith('/auction');
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
+    { href: '/auction', label: 'Auction' },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -54,6 +56,16 @@ export default function BottomNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
             <span className="text-[10px] font-medium">{t('nav.catalog')}</span>
+          </Link>
+
+          <Link
+            href="/auction"
+            className={`flex flex-col items-center gap-0.5 px-4 py-1 ${isAuction ? 'text-primary' : 'text-gray-400'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13h18M5 13l2-5h10l2 5M7 13v5m10-5v5M6 18h12M8 8V6h8v2" />
+            </svg>
+            <span className="text-[10px] font-medium">Auction</span>
           </Link>
 
           <Link

@@ -1,0 +1,1 @@
+ALTER TABLE `cars` ADD `first_reg_date` text;

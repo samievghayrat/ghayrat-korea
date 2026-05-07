@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1771311511966,
+      "tag": "0000_skinny_praxagora",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771313471905,
+      "tag": "0001_odd_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771381778190,
+      "tag": "0002_cute_bastion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771408800000,
+      "tag": "0003_add_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1771500000000,
+      "tag": "0004_add_drive_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1771600000000,
+      "tag": "0006_add_bid_ip",
+      "breakpoints": true
+    }
+  ]
+}

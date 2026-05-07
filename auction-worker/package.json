@@ -1,0 +1,24 @@
+{
+  "name": "kcar-bidding-serverless",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply kcar-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply kcar-db --remote"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.39.0",
+    "hono": "^4.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "drizzle-kit": "^0.30.0",
+    "typescript": "^5.5.3",
+    "wrangler": "^4.66.0"
+  }
+}

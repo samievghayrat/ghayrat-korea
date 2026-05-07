@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:auction-worker": "npm run dev --prefix auction-worker",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:auction-worker": "npm run deploy --prefix auction-worker"
   },
   "dependencies": {
     "mongoose": "^9.2.4",

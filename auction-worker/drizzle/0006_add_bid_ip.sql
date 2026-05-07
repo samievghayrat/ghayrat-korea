@@ -1,0 +1,1 @@
+ALTER TABLE bid_requests ADD COLUMN ip TEXT;

@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GHAYRAT KOREA
+
+Next.js website for Korean car listings, delivery information, favorites, contact flows, and KCar auction listings.
+
+The auction UI is part of this same Vercel app:
+
+- `/auction` lists active KCar auction cars.
+- `/auction/[id]` shows the auction detail page.
+- `/api/auction/*` proxies auction data through the Next app.
+- `auction-worker/` contains the KCar scraper/API worker that syncs KCar data into Cloudflare D1/R2.
 
 ## Getting Started
 
-First, run the development server:
+Run the Vercel/Next website:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Run the auction data worker locally when changing the scraper/API:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev:auction-worker
+```
 
-## Learn More
+Deploy the website through Vercel as usual. Deploy the auction worker separately:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run deploy:auction-worker
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Website:
 
-## Deploy on Vercel
+- `KCAR_API_URL` or `NEXT_PUBLIC_KCAR_API_URL`: optional override for the KCar worker API. Defaults to the current deployed worker.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Auction worker:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Copy `auction-worker/.dev.vars.example` to `auction-worker/.dev.vars` for local development.
+- Set Cloudflare secrets for production: `KCAR_USER_ID`, `KCAR_USER_PW`, `SYNC_SECRET`, and optional Telegram variables.

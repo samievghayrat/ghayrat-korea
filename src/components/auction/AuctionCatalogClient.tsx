@@ -9,6 +9,7 @@ interface AuctionCatalogClientProps {
 }
 
 type YearFilter = "all" | "2014" | "2021";
+const PAGE_SIZE = 10;
 
 function getDisplayYear(car: KCarAuctionCar): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
@@ -19,19 +20,41 @@ function getDisplayYear(car: KCarAuctionCar): number {
 }
 
 export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps) {
-  const [query, setQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
+  const [page, setPage] = useState(1);
+
+  const carOptions = useMemo(() => {
+    const rows = cars.map((car) => {
+      const name = formatKCarName(car);
+      const [brand = car.brand, ...modelParts] = name.split(" ");
+      return {
+        brand,
+        model: modelParts.join(" ").trim() || car.model,
+      };
+    });
+
+    const brands = Array.from(new Set(rows.map((row) => row.brand).filter(Boolean))).sort();
+    const models = Array.from(
+      new Set(
+        rows
+          .filter((row) => !selectedBrand || row.brand === selectedBrand)
+          .map((row) => row.model)
+          .filter(Boolean),
+      ),
+    ).sort();
+
+    return { brands, models };
+  }, [cars, selectedBrand]);
 
   const filteredCars = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
     return cars.filter((car) => {
-      const displayName = formatKCarName(car).toLowerCase();
-      const rawName = `${car.brand} ${car.model}`.toLowerCase();
-      const matchesQuery = !normalizedQuery ||
-        displayName.includes(normalizedQuery) ||
-        rawName.includes(normalizedQuery) ||
-        car.lotNumber?.toLowerCase().includes(normalizedQuery);
+      const displayName = formatKCarName(car);
+      const [brand = car.brand, ...modelParts] = displayName.split(" ");
+      const model = modelParts.join(" ").trim() || car.model;
+      const matchesBrand = !selectedBrand || brand === selectedBrand;
+      const matchesModel = !selectedModel || model === selectedModel;
 
       const year = getDisplayYear(car);
       const matchesYear =
@@ -39,24 +62,86 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
         (yearFilter === "2014" && year >= 2014) ||
         (yearFilter === "2021" && year >= 2021);
 
-      return matchesQuery && matchesYear;
+      return matchesBrand && matchesModel && matchesYear;
     });
-  }, [cars, query, yearFilter]);
+  }, [cars, selectedBrand, selectedModel, yearFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCars.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedCars = filteredCars.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const pageItems = useMemo(() => {
+    const pages = new Set<number>();
+    pages.add(1);
+    pages.add(2);
+    pages.add(3);
+    pages.add(currentPage - 1);
+    pages.add(currentPage);
+    pages.add(currentPage + 1);
+    pages.add(totalPages - 2);
+    pages.add(totalPages - 1);
+    pages.add(totalPages);
+
+    const sorted = Array.from(pages)
+      .filter((item) => item >= 1 && item <= totalPages)
+      .sort((a, b) => a - b);
+
+    const result: Array<number | "..."> = [];
+    sorted.forEach((item, index) => {
+      if (index > 0 && item - sorted[index - 1] > 1) result.push("...");
+      result.push(item);
+    });
+    return result;
+  }, [currentPage, totalPages]);
+
+  const updateBrand = (brand: string) => {
+    setSelectedBrand(brand);
+    setSelectedModel("");
+    setPage(1);
+  };
+
+  const updateModel = (model: string) => {
+    setSelectedModel(model);
+    setPage(1);
+  };
+
+  const updateYear = (value: YearFilter) => {
+    setYearFilter(value);
+    setPage(1);
+  };
 
   return (
     <>
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative flex-1">
-            <svg className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
-            </svg>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search brand, model, lot number"
-              className="h-12 w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
-            />
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-gray-600">
+            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> auction cars
+          </div>
+          <div className="text-xs font-medium text-gray-500">10 cars per page</div>
+        </div>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
+            <select
+              value={selectedBrand}
+              onChange={(event) => updateBrand(event.target.value)}
+              className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+            >
+              <option value="">All brands</option>
+              {carOptions.brands.map((brand) => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+            <select
+              value={selectedModel}
+              onChange={(event) => updateModel(event.target.value)}
+              className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+            >
+              <option value="">All models</option>
+              {carOptions.models.map((model) => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex gap-2">
@@ -68,7 +153,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               <button
                 key={value}
                 type="button"
-                onClick={() => setYearFilter(value)}
+                onClick={() => updateYear(value)}
                 className={`h-10 rounded-lg px-4 text-sm font-bold transition ${
                   yearFilter === value
                     ? "bg-red-600 text-white"
@@ -82,25 +167,55 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
         </div>
       </div>
 
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-600">
-          <span className="font-extrabold text-gray-950">{filteredCars.length}</span> auction cars
-        </p>
-        <p className="hidden text-xs font-medium text-gray-500 sm:block">
-          Prices exclude auction commission and delivery
-        </p>
-      </div>
-
       {filteredCars.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-500">
           No auction cars found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCars.map((car, index) => (
-            <AuctionCarCard key={car.id} car={car} priority={index < 6} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pagedCars.map((car, index) => (
+              <AuctionCarCard key={car.id} car={car} priority={currentPage === 1 && index < 6} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                disabled={currentPage === 1}
+                className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 disabled:opacity-40"
+              >
+                Prev
+              </button>
+              {pageItems.map((item, index) => item === "..." ? (
+                <span key={`dots-${index}`} className="px-2 text-sm font-bold text-gray-400">...</span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setPage(item)}
+                  className={`h-9 min-w-9 rounded-lg px-3 text-sm font-bold ${
+                    currentPage === item
+                      ? "bg-red-600 text-white"
+                      : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </>
   );

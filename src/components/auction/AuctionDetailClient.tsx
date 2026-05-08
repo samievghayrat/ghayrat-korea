@@ -115,7 +115,21 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           Back to auction
         </Link>
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <section className="mb-4 rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
+          <div className="text-xs font-bold uppercase tracking-wide text-gray-500">Start price</div>
+          <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
+          <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
+            This price is without auction commission and delivery.
+          </div>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`KCar auction: ${title}, lot ${car.lotNumber}, ${price}`)}`}
+            className="mt-4 block rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:inline-block sm:px-6"
+          >
+            Ask about this car
+          </a>
+        </section>
+
+        <div className="grid gap-4">
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
             <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
 
@@ -128,20 +142,6 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               ))}
             </div>
           </section>
-
-          <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="text-xs font-bold uppercase tracking-wide text-gray-500">Start price</div>
-            <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
-            <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
-              This price is without auction commission and delivery.
-            </div>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`KCar auction: ${title}, lot ${car.lotNumber}, ${price}`)}`}
-              className="mt-5 block rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700"
-            >
-              Ask about this car
-            </a>
-          </aside>
         </div>
       </div>
     </div>

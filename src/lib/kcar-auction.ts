@@ -82,6 +82,15 @@ const BRAND_MAP: Record<string, string> = {
   "재규어": "Jaguar",
   "푸조": "Peugeot",
   "시트로엥": "Citroen",
+  "ê¸°ì": "Kia",
+  "íë": "Hyundai",
+  "ì ë¤ìì¤": "Genesis",
+  "ìë³´ë (GMëì°)": "Chevrolet",
+  "ë¥´ë¸ì½ë¦¬ì(ì¼ì±)": "Renault Korea",
+  "ë¯¸ë": "MINI",
+  "ìì°ë": "Audi",
+  "í¸ì¡°": "Peugeot",
+  "ë²¤ì¸ ": "Mercedes-Benz",
 };
 
 const MODEL_REPLACEMENTS: [RegExp, string][] = [
@@ -132,6 +141,53 @@ const MODEL_REPLACEMENTS: [RegExp, string][] = [
   [/하이브리드/g, "Hybrid"],
   [/전기/g, "Electric"],
   [/세대/g, "Gen"],
+  [/ìëí/g, "Sonata"],
+  [/ìë°ë¼/g, "Avante"],
+  [/ê·¸ëì /g, "Grandeur"],
+  [/ê·¸ëë ì¤íë ì¤/g, "Grand Starex"],
+  [/í¬ì¼/g, "Tucson"],
+  [/ì¼íí/g, "Santa Fe"],
+  [/ì ë¤ìì¤/g, "Genesis"],
+  [/ë²¨ë¡ì¤í°/g, "Veloster"],
+  [/ìì¼í¸/g, "Accent"],
+  [/í¬í°/g, "Porter"],
+  [/ì¬ ë´ ì¹´ë ì¤/g, "All New Carens"],
+  [/ì¹´ë ì¤/g, "Carens"],
+  [/íë¼ì´ë/g, "Pride"],
+  [/ì¹´ëë°/g, "Carnival"],
+  [/ìë í /g, "Sorento"],
+  [/ì¤í¬í°ì§/g, "Sportage"],
+  [/ëª¨íë¹/g, "Mohave"],
+  [/ìí ì¤/g, "Seltos"],
+  [/ëë¡/g, "Niro"],
+  [/ë ì´/g, "Ray"],
+  [/ëª¨ë/g, "Morning"],
+  [/ë´ê³ /g, "Bongo"],
+  [/í°ë³¼ë¦¬/g, "Tivoli"],
+  [/ì½ëë/g, "Korando"],
+  [/ë·°í°í Korando/g, "Korando"],
+  [/ë ì¤í´/g, "Rexton"],
+  [/í¬ë£¨ì¦/g, "Cruze"],
+  [/ì¤íí¬/g, "Spark"],
+  [/ì¬ëë/g, "Orlando"],
+  [/ì¿ í¼/g, "Cooper"],
+  [/ì»¨í¸ë¦¬ë§¨/g, "Countryman"],
+  [/í´ëì¤/g, "Class"],
+  [/ìë¦¬ì¦/g, "Series"],
+  [/ë ë´/g, "The New"],
+  [/ì¬ ë´/g, "All New"],
+  [/ë´/g, "New"],
+  [/íì´ë¸ë¦¬ë/g, "Hybrid"],
+  [/ì¸ë/g, "Gen"],
+  [/í¬ë¦¬ì¤ëª¨/g, "Turismo"],
+  [/ì¤í¬ì¸ /g, "Sports"],
+  [/ìì´/g, "Air"],
+  [/ë¤ì¤/g, "Neo"],
+  [/í¸ë­/g, "Truck"],
+  [/ì¹´ê³ /g, "Cargo"],
+  [/í¹ì¥/g, "Special"],
+  [/ë íë ì¤í°ì§/g, "The Prestige"],
+  [/ë íë¼ì/g, "The Prime"],
 ];
 
 const KOREAN_RE = /[\u3131-\uD79D]/;
@@ -179,8 +235,38 @@ export function getKCarBaseModel(car: Pick<KCarAuctionCar, "brand" | "model">): 
     })
     .replace(/\([^)]*\)/g, "")
     .replace(/[0-9.]+\s*(T|Turbo|GDI|CRDi|cc)?\b/gi, "")
+    .replace(/\b(F\/L|LPi|CRDi|Neo|Sports|Turismo|Air|Cargo|Special|The Prime|The Prestige)\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
+
+  const knownModels = [
+    "Grand Starex",
+    "Santa Fe",
+    "Range Rover",
+    "Land Rover",
+    "Mercedes-Benz",
+    "C Class",
+    "E Class",
+    "S Class",
+    "CLS Class",
+    "GLA Class",
+    "GLC Class",
+    "GLE Class",
+    "5 Series",
+    "3 Series",
+    "7 Series",
+    "All New SM7",
+    "SM3",
+    "SM5",
+    "SM6",
+    "SM7",
+    "QM3",
+    "QM5",
+    "QM6",
+    "XM3",
+  ];
+  const known = knownModels.find((item) => new RegExp(`\\b${item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(model));
+  if (known) return known;
 
   const firstWords = model.split(" ").filter(Boolean);
   if (firstWords.length >= 2 && ["Class", "Series"].includes(firstWords[1])) {

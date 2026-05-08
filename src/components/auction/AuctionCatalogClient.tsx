@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import AuctionCarCard from "@/components/auction/AuctionCarCard";
+import { useApp } from "@/contexts/AppContext";
+import type { Lang } from "@/lib/i18n";
 import { getKCarBaseModel, getKCarBrand, type KCarAuctionCar } from "@/lib/kcar-auction";
 
 interface AuctionCatalogClientProps {
@@ -10,6 +12,22 @@ interface AuctionCatalogClientProps {
 
 type YearFilter = "all" | "2014" | "2021";
 const PAGE_SIZE = 10;
+
+const TEXT = {
+  auctionCars: { ru: "авто на аукционе", en: "auction cars", tj: "мошин дар аукцион", uz: "auksiondagi avtomobil" },
+  pageOf: { ru: "Страница", en: "Page", tj: "Саҳифа", uz: "Sahifa" },
+  of: { ru: "из", en: "of", tj: "аз", uz: "dan" },
+  allBrands: { ru: "Все марки", en: "All brands", tj: "Ҳамаи брендҳо", uz: "Barcha brendlar" },
+  allModels: { ru: "Все модели", en: "All models", tj: "Ҳамаи моделҳо", uz: "Barcha modellar" },
+  allYears: { ru: "Все годы", en: "All years", tj: "Ҳамаи солҳо", uz: "Barcha yillar" },
+  noCars: { ru: "Автомобили не найдены.", en: "No auction cars found.", tj: "Мошин ёфт нашуд.", uz: "Avtomobil topilmadi." },
+  previous: { ru: "Назад", en: "Previous", tj: "Қафо", uz: "Oldingi" },
+  next: { ru: "Далее", en: "Next", tj: "Баъдӣ", uz: "Keyingi" },
+} satisfies Record<string, Record<Lang, string>>;
+
+function tr(key: keyof typeof TEXT, lang: Lang): string {
+  return TEXT[key][lang] || TEXT[key].en;
+}
 
 function getDisplayYear(car: KCarAuctionCar): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
@@ -20,6 +38,7 @@ function getDisplayYear(car: KCarAuctionCar): number {
 }
 
 export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps) {
+  const { lang } = useApp();
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
@@ -34,14 +53,17 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     });
 
     const brands = Array.from(new Set(rows.map((row) => row.brand).filter(Boolean))).sort();
-    const models = Array.from(
-      new Set(
-        rows
-          .filter((row) => !selectedBrand || row.brand === selectedBrand)
-          .map((row) => row.model)
-          .filter(Boolean),
-      ),
-    ).sort();
+    const modelCounts = new Map<string, number>();
+    rows
+      .filter((row) => !selectedBrand || row.brand === selectedBrand)
+      .forEach((row) => {
+        if (!row.model) return;
+        modelCounts.set(row.model, (modelCounts.get(row.model) || 0) + 1);
+      });
+
+    const models = Array.from(modelCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     return { brands, models };
   }, [cars, selectedBrand]);
@@ -106,10 +128,10 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="text-sm font-semibold text-gray-600">
-            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> auction cars
+            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> {tr("auctionCars", lang)}
           </div>
           <div className="text-xs font-medium text-gray-500">
-            Page {currentPage} of {totalPages}
+            {tr("pageOf", lang)} {currentPage} {tr("of", lang)} {totalPages}
           </div>
         </div>
 
@@ -120,7 +142,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateBrand(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">All brands</option>
+              <option value="">{tr("allBrands", lang)}</option>
               {carOptions.brands.map((brand) => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
@@ -130,16 +152,16 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateModel(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">All models</option>
+              <option value="">{tr("allModels", lang)}</option>
               {carOptions.models.map((model) => (
-                <option key={model} value={model}>{model}</option>
+                <option key={model.name} value={model.name}>{model.name} ({model.count})</option>
               ))}
             </select>
           </div>
 
           <div className="flex gap-2">
             {([
-              ["all", "All years"],
+              ["all", tr("allYears", lang)],
               ["2014", "2014+"],
               ["2021", "2021+"],
             ] as [YearFilter, string][]).map(([value, label]) => (
@@ -162,7 +184,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
       {filteredCars.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-500">
-          No auction cars found.
+          {tr("noCars", lang)}
         </div>
       ) : (
         <>
@@ -183,7 +205,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Previous
+                {tr("previous", lang)}
               </button>
 
               <div className="flex items-center gap-1">
@@ -207,7 +229,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               </div>
 
               <div className="text-xs font-semibold text-gray-500 sm:hidden">
-                Page {currentPage} of {totalPages}
+                {tr("pageOf", lang)} {currentPage} {tr("of", lang)} {totalPages}
               </div>
 
               <button
@@ -216,7 +238,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 disabled={currentPage === totalPages}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Next
+                {tr("next", lang)}
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
                 </svg>

@@ -68,17 +68,11 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   const pagedCars = filteredCars.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const pageItems = useMemo(() => {
-    const pages = new Set<number>();
-    pages.add(1);
-    pages.add(2);
-    pages.add(3);
-    pages.add(currentPage - 1);
-    pages.add(currentPage);
-    pages.add(currentPage + 1);
-    pages.add(totalPages - 2);
-    pages.add(totalPages - 1);
-    pages.add(totalPages);
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
 
+    const pages = new Set<number>([1, currentPage - 1, currentPage, currentPage + 1, totalPages]);
     const sorted = Array.from(pages)
       .filter((item) => item >= 1 && item <= totalPages)
       .sort((a, b) => a - b);
@@ -179,40 +173,55 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-1.5">
+            <nav className="mt-6 flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm sm:flex-row sm:justify-between">
               <button
                 type="button"
                 onClick={() => setPage((value) => Math.max(1, value - 1))}
                 disabled={currentPage === 1}
-                className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Prev
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous
               </button>
-              {pageItems.map((item, index) => item === "..." ? (
-                <span key={`dots-${index}`} className="px-2 text-sm font-bold text-gray-400">...</span>
-              ) : (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setPage(item)}
-                  className={`h-9 min-w-9 rounded-lg px-3 text-sm font-bold ${
-                    currentPage === item
-                      ? "bg-red-600 text-white"
-                      : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
+
+              <div className="flex items-center gap-1">
+                {pageItems.map((item, index) => item === "..." ? (
+                  <span key={`dots-${index}`} className="flex h-10 min-w-8 items-center justify-center text-sm font-bold text-gray-400">...</span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setPage(item)}
+                    aria-current={currentPage === item ? "page" : undefined}
+                    className={`h-10 min-w-10 rounded-lg px-3 text-sm font-bold transition ${
+                      currentPage === item
+                        ? "bg-red-600 text-white shadow-sm"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-xs font-semibold text-gray-500 sm:hidden">
+                Page {currentPage} of {totalPages}
+              </div>
+
               <button
                 type="button"
                 onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
                 disabled={currentPage === totalPages}
-                className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
-            </div>
+            </nav>
           )}
         </>
       )}

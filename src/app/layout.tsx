@@ -11,8 +11,8 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
   title: {
-    default: 'GHAYRAT KOREA — Cars from Korea',
-    template: '%s | GHAYRAT KOREA',
+    default: 'GHAYRAT — Cars from Korea',
+    template: '%s | GHAYRAT',
   },
   description: 'Cars from South Korea with delivery. Catalog of cars from Korean auctions, turnkey cost calculation.',
   keywords: ['cars from korea', 'buy car from korea', 'encar', 'korean cars'],

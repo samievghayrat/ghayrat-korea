@@ -160,6 +160,36 @@ export function formatKCarName(car: Pick<KCarAuctionCar, "brand" | "model">): st
   return [brand, model].filter(Boolean).join(" ").trim();
 }
 
+export function getKCarBrand(car: Pick<KCarAuctionCar, "brand" | "model">): string {
+  return formatKCarName(car).split(" ")[0] || car.brand;
+}
+
+export function getKCarBaseModel(car: Pick<KCarAuctionCar, "brand" | "model">): string {
+  const name = formatKCarName(car);
+  const [, ...modelParts] = name.split(" ");
+  let model = modelParts.join(" ").trim() || car.model;
+
+  model = model
+    .replace(/\b(The All New|All New|The New|New)\b/gi, "")
+    .replace(/\bHybrid|Electric|Diesel|Gasoline|LPG\b/gi, "")
+    .replace(/\b\d+(st|nd|rd|th)?\s*Gen\b/gi, "")
+    .replace(/\b[A-Z]{1,3}\d{0,3}\b(?=\s|$)/g, (match) => {
+      const keep = ["K3", "K5", "K7", "K8", "K9", "G70", "G80", "G90", "GV60", "GV70", "GV80", "EV6", "EV9", "SM3", "SM5", "SM6", "SM7", "QM3", "QM5", "QM6", "XM3"];
+      return keep.includes(match) ? match : "";
+    })
+    .replace(/\([^)]*\)/g, "")
+    .replace(/[0-9.]+\s*(T|Turbo|GDI|CRDi|cc)?\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const firstWords = model.split(" ").filter(Boolean);
+  if (firstWords.length >= 2 && ["Class", "Series"].includes(firstWords[1])) {
+    return firstWords.slice(0, 2).join(" ");
+  }
+
+  return firstWords[0] || model || car.model;
+}
+
 export function formatKcarAuctionDate(date: string): string {
   if (!date) return "";
   return new Intl.DateTimeFormat("ru-RU", {

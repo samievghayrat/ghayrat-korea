@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import AuctionCarCard from "@/components/auction/AuctionCarCard";
-import { formatKCarName, type KCarAuctionCar } from "@/lib/kcar-auction";
+import { getKCarBaseModel, getKCarBrand, type KCarAuctionCar } from "@/lib/kcar-auction";
 
 interface AuctionCatalogClientProps {
   cars: KCarAuctionCar[];
@@ -27,11 +27,9 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
   const carOptions = useMemo(() => {
     const rows = cars.map((car) => {
-      const name = formatKCarName(car);
-      const [brand = car.brand, ...modelParts] = name.split(" ");
       return {
-        brand,
-        model: modelParts.join(" ").trim() || car.model,
+        brand: getKCarBrand(car),
+        model: getKCarBaseModel(car),
       };
     });
 
@@ -50,9 +48,8 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
   const filteredCars = useMemo(() => {
     return cars.filter((car) => {
-      const displayName = formatKCarName(car);
-      const [brand = car.brand, ...modelParts] = displayName.split(" ");
-      const model = modelParts.join(" ").trim() || car.model;
+      const brand = getKCarBrand(car);
+      const model = getKCarBaseModel(car);
       const matchesBrand = !selectedBrand || brand === selectedBrand;
       const matchesModel = !selectedModel || model === selectedModel;
 
@@ -117,7 +114,9 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
           <div className="text-sm font-semibold text-gray-600">
             <span className="font-extrabold text-gray-950">{filteredCars.length}</span> auction cars
           </div>
-          <div className="text-xs font-medium text-gray-500">10 cars per page</div>
+          <div className="text-xs font-medium text-gray-500">
+            Page {currentPage} of {totalPages}
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -173,7 +172,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {pagedCars.map((car, index) => (
               <AuctionCarCard key={car.id} car={car} priority={currentPage === 1 && index < 6} />
             ))}

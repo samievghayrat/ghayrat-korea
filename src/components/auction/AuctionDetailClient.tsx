@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
 import {
   formatKcarAuctionDate,
@@ -25,6 +26,8 @@ function translateValue(value: string | null | undefined): string {
     LPG: "Газ (LPG)",
     Automatic: "Автомат",
     Manual: "Механика",
+    기타: "Другое",
+    세종경매장: "Седжон, аукционная площадка",
     "2WD": "2WD",
     "4WD": "4WD",
     AWD: "AWD",
@@ -34,6 +37,7 @@ function translateValue(value: string | null | undefined): string {
 
 export default function AuctionDetailClient({ car, images }: AuctionDetailClientProps) {
   const { formatKrwPrice } = useApp();
+  const searchParams = useSearchParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const title = formatKCarName(car);
@@ -41,6 +45,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const telegramUrl = `https://t.me/+821099221601`;
+  const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6
     ? `${car.firstRegDate.slice(0, 4)}/${car.firstRegDate.slice(4, 6)}`
     : String(car.year);
@@ -51,8 +56,8 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     ["Топливо", translateValue(car.fuelType)],
     ["КПП", translateValue(car.transmission)],
     ["Двигатель", car.engineVolume ? `${car.engineVolume}cc` : car.engineTier || "-"],
-    ["Локация", car.location || "-"],
-    ["Цвет", car.color || "-"],
+    ["Локация", translateValue(car.location)],
+    ["Цвет", translateValue(car.color)],
     ["Привод", translateValue(car.driveType)],
     ["VIN", car.vin || "-"],
   ]), [car, regYear]);
@@ -143,7 +148,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
-        <Link href="/auction" className="mb-4 inline-flex text-sm font-semibold text-primary hover:underline">
+        <Link href={backHref} className="mb-4 inline-flex text-sm font-semibold text-primary hover:underline">
           Назад к аукциону
         </Link>
 

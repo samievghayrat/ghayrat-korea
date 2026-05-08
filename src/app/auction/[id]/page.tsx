@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import AuctionDetailClient from "@/components/auction/AuctionDetailClient";
 import {
   formatKCarName,
@@ -30,5 +31,9 @@ export default async function AuctionDetailPage({ params }: AuctionDetailPagePro
   const imagePaths = await getKCarAuctionImages(car.id);
   const images = (imagePaths.length > 0 ? imagePaths : [car.image]).map(resolveKCarImageUrl);
 
-  return <AuctionDetailClient car={car} images={images} />;
+  return (
+    <Suspense fallback={null}>
+      <AuctionDetailClient car={car} images={images} />
+    </Suspense>
+  );
 }

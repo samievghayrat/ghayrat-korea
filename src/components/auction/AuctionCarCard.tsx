@@ -13,9 +13,21 @@ import {
 interface AuctionCarCardProps {
   car: KCarAuctionCar;
   priority?: boolean;
+  href?: string;
 }
 
-export default function AuctionCarCard({ car, priority = false }: AuctionCarCardProps) {
+function translateFuel(value: string): string {
+  const map: Record<string, string> = {
+    Gasoline: "Бензин",
+    Diesel: "Дизель",
+    Hybrid: "Гибрид",
+    Electric: "Электро",
+    LPG: "Газ (LPG)",
+  };
+  return map[value] || value;
+}
+
+export default function AuctionCarCard({ car, priority = false, href }: AuctionCarCardProps) {
   const { formatKrwPrice } = useApp();
   const title = formatKCarName(car);
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6
@@ -24,7 +36,7 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
 
   return (
     <Link
-      href={`/auction/${car.id}`}
+      href={href || `/auction/${car.id}`}
       className="group overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-red-200 hover:shadow-md"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
@@ -56,7 +68,7 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
           <span className="text-gray-300">/</span>
           <span>{car.mileage.toLocaleString("ru-RU")} км</span>
           <span className="text-gray-300">/</span>
-          <span>{car.fuelType}</span>
+          <span>{translateFuel(car.fuelType)}</span>
           {car.engineVolume && (
             <>
               <span className="text-gray-300">/</span>

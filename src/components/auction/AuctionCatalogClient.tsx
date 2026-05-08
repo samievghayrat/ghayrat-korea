@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AuctionCarCard from "@/components/auction/AuctionCarCard";
 import { getKCarBaseModel, getKCarBrand, type KCarAuctionCar } from "@/lib/kcar-auction";
 
@@ -20,18 +21,21 @@ function getDisplayYear(car: KCarAuctionCar): number {
 }
 
 export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps) {
-  const [selectedBrand, setSelectedBrand] = useState("");
-  const [selectedModel, setSelectedModel] = useState("");
-  const [yearFilter, setYearFilter] = useState<YearFilter>("all");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selectedBrand = searchParams.get("brand") || "";
+  const selectedModel = searchParams.get("model") || "";
+  const yearParam = searchParams.get("year");
+  const yearFilter: YearFilter = yearParam === "2014" || yearParam === "2021" ? yearParam : "all";
+  const pageParam = Number(searchParams.get("page") || "1");
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const carOptions = useMemo(() => {
-    const rows = cars.map((car) => {
-      return {
-        brand: getKCarBrand(car),
-        model: getKCarBaseModel(car),
-      };
-    });
+    const rows = cars.map((car) => ({
+      brand: getKCarBrand(car),
+      model: getKCarBaseModel(car),
+    }));
 
     const brands = Array.from(new Set(rows.map((row) => row.brand).filter(Boolean))).sort();
     const modelCounts = new Map<string, number>();
@@ -88,20 +92,38 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     return result;
   }, [currentPage, totalPages]);
 
+  const updateFilters = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "" || value === "all" || value === 1) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const detailHref = (id: string) => {
+    const query = searchParams.toString();
+    return query ? `/auction/${id}?${query}` : `/auction/${id}`;
+  };
+
   const updateBrand = (brand: string) => {
-    setSelectedBrand(brand);
-    setSelectedModel("");
-    setPage(1);
+    updateFilters({ brand, model: null, page: null });
   };
 
   const updateModel = (model: string) => {
-    setSelectedModel(model);
-    setPage(1);
+    updateFilters({ model, page: null });
   };
 
   const updateYear = (value: YearFilter) => {
-    setYearFilter(value);
-    setPage(1);
+    updateFilters({ year: value, page: null });
+  };
+
+  const updatePage = (value: number) => {
+    updateFilters({ page: value });
   };
 
   return (
@@ -171,7 +193,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {pagedCars.map((car, index) => (
-              <AuctionCarCard key={car.id} car={car} priority={currentPage === 1 && index < 6} />
+              <AuctionCarCard key={car.id} car={car} href={detailHref(car.id)} priority={currentPage === 1 && index < 6} />
             ))}
           </div>
 
@@ -179,7 +201,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             <nav className="mt-6 flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm sm:flex-row sm:justify-between">
               <button
                 type="button"
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                onClick={() => updatePage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -196,7 +218,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                   <button
                     key={item}
                     type="button"
-                    onClick={() => setPage(item)}
+                    onClick={() => updatePage(item)}
                     aria-current={currentPage === item ? "page" : undefined}
                     className={`h-10 min-w-10 rounded-lg px-3 text-sm font-bold transition ${
                       currentPage === item
@@ -215,7 +237,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
               <button
                 type="button"
-                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                onClick={() => updatePage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >

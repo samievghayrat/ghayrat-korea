@@ -27,6 +27,10 @@ function translateValue(value: string | null | undefined): string {
     Automatic: "Автомат",
     Manual: "Механика",
     기타: "Другое",
+    흰색: "Белый",
+    검정색: "Черный",
+    은색: "Серебристый",
+    회색: "Серый",
     세종경매장: "Седжон, аукционная площадка",
     "2WD": "2WD",
     "4WD": "4WD",
@@ -46,6 +50,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const telegramUrl = `https://t.me/+821099221601`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
+  const currentImage = images[selectedImage] || images[0] || "/images/no-image.svg";
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6
     ? `${car.firstRegDate.slice(0, 4)}/${car.firstRegDate.slice(4, 6)}`
     : String(car.year);
@@ -78,25 +83,27 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
         <div className="mx-auto max-w-5xl">
           <div className="relative aspect-[16/10] bg-gray-900 sm:aspect-[16/8]">
             {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-gray-900/40">
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-white/25 border-t-white" />
               </div>
             )}
             <img
-              src={images[selectedImage] || images[0]}
+              key={currentImage}
+              src={currentImage}
               alt={title}
-              className={`h-full w-full object-contain transition-opacity duration-200 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+              className="h-full w-full object-contain"
               loading="eager"
               decoding="async"
               fetchPriority="high"
               onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)}
             />
             {images.length > 1 && (
               <>
                 <button
                   type="button"
                   onClick={showPreviousImage}
-                  className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
+                  className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
                   aria-label="Предыдущее фото"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +113,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 <button
                   type="button"
                   onClick={showNextImage}
-                  className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
+                  className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
                   aria-label="Следующее фото"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,11 +122,11 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 </button>
               </>
             )}
-            <div className="absolute left-3 top-3 rounded bg-white px-3 py-1 text-sm font-bold text-gray-950">
+            <div className="absolute left-3 top-3 z-20 rounded bg-white px-3 py-1 text-sm font-bold text-gray-950">
               Аукцион {formatKcarAuctionDate(car.auctionDate)}
             </div>
             {car.lotNumber && (
-              <div className="absolute right-3 top-3 rounded bg-white/90 px-3 py-1 text-sm font-bold text-gray-950">
+              <div className="absolute right-3 top-3 z-20 rounded bg-white/90 px-3 py-1 text-sm font-bold text-gray-950">
                 Лот #{car.lotNumber}
               </div>
             )}

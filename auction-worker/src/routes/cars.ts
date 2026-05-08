@@ -4,8 +4,6 @@ import { createDb } from "../db";
 import { cars } from "../db/schema";
 import { carQuerySchema } from "../validators/car";
 import type { Env } from "../types/env";
-import { KCarClient } from "../scraper/kcar-client";
-import { saveImageManifest } from "../scraper/image-downloader";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -64,24 +62,6 @@ app.get("/:id/images", async (c) => {
   // Return cached images if populated
   if (car.images && car.images.length > 0) {
     return c.json({ data: car.images });
-  }
-
-  try {
-    const client = new KCarClient();
-    await client.login(c.env.KCAR_USER_ID, c.env.KCAR_USER_PW);
-    const sourceImages = await client.fetchCarImages(id);
-
-    if (sourceImages.length > 0) {
-      const paths = await saveImageManifest(c.env.BUCKET, id, sourceImages);
-      await db
-        .update(cars)
-        .set({ images: paths })
-        .where(eq(cars.id, id));
-
-      return c.json({ data: paths });
-    }
-  } catch {
-    // If KCar blocks or times out, keep the page usable with the thumbnail.
   }
 
   // Fall back to single thumbnail

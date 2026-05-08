@@ -1,7 +1,7 @@
 import type { Env } from "../types/env";
 import { KCarClient, parseEngineVolume, parseInspectionFromListing } from "./kcar-client";
 import { mapKCarToSchema } from "./field-mapper";
-import { downloadImage, saveImageManifest } from "./image-downloader";
+import { downloadImage, saveImageSet } from "./image-downloader";
 
 const BATCH_SIZE = 3;
 
@@ -124,15 +124,17 @@ export async function syncKCarAuctions(env: Env): Promise<SyncResult> {
         Promise.all(
           batch.map(async (car) => {
             const existing = existingCars.get(car.CAR_ID);
-            // Skip all image work for existing cars
-            if (existing) {
-              try { return existing.images ? JSON.parse(existing.images) : []; } catch { return []; }
+            if (existing?.images) {
+              try {
+                const parsed = JSON.parse(existing.images);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+              } catch { /* fetch a fresh image set below */ }
             }
             try {
               const imgs = await client.fetchCarImages(car.CAR_ID);
               if (imgs.length > 0) {
                 imagesUpdated++;
-                return await saveImageManifest(env.BUCKET, car.CAR_ID, imgs);
+                return await saveImageSet(env.BUCKET, car.CAR_ID, imgs);
               }
               return [];
             } catch {
@@ -268,7 +270,7 @@ export async function enrichCarDetails(env: Env, limit: number = 50): Promise<{ 
         await randomDelay(800, 2000);
         const imgs = await client.fetchCarImages(row.id);
         if (imgs.length > 0) {
-          const paths = await saveImageManifest(env.BUCKET, row.id, imgs);
+          const paths = await saveImageSet(env.BUCKET, row.id, imgs);
           await env.DB.prepare(
             `UPDATE cars SET images = ?1 WHERE id = ?2`
           ).bind(JSON.stringify(paths), row.id).run();

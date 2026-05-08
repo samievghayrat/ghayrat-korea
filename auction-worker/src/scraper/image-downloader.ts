@@ -78,6 +78,31 @@ export async function saveImageManifest(
   return manifest.map((e) => `/api/images/${e.r2Key}`);
 }
 
+export async function saveImageSet(
+  bucket: R2Bucket,
+  carId: string,
+  sourceUrls: string[]
+): Promise<string[]> {
+  const paths = await saveImageManifest(bucket, carId, sourceUrls);
+  await Promise.allSettled(
+    sourceUrls.map(async (url, i) => {
+      const index = String(i + 1).padStart(2, "0");
+      const r2Key = `kcar/${carId}_${index}.jpg`;
+      const existing = await bucket.head(r2Key);
+      if (existing) return;
+
+      const response = await fetchWithTimeout(url);
+      if (!response.ok) return;
+
+      const arrayBuffer = await response.arrayBuffer();
+      await bucket.put(r2Key, arrayBuffer, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+    })
+  );
+  return paths;
+}
+
 /**
  * Fetch an image from K Car using the manifest, cache in R2, and return the image body.
  */

@@ -36,6 +36,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     ["VIN", car.vin || "-"],
   ]), [car, regYear]);
 
+  const showPreviousImage = () => {
+    setSelectedImage((current) => (current === 0 ? images.length - 1 : current - 1));
+  };
+
+  const showNextImage = () => {
+    setSelectedImage((current) => (current + 1) % images.length);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       <div className="bg-gray-950">
@@ -49,6 +57,30 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               decoding="async"
               fetchPriority="high"
             />
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={showPreviousImage}
+                  className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
+                  aria-label="Previous photo"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={showNextImage}
+                  className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
+                  aria-label="Next photo"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
             <div className="absolute left-3 top-3 rounded bg-white px-3 py-1 text-sm font-bold text-gray-950">
               Auction {formatKcarAuctionDate(car.auctionDate)}
             </div>
@@ -100,6 +132,9 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="text-xs font-bold uppercase tracking-wide text-gray-500">Start price</div>
             <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
+            <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
+              This price is without auction commission and delivery.
+            </div>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(`KCar auction: ${title}, lot ${car.lotNumber}, ${price}`)}`}
               className="mt-5 block rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700"

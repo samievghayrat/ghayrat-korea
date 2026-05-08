@@ -72,6 +72,9 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
               {formatKrwPrice(kcarPriceToKrw(car.price))}
             </div>
           </div>
+          <div className="mt-1 border-t border-red-100 pt-1 text-[10px] font-medium leading-tight text-gray-500">
+            Without auction commission and delivery
+          </div>
         </div>
       </div>
     </Link>

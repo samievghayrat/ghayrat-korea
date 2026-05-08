@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AuctionCarCard from "@/components/auction/AuctionCarCard";
+import AuctionCatalogClient from "@/components/auction/AuctionCatalogClient";
 import { getKCarAuctionCars } from "@/lib/kcar-auction";
 
 export const metadata: Metadata = {
@@ -29,17 +29,7 @@ export default async function AuctionPage() {
           </div>
         </div>
 
-        {cars.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-500">
-            No auction cars available right now.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cars.map((car, index) => (
-              <AuctionCarCard key={car.id} car={car} priority={index < 6} />
-            ))}
-          </div>
-        )}
+        <AuctionCatalogClient cars={cars} />
       </div>
     </div>
   );

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import type { Lang } from "@/lib/i18n";
 import {
   formatKcarAuctionDate,
   formatKCarName,
@@ -16,40 +15,25 @@ interface AuctionDetailClientProps {
   images: string[];
 }
 
-const TEXT = {
-  auction: { ru: "Аукцион", en: "Auction", tj: "Аукцион", uz: "Auksion" },
-  lot: { ru: "Лот", en: "Lot", tj: "Лот", uz: "Lot" },
-  previousPhoto: { ru: "Предыдущее фото", en: "Previous photo", tj: "Сурати қаблӣ", uz: "Oldingi rasm" },
-  nextPhoto: { ru: "Следующее фото", en: "Next photo", tj: "Сурати баъдӣ", uz: "Keyingi rasm" },
-  showPhoto: { ru: "Показать фото", en: "Show photo", tj: "Нишон додани сурат", uz: "Rasmni ko'rsatish" },
-  back: { ru: "Назад к аукциону", en: "Back to auction", tj: "Бозгашт ба аукцион", uz: "Auksionga qaytish" },
-  startPrice: { ru: "Стартовая цена", en: "Start price", tj: "Нархи оғоз", uz: "Boshlang'ich narx" },
-  priceNote: {
-    ru: "Эта цена указана без аукционной комиссии и доставки.",
-    en: "This price is without auction commission and delivery.",
-    tj: "Ин нарх бе комиссияи аукцион ва доставка нишон дода шудааст.",
-    uz: "Bu narx auksion komissiyasi va yetkazib berishsiz ko'rsatilgan.",
-  },
-  ask: { ru: "Спросить об этом авто", en: "Ask about this car", tj: "Дар бораи ин мошин пурсед", uz: "Bu avtomobil haqida so'rash" },
-  whatsapp: { ru: "WhatsApp", en: "WhatsApp", tj: "WhatsApp", uz: "WhatsApp" },
-  telegram: { ru: "Telegram", en: "Telegram", tj: "Telegram", uz: "Telegram" },
-  year: { ru: "Год", en: "Year", tj: "Сол", uz: "Yil" },
-  mileage: { ru: "Пробег", en: "Mileage", tj: "Масофа", uz: "Yurgan masofasi" },
-  fuel: { ru: "Топливо", en: "Fuel", tj: "Сӯзишворӣ", uz: "Yoqilg'i" },
-  transmission: { ru: "КПП", en: "Transmission", tj: "КПП", uz: "Uzatma" },
-  engine: { ru: "Двигатель", en: "Engine", tj: "Муҳаррик", uz: "Dvigatel" },
-  location: { ru: "Локация", en: "Location", tj: "Ҷой", uz: "Joylashuv" },
-  color: { ru: "Цвет", en: "Color", tj: "Ранг", uz: "Rang" },
-  drive: { ru: "Привод", en: "Drive", tj: "Ҳаракат", uz: "Yetakchi" },
-  km: { ru: "км", en: "km", tj: "км", uz: "km" },
-} satisfies Record<string, Record<Lang, string>>;
-
-function tr(key: keyof typeof TEXT, lang: Lang): string {
-  return TEXT[key][lang] || TEXT[key].en;
+function translateValue(value: string | null | undefined): string {
+  if (!value) return "-";
+  const map: Record<string, string> = {
+    Gasoline: "Бензин",
+    Diesel: "Дизель",
+    Hybrid: "Гибрид",
+    Electric: "Электро",
+    LPG: "Газ (LPG)",
+    Automatic: "Автомат",
+    Manual: "Механика",
+    "2WD": "2WD",
+    "4WD": "4WD",
+    AWD: "AWD",
+  };
+  return map[value] || value;
 }
 
 export default function AuctionDetailClient({ car, images }: AuctionDetailClientProps) {
-  const { formatKrwPrice, lang } = useApp();
+  const { formatKrwPrice } = useApp();
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const title = formatKCarName(car);
@@ -62,16 +46,16 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     : String(car.year);
 
   const specs = useMemo(() => ([
-    [tr("year", lang), regYear],
-    [tr("mileage", lang), `${car.mileage.toLocaleString("ru-RU")} ${tr("km", lang)}`],
-    [tr("fuel", lang), car.fuelType],
-    [tr("transmission", lang), car.transmission],
-    [tr("engine", lang), car.engineVolume ? `${car.engineVolume}cc` : car.engineTier || "-"],
-    [tr("location", lang), car.location || "-"],
-    [tr("color", lang), car.color || "-"],
-    [tr("drive", lang), car.driveType || "-"],
+    ["Год", regYear],
+    ["Пробег", `${car.mileage.toLocaleString("ru-RU")} км`],
+    ["Топливо", translateValue(car.fuelType)],
+    ["КПП", translateValue(car.transmission)],
+    ["Двигатель", car.engineVolume ? `${car.engineVolume}cc` : car.engineTier || "-"],
+    ["Локация", car.location || "-"],
+    ["Цвет", car.color || "-"],
+    ["Привод", translateValue(car.driveType)],
     ["VIN", car.vin || "-"],
-  ]), [car, regYear, lang]);
+  ]), [car, regYear]);
 
   const showPreviousImage = () => {
     setImageLoaded(false);
@@ -108,7 +92,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   type="button"
                   onClick={showPreviousImage}
                   className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
-                  aria-label={tr("previousPhoto", lang)}
+                  aria-label="Предыдущее фото"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
@@ -118,7 +102,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   type="button"
                   onClick={showNextImage}
                   className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-gray-950 shadow-md transition hover:bg-white"
-                  aria-label={tr("nextPhoto", lang)}
+                  aria-label="Следующее фото"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
@@ -127,11 +111,11 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               </>
             )}
             <div className="absolute left-3 top-3 rounded bg-white px-3 py-1 text-sm font-bold text-gray-950">
-              {tr("auction", lang)} {formatKcarAuctionDate(car.auctionDate)}
+              Аукцион {formatKcarAuctionDate(car.auctionDate)}
             </div>
             {car.lotNumber && (
               <div className="absolute right-3 top-3 rounded bg-white/90 px-3 py-1 text-sm font-bold text-gray-950">
-                {tr("lot", lang)} #{car.lotNumber}
+                Лот #{car.lotNumber}
               </div>
             )}
           </div>
@@ -148,7 +132,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   className={`relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-md border ${
                     selectedImage === index ? "border-red-400" : "border-white/20"
                   }`}
-                  aria-label={`${tr("showPhoto", lang)} ${index + 1}`}
+                  aria-label={`Показать фото ${index + 1}`}
                 >
                   <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                 </button>
@@ -160,14 +144,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
 
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
         <Link href="/auction" className="mb-4 inline-flex text-sm font-semibold text-primary hover:underline">
-          {tr("back", lang)}
+          Назад к аукциону
         </Link>
 
         <section className="mb-4 rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
-          <div className="text-xs font-bold uppercase tracking-wide text-gray-500">{tr("startPrice", lang)}</div>
+          <div className="text-xs font-bold uppercase tracking-wide text-gray-500">Стартовая цена</div>
           <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
           <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
-            {tr("priceNote", lang)}
+            Эта цена указана без аукционной комиссии и доставки.
           </div>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <a
@@ -176,7 +160,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               rel="noopener noreferrer"
               className="block rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:px-6"
             >
-              {tr("whatsapp", lang)}
+              WhatsApp
             </a>
             <a
               href={telegramUrl}
@@ -184,7 +168,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               rel="noopener noreferrer"
               className="block rounded-lg bg-sky-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-sky-700 sm:px-6"
             >
-              {tr("telegram", lang)}
+              Telegram
             </a>
           </div>
         </section>

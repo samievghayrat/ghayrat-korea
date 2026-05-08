@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useApp } from "@/contexts/AppContext";
-import type { Lang } from "@/lib/i18n";
 import {
   formatKcarAuctionDate,
   formatKCarName,
@@ -16,18 +15,8 @@ interface AuctionCarCardProps {
   priority?: boolean;
 }
 
-const TEXT = {
-  auction: { ru: "Аукцион", en: "Auction", tj: "Аукцион", uz: "Auksion" },
-  startPrice: { ru: "Стартовая цена", en: "Start price", tj: "Нархи оғоз", uz: "Boshlang'ich narx" },
-  km: { ru: "км", en: "km", tj: "км", uz: "km" },
-} satisfies Record<string, Record<Lang, string>>;
-
-function tr(key: keyof typeof TEXT, lang: Lang): string {
-  return TEXT[key][lang] || TEXT[key].en;
-}
-
 export default function AuctionCarCard({ car, priority = false }: AuctionCarCardProps) {
-  const { formatKrwPrice, lang } = useApp();
+  const { formatKrwPrice } = useApp();
   const title = formatKCarName(car);
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6
     ? `${car.firstRegDate.slice(0, 4)}/${car.firstRegDate.slice(4, 6)}`
@@ -48,7 +37,7 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
           fetchPriority={priority ? "high" : "auto"}
         />
         <div className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[11px] font-bold text-white">
-          {tr("auction", lang)} {formatKcarAuctionDate(car.auctionDate)}
+          Аукцион {formatKcarAuctionDate(car.auctionDate)}
         </div>
         {car.lotNumber && (
           <div className="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-[11px] font-bold text-gray-800 shadow-sm">
@@ -65,7 +54,7 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
           <span>{regYear}</span>
           <span className="text-gray-300">/</span>
-          <span>{car.mileage.toLocaleString("ru-RU")} {tr("km", lang)}</span>
+          <span>{car.mileage.toLocaleString("ru-RU")} км</span>
           <span className="text-gray-300">/</span>
           <span>{car.fuelType}</span>
           {car.engineVolume && (
@@ -78,7 +67,7 @@ export default function AuctionCarCard({ car, priority = false }: AuctionCarCard
 
         <div className="mt-2.5 rounded-md bg-red-50/80 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="text-[11px] font-semibold text-red-700/75">{tr("startPrice", lang)}</div>
+            <div className="text-[11px] font-semibold text-red-700/75">Стартовая цена</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-red-700">
               {formatKrwPrice(kcarPriceToKrw(car.price))}
             </div>

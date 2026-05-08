@@ -37,6 +37,14 @@ interface KCarImagesResponse {
   data: string[];
 }
 
+interface KCarThumbnailResponse {
+  THUMBNAIL?: Array<{
+    THUM_WEB_PATH?: string;
+    THUM_ID?: string;
+    THUM_EXT?: string;
+  }>;
+}
+
 export const KCAR_API_URL =
   process.env.KCAR_API_URL ||
   process.env.NEXT_PUBLIC_KCAR_API_URL ||
@@ -313,11 +321,43 @@ export async function getKCarAuctionCar(id: string): Promise<KCarAuctionCar | nu
 
 export async function getKCarAuctionImages(id: string): Promise<string[]> {
   const res = await fetch(`${KCAR_API_URL}/api/cars/${encodeURIComponent(id)}/images`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 300 },
   });
 
-  if (!res.ok) return [];
+  let storedImages: string[] = [];
+  if (res.ok) {
+    const payload = (await res.json()) as KCarImagesResponse;
+    storedImages = payload.data || [];
+  }
 
-  const payload = (await res.json()) as KCarImagesResponse;
-  return payload.data || [];
+  if (storedImages.length > 1) return storedImages;
+
+  const directImages = await getKCarDirectImages(id);
+  return directImages.length > 0 ? directImages : storedImages;
+}
+
+async function getKCarDirectImages(id: string): Promise<string[]> {
+  const response = await fetch("https://www.kcarauction.com/auction/getThumbnail_ajax.do", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      Accept: "application/json, text/javascript, */*; q=0.01",
+      "Accept-Language": "ko-KR,ko;q=0.9",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "X-Requested-With": "XMLHttpRequest",
+      Referer: "https://www.kcarauction.com/kcar/auction/daily_auction/colAuction.do?PAGE_TYPE=dCfm",
+    },
+    body: new URLSearchParams({ CAR_ID: id }).toString(),
+    next: { revalidate: 300 },
+  });
+
+  if (!response.ok) return [];
+
+  const payload = (await response.json().catch(() => ({}))) as KCarThumbnailResponse;
+  const thumbnails = payload.THUMBNAIL || [];
+
+  return thumbnails
+    .filter((item) => item.THUM_WEB_PATH && item.THUM_ID && item.THUM_EXT)
+    .map((item) => `https://www.kcarauction.com/auction/IMAGE_UPLOAD/CAR/${item.THUM_WEB_PATH}${item.THUM_ID}_640${item.THUM_EXT}`);
 }

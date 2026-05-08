@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { syncKCarAuctions, enrichCarDetails } from "../scraper/sync";
-import type { ImageManifestEntry } from "../scraper/image-downloader";
+import { downloadManifestImage, type ImageManifestEntry } from "../scraper/image-downloader";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -29,42 +29,40 @@ app.get("/enrich", async (c) => {
 
 // GET /api/sync/warm-images - Pre-download images from manifests into R2
 app.get("/warm-images", async (c) => {
-  const limit = parseInt(c.req.query("limit") || "10", 10);
+  const limit = parseInt(c.req.query("limit") || "12", 10);
   const offset = parseInt(c.req.query("offset") || "0", 10);
+  const maxImages = Math.min(Math.max(limit, 1), 18);
   let warmed = 0;
   let skipped = 0;
   let failed = 0;
   let manifestsProcessed = 0;
+  let nextOffset = offset;
 
   const listed = await c.env.BUCKET.list({ prefix: "kcar/", limit: 1000 });
   const manifests = listed.objects.filter(o => o.key.endsWith("_manifest.json"));
 
-  for (const mObj of manifests.slice(offset, offset + limit)) {
+  outer:
+  for (const mObj of manifests.slice(offset)) {
     const obj = await c.env.BUCKET.get(mObj.key);
+    nextOffset++;
     if (!obj) continue;
     manifestsProcessed++;
 
     const entries: ImageManifestEntry[] = await obj.json();
 
-    await Promise.allSettled(
-      entries.map(async (entry) => {
-        const existing = await c.env.BUCKET.head(entry.r2Key);
-        if (existing) { skipped++; return; }
-        try {
-          const res = await fetch(entry.sourceUrl);
-          if (res.ok) {
-            const buf = await res.arrayBuffer();
-            await c.env.BUCKET.put(entry.r2Key, buf, {
-              httpMetadata: { contentType: "image/jpeg" },
-            });
-            warmed++;
-          } else { failed++; }
-        } catch { failed++; }
-      })
-    );
+    for (const entry of entries) {
+      if (warmed + failed >= maxImages) break outer;
+      try {
+        const didDownload = await downloadManifestImage(c.env.BUCKET, entry);
+        if (didDownload) warmed++;
+        else skipped++;
+      } catch {
+        failed++;
+      }
+    }
   }
 
-  return c.json({ data: { warmed, skipped, failed, manifestsProcessed, totalManifests: manifests.length, nextOffset: offset + limit } });
+  return c.json({ data: { warmed, skipped, failed, manifestsProcessed, totalManifests: manifests.length, nextOffset } });
 });
 
 // GET /api/sync/restore-images - Restore images column from R2 manifests

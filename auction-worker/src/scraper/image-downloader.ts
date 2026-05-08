@@ -83,24 +83,24 @@ export async function saveImageSet(
   carId: string,
   sourceUrls: string[]
 ): Promise<string[]> {
-  const paths = await saveImageManifest(bucket, carId, sourceUrls);
-  await Promise.allSettled(
-    sourceUrls.map(async (url, i) => {
-      const index = String(i + 1).padStart(2, "0");
-      const r2Key = `kcar/${carId}_${index}.jpg`;
-      const existing = await bucket.head(r2Key);
-      if (existing) return;
+  return saveImageManifest(bucket, carId, sourceUrls);
+}
 
-      const response = await fetchWithTimeout(url);
-      if (!response.ok) return;
+export async function downloadManifestImage(
+  bucket: R2Bucket,
+  entry: ImageManifestEntry
+): Promise<boolean> {
+  const existing = await bucket.head(entry.r2Key);
+  if (existing) return false;
 
-      const arrayBuffer = await response.arrayBuffer();
-      await bucket.put(r2Key, arrayBuffer, {
-        httpMetadata: { contentType: "image/jpeg" },
-      });
-    })
-  );
-  return paths;
+  const response = await fetchWithTimeout(entry.sourceUrl);
+  if (!response.ok) return false;
+
+  const arrayBuffer = await response.arrayBuffer();
+  await bucket.put(entry.r2Key, arrayBuffer, {
+    httpMetadata: { contentType: "image/jpeg" },
+  });
+  return true;
 }
 
 /**

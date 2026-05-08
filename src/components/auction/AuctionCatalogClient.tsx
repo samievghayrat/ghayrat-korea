@@ -37,7 +37,14 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       model: getKCarBaseModel(car),
     }));
 
-    const brands = Array.from(new Set(rows.map((row) => row.brand).filter(Boolean))).sort();
+    const brandCounts = new Map<string, number>();
+    rows.forEach((row) => {
+      if (!row.brand) return;
+      brandCounts.set(row.brand, (brandCounts.get(row.brand) || 0) + 1);
+    });
+    const brands = Array.from(brandCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
     const modelCounts = new Map<string, number>();
     rows
       .filter((row) => !selectedBrand || row.brand === selectedBrand)
@@ -147,7 +154,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             >
               <option value="">Все марки</option>
               {carOptions.brands.map((brand) => (
-                <option key={brand} value={brand}>{brand}</option>
+                <option key={brand.name} value={brand.name}>{brand.name} ({brand.count})</option>
               ))}
             </select>
             <select

@@ -89,7 +89,7 @@ export default function Header() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
                     ? link.href === '/auction'
-                      ? 'bg-blue-50 text-blue-700'
+                      ? 'bg-red-50 text-red-700'
                       : 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}

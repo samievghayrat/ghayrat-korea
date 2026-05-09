@@ -10,7 +10,7 @@ interface AuctionCatalogClientProps {
 }
 
 type YearFilter = "all" | "2014" | "2021";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 9;
 
 function getDisplayYear(car: KCarAuctionCar): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
@@ -136,11 +136,11 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   return (
     <>
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-gray-600">
+        <div className="hidden">
+          <div className="hidden text-sm font-semibold text-gray-600">
             <span className="font-extrabold text-gray-950">{filteredCars.length}</span> авто на аукционе
           </div>
-          <div className="text-xs font-medium text-gray-500">
+          <div className="hidden text-xs font-medium text-gray-500">
             Страница {currentPage} из {totalPages}
           </div>
         </div>
@@ -189,6 +189,9 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-3 flex justify-end text-sm font-semibold text-gray-500">
+          Найдено: <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
         </div>
       </div>
 

@@ -359,5 +359,8 @@ async function getKCarDirectImages(id: string): Promise<string[]> {
 
   return thumbnails
     .filter((item) => item.THUM_WEB_PATH && item.THUM_ID && item.THUM_EXT)
-    .map((item) => `https://www.kcarauction.com/auction/IMAGE_UPLOAD/CAR/${item.THUM_WEB_PATH}${item.THUM_ID}_640${item.THUM_EXT}`);
+    .map((item) => {
+      const imageUrl = `https://www.kcarauction.com/auction/IMAGE_UPLOAD/CAR/${item.THUM_WEB_PATH}${item.THUM_ID}_640${item.THUM_EXT}`;
+      return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    });
 }

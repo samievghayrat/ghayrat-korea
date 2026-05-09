@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
   try {
     const referer = url.includes('encar.com')
       ? 'https://fem.encar.com'
+      : url.includes('kcarauction.com')
+        ? 'https://www.kcarauction.com'
       : url.includes('kbchachacha')
         ? 'https://www.kbchachacha.com'
         : '';

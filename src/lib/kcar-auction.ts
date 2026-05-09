@@ -320,6 +320,9 @@ export async function getKCarAuctionCar(id: string): Promise<KCarAuctionCar | nu
 }
 
 export async function getKCarAuctionImages(id: string): Promise<string[]> {
+  const directImages = await getKCarDirectImages(id);
+  if (directImages.length > 0) return directImages;
+
   const res = await fetch(`${KCAR_API_URL}/api/cars/${encodeURIComponent(id)}/images`, {
     next: { revalidate: 300 },
   });
@@ -330,10 +333,7 @@ export async function getKCarAuctionImages(id: string): Promise<string[]> {
     storedImages = payload.data || [];
   }
 
-  if (storedImages.length > 1) return storedImages;
-
-  const directImages = await getKCarDirectImages(id);
-  return directImages.length > 0 ? directImages : storedImages;
+  return storedImages;
 }
 
 async function getKCarDirectImages(id: string): Promise<string[]> {

@@ -48,7 +48,6 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const price = formatKrwPrice(kcarPriceToKrw(car.price));
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
-  const telegramUrl = `https://t.me/+821099221601`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
   const currentImage = images[selectedImage] || images[0] || "/images/no-image.svg";
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6
@@ -165,22 +164,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
             Эта цена указана без аукционной комиссии и доставки.
           </div>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-4">
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:px-6"
+              className="inline-flex rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700"
             >
               WhatsApp
-            </a>
-            <a
-              href={telegramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-lg bg-sky-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-sky-700 sm:px-6"
-            >
-              Telegram
             </a>
           </div>
         </section>

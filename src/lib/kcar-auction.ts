@@ -53,6 +53,7 @@ export const KCAR_API_URL =
 export function resolveKCarImageUrl(image?: string | null): string {
   if (!image) return "/images/no-image.svg";
   if (image.startsWith("http")) return image;
+  if (image.startsWith("/api/proxy-image")) return image;
   return `${KCAR_API_URL}${image}`;
 }
 

@@ -27,6 +27,17 @@ function translateFuel(value: string): string {
   return map[value] || value;
 }
 
+function formatRemainingTime(date: string): string {
+  const target = new Date(`${date}T09:00:00+09:00`).getTime();
+  const diff = target - Date.now();
+  if (!date || diff <= 0) return "Аукцион начался";
+  const totalMinutes = Math.ceil(diff / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  if (days > 0) return `До аукциона: ${days}д ${hours}ч`;
+  return `До аукциона: ${hours}ч ${totalMinutes % 60}мин`;
+}
+
 export default function AuctionCarCard({ car, priority = false, href }: AuctionCarCardProps) {
   const { formatKrwPrice } = useApp();
   const title = formatKCarName(car);
@@ -76,6 +87,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
             </>
           )}
         </div>
+        <div className="mt-2 text-[12px] font-bold text-red-700">{formatRemainingTime(car.auctionDate)}</div>
 
         <div className="mt-2.5 rounded-md bg-red-50/80 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">

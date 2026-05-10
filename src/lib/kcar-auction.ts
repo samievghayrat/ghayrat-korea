@@ -13,6 +13,7 @@ export interface KCarAuctionCar {
   images?: string[] | null;
   auctionDate: string;
   lotNumber: string;
+  exbitSeq?: string | null;
   location: string;
   condition: "Excellent" | "Good" | "Fair";
   startingBid: number;

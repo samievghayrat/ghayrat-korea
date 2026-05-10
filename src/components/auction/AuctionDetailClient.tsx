@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
 import {
@@ -59,7 +59,27 @@ const RU = {
   silver: "\u0421\u0435\u0440\u0435\u0431\u0440\u0438\u0441\u0442\u044b\u0439",
   gray: "\u0421\u0435\u0440\u044b\u0439",
   sejong: "\u0421\u0435\u0434\u0436\u043e\u043d, \u0430\u0443\u043a\u0446\u0438\u043e\u043d\u043d\u0430\u044f \u043f\u043b\u043e\u0449\u0430\u0434\u043a\u0430",
+  remaining: "\u0414\u043e \u0430\u0443\u043a\u0446\u0438\u043e\u043d\u0430",
+  started: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d \u043d\u0430\u0447\u0430\u043b\u0441\u044f",
+  dayShort: "\u0434",
+  hourShort: "\u0447",
+  minuteShort: "\u043c\u0438\u043d",
 };
+
+function getAuctionTargetTime(date: string): number {
+  return new Date(`${date}T09:00:00+09:00`).getTime();
+}
+
+function formatRemainingTime(date: string): string {
+  const diff = getAuctionTargetTime(date) - Date.now();
+  if (!date || diff <= 0) return RU.started;
+  const totalMinutes = Math.ceil(diff / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}${RU.dayShort} ${hours}${RU.hourShort} ${minutes}${RU.minuteShort}`;
+  return `${hours}${RU.hourShort} ${minutes}${RU.minuteShort}`;
+}
 
 function translateValue(value: string | null | undefined): string {
   if (!value) return "-";
@@ -89,6 +109,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const searchParams = useSearchParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(() => formatRemainingTime(car.auctionDate));
   const title = formatKCarName(car);
   const startPriceKrw = kcarPriceToKrw(car.price);
   const [bidKrw, setBidKrw] = useState(startPriceKrw);
@@ -121,6 +142,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     [RU.drive, translateValue(car.driveType)],
     ["VIN", car.vin || "-"],
   ]), [car, regYear]);
+
+  useEffect(() => {
+    setRemainingTime(formatRemainingTime(car.auctionDate));
+    const timer = window.setInterval(() => {
+      setRemainingTime(formatRemainingTime(car.auctionDate));
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [car.auctionDate]);
 
   const showPreviousImage = () => {
     setImageLoaded(false);
@@ -220,6 +249,9 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
             <p className="mt-1 text-sm font-semibold text-gray-500">
               {RU.lot} #{car.lotNumber || "-"} · {RU.auction} {formatKcarAuctionDate(car.auctionDate)}
             </p>
+            <div className="mt-3 inline-flex rounded-lg bg-red-50 px-3 py-2 text-sm font-extrabold text-red-700">
+              {RU.remaining}: {remainingTime}
+            </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {specs.map(([label, value]) => (
@@ -232,14 +264,12 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           </section>
 
           <section className="rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
-            <div className="rounded-xl bg-red-50 p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wide text-red-700">{RU.startPrice}</div>
-                  <div className="mt-2 text-3xl font-extrabold text-red-700">{price}</div>
-                </div>
-                <p className="max-w-md text-sm font-semibold leading-snug text-red-800">{RU.priceNote}</p>
+            <div className="flex flex-col gap-2 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="text-sm font-extrabold uppercase tracking-wide text-gray-500">{RU.startPrice}</div>
+                <p className="mt-1 text-sm font-semibold leading-snug text-gray-500">{RU.priceNote}</p>
               </div>
+              <div className="text-2xl font-extrabold text-red-700 sm:text-right">{price}</div>
             </div>
 
             <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50">

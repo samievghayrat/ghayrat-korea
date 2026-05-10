@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ interface AuctionCatalogClientProps {
 }
 
 type YearFilter = "all" | "2014" | "2021";
-type SortFilter = "year_desc" | "year_asc" | "price_asc" | "price_desc";
+type SortFilter = "order_asc" | "order_desc" | "year_desc" | "year_asc" | "price_asc" | "price_desc";
 const PAGE_SIZE = 9;
 
 function getDisplayYear(car: KCarAuctionCar): number {
@@ -19,6 +19,11 @@ function getDisplayYear(car: KCarAuctionCar): number {
     if (Number.isFinite(parsed)) return parsed;
   }
   return car.year;
+}
+
+function getAuctionOrder(car: KCarAuctionCar): number {
+  const parsed = Number(car.lotNumber || car.exbitSeq || 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps) {
@@ -31,7 +36,13 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   const yearFilter: YearFilter = yearParam === "2014" || yearParam === "2021" ? yearParam : "all";
   const sortParam = searchParams.get("sort");
   const sortFilter: SortFilter =
-    sortParam === "year_asc" || sortParam === "price_asc" || sortParam === "price_desc" ? sortParam : "year_desc";
+    sortParam === "order_desc" ||
+    sortParam === "year_desc" ||
+    sortParam === "year_asc" ||
+    sortParam === "price_asc" ||
+    sortParam === "price_desc"
+      ? sortParam
+      : "order_asc";
   const pageParam = Number(searchParams.get("page") || "1");
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
@@ -84,9 +95,11 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   const sortedCars = useMemo(() => {
     return [...filteredCars].sort((a, b) => {
       if (sortFilter === "year_asc") return getDisplayYear(a) - getDisplayYear(b);
+      if (sortFilter === "year_desc") return getDisplayYear(b) - getDisplayYear(a);
+      if (sortFilter === "order_desc") return getAuctionOrder(b) - getAuctionOrder(a);
       if (sortFilter === "price_asc") return a.price - b.price;
       if (sortFilter === "price_desc") return b.price - a.price;
-      return getDisplayYear(b) - getDisplayYear(a);
+      return getAuctionOrder(a) - getAuctionOrder(b);
     });
   }, [filteredCars, sortFilter]);
 
@@ -143,7 +156,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   };
 
   const updateSort = (value: SortFilter) => {
-    updateFilters({ sort: value === "year_desc" ? null : value, page: null });
+    updateFilters({ sort: value === "order_asc" ? null : value, page: null });
   };
 
   const updatePage = (value: number) => {
@@ -155,10 +168,10 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <div className="hidden">
           <div className="hidden text-sm font-semibold text-gray-600">
-            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> авто на аукционе
+            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> Ð°Ð²Ñ‚Ð¾ Ð½Ð° Ð°ÑƒÐºÑ†Ð¸Ð¾Ð½Ðµ
           </div>
           <div className="hidden text-xs font-medium text-gray-500">
-            Страница {currentPage} из {totalPages}
+            Ð¡Ñ‚Ñ€Ð°Ð½Ð¸Ñ†Ð° {currentPage} Ð¸Ð· {totalPages}
           </div>
         </div>
 
@@ -169,7 +182,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateBrand(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">Все марки</option>
+              <option value="">Ð’ÑÐµ Ð¼Ð°Ñ€ÐºÐ¸</option>
               {carOptions.brands.map((brand) => (
                 <option key={brand.name} value={brand.name}>{brand.name} ({brand.count})</option>
               ))}
@@ -179,7 +192,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateModel(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">Все модели</option>
+              <option value="">Ð’ÑÐµ Ð¼Ð¾Ð´ÐµÐ»Ð¸</option>
               {carOptions.models.map((model) => (
                 <option key={model.name} value={model.name}>{model.name} ({model.count})</option>
               ))}
@@ -188,7 +201,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
           <div className="flex gap-2">
             {([
-              ["all", "Все годы"],
+              ["all", "Ð’ÑÐµ Ð³Ð¾Ð´Ñ‹"],
               ["2014", "2014+"],
               ["2021", "2021+"],
             ] as [YearFilter, string][]).map(([value, label]) => (
@@ -213,20 +226,22 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             onChange={(event) => updateSort(event.target.value as SortFilter)}
             className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
           >
+            <option value="order_asc">Порядок: сначала первые</option>
+            <option value="order_desc">Порядок: сначала последние</option>
             <option value="year_desc">Год: сначала новые</option>
             <option value="year_asc">Год: сначала старые</option>
             <option value="price_asc">Цена: сначала дешевые</option>
             <option value="price_desc">Цена: сначала дорогие</option>
           </select>
           <div className="text-sm font-semibold text-gray-500">
-          Найдено: <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
+          ÐÐ°Ð¹Ð´ÐµÐ½Ð¾: <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
           </div>
         </div>
       </div>
 
       {filteredCars.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-500">
-          Автомобили не найдены.
+          ÐÐ²Ñ‚Ð¾Ð¼Ð¾Ð±Ð¸Ð»Ð¸ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹.
         </div>
       ) : (
         <>
@@ -247,7 +262,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Назад
+                ÐÐ°Ð·Ð°Ð´
               </button>
 
               <div className="flex items-center gap-1">
@@ -271,7 +286,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               </div>
 
               <div className="text-xs font-semibold text-gray-500 sm:hidden">
-                Страница {currentPage} из {totalPages}
+                Ð¡Ñ‚Ñ€Ð°Ð½Ð¸Ñ†Ð° {currentPage} Ð¸Ð· {totalPages}
               </div>
 
               <button
@@ -280,7 +295,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 disabled={currentPage === totalPages}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Далее
+                Ð”Ð°Ð»ÐµÐµ
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -292,3 +307,4 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     </>
   );
 }
+

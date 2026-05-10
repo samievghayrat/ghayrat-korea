@@ -171,68 +171,16 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           Назад к аукциону
         </Link>
 
-        <section className="mb-4 rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
-          <div className="text-xs font-bold uppercase tracking-wide text-gray-500">Стартовая цена</div>
-          <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
-          <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
-            Эта цена указана без аукционной комиссии и доставки.
-          </div>
-          <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50">
-            <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
-              Расчет ставки
-            </div>
-            <div className="space-y-3 p-4">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">Ваша ставка, ₩</span>
-                <input
-                  type="number"
-                  min={0}
-                  step={100000}
-                  value={bidKrw}
-                  onChange={(event) => setBidKrw(Math.max(0, Number(event.target.value) || 0))}
-                  className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
-                />
-              </label>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-gray-500">Сумма ставки</span>
-                  <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-gray-500">Комиссия аукциона</span>
-                  <span className="font-bold text-gray-950">{formatKrwPrice(auctionCommissionKrw)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-gray-500">Доставка</span>
-                  <span className="font-bold text-gray-950">{formatKrwPrice(shippingKrw)}</span>
-                </div>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex items-center justify-between gap-3 text-base">
-                    <span className="font-extrabold text-gray-950">Итого</span>
-                    <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
-                  </div>
-                  <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">
-                    Комиссия: 2.5% для авто дороже 10,000,000 ₩, для авто дешевле - $150. Доставка - $100.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700"
-            >
-              WhatsApp
-            </a>
-          </div>
-        </section>
-
         <div className="grid gap-4">
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
+                <p className="mt-1 text-sm font-semibold text-gray-500">
+                  Лот #{car.lotNumber || "-"} · Аукцион {formatKcarAuctionDate(car.auctionDate)}
+                </p>
+              </div>
+            </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {specs.map(([label, value]) => (
@@ -241,6 +189,68 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   <div className="mt-1 text-sm font-bold text-gray-900">{value}</div>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
+            <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+              <div className="rounded-xl bg-red-50 p-4">
+                <div className="text-xs font-bold uppercase tracking-wide text-red-700">Стартовая цена аукциона</div>
+                <div className="mt-2 text-3xl font-extrabold text-red-700">{price}</div>
+                <p className="mt-3 text-sm font-semibold leading-snug text-red-800">
+                  Эта цена указана без аукционной комиссии и доставки.
+                </p>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex w-full justify-center rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:w-auto"
+                >
+                  WhatsApp
+                </a>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50">
+                <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
+                  Расчет ставки
+                </div>
+                <div className="space-y-3 p-4">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">Ваша ставка, ₩</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={100000}
+                      value={bidKrw}
+                      onChange={(event) => setBidKrw(Math.max(0, Number(event.target.value) || 0))}
+                      className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                    />
+                  </label>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">Сумма ставки</span>
+                      <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">Комиссия аукциона</span>
+                      <span className="font-bold text-gray-950">{formatKrwPrice(auctionCommissionKrw)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">Доставка</span>
+                      <span className="font-bold text-gray-950">{formatKrwPrice(shippingKrw)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center justify-between gap-3 text-base">
+                        <span className="font-extrabold text-gray-950">Итого</span>
+                        <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
+                      </div>
+                      <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">
+                        Комиссия: 2.5% для авто дороже 10,000,000 ₩, для авто дешевле - $150. Доставка - $100.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>

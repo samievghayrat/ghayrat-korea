@@ -38,7 +38,7 @@ export default function BottomNav() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
-    { href: '/auction', label: 'Auction' },
+    { href: '/auction', label: '\u0410\u0443\u043a\u0446\u0438\u043e\u043d' },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -65,7 +65,7 @@ export default function BottomNav() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13h18M5 13l2-5h10l2 5M7 13v5m10-5v5M6 18h12M8 8V6h8v2" />
             </svg>
-            <span className="text-[10px] font-medium">Auction</span>
+            <span className="text-[10px] font-medium">{"\u0410\u0443\u043a\u0446\u0438\u043e\u043d"}</span>
           </Link>
 
           <Link

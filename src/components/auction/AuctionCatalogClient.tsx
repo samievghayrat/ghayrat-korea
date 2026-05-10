@@ -12,6 +12,24 @@ interface AuctionCatalogClientProps {
 type YearFilter = "all" | "2014" | "2021";
 type SortFilter = "order_asc" | "order_desc" | "year_desc" | "year_asc" | "price_asc" | "price_desc";
 const PAGE_SIZE = 9;
+const RU = {
+  allBrands: "\u0412\u0441\u0435 \u043c\u0430\u0440\u043a\u0438",
+  allModels: "\u0412\u0441\u0435 \u043c\u043e\u0434\u0435\u043b\u0438",
+  allYears: "\u0412\u0441\u0435 \u0433\u043e\u0434\u044b",
+  found: "\u041d\u0430\u0439\u0434\u0435\u043d\u043e:",
+  noCars: "\u0410\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0438 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.",
+  prev: "\u041d\u0430\u0437\u0430\u0434",
+  next: "\u0414\u0430\u043b\u0435\u0435",
+  page: "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430",
+  of: "\u0438\u0437",
+  carsOnAuction: "\u0430\u0432\u0442\u043e \u043d\u0430 \u0430\u0443\u043a\u0446\u0438\u043e\u043d\u0435",
+  sortOrderAsc: "\u041f\u043e\u0440\u044f\u0434\u043e\u043a: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u043f\u0435\u0440\u0432\u044b\u0435",
+  sortOrderDesc: "\u041f\u043e\u0440\u044f\u0434\u043e\u043a: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0435",
+  sortYearDesc: "\u0413\u043e\u0434: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u043e\u0432\u044b\u0435",
+  sortYearAsc: "\u0413\u043e\u0434: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u0442\u0430\u0440\u044b\u0435",
+  sortPriceAsc: "\u0426\u0435\u043d\u0430: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u0434\u0435\u0448\u0435\u0432\u044b\u0435",
+  sortPriceDesc: "\u0426\u0435\u043d\u0430: \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u0434\u043e\u0440\u043e\u0433\u0438\u0435",
+};
 
 function getDisplayYear(car: KCarAuctionCar): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
@@ -168,10 +186,10 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <div className="hidden">
           <div className="hidden text-sm font-semibold text-gray-600">
-            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> Ð°Ð²Ñ‚Ð¾ Ð½Ð° Ð°ÑƒÐºÑ†Ð¸Ð¾Ð½Ðµ
+            <span className="font-extrabold text-gray-950">{filteredCars.length}</span> {RU.carsOnAuction}
           </div>
           <div className="hidden text-xs font-medium text-gray-500">
-            Ð¡Ñ‚Ñ€Ð°Ð½Ð¸Ñ†Ð° {currentPage} Ð¸Ð· {totalPages}
+            {RU.page} {currentPage} {RU.of} {totalPages}
           </div>
         </div>
 
@@ -182,7 +200,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateBrand(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">Ð’ÑÐµ Ð¼Ð°Ñ€ÐºÐ¸</option>
+              <option value="">{RU.allBrands}</option>
               {carOptions.brands.map((brand) => (
                 <option key={brand.name} value={brand.name}>{brand.name} ({brand.count})</option>
               ))}
@@ -192,7 +210,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               onChange={(event) => updateModel(event.target.value)}
               className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
             >
-              <option value="">Ð’ÑÐµ Ð¼Ð¾Ð´ÐµÐ»Ð¸</option>
+              <option value="">{RU.allModels}</option>
               {carOptions.models.map((model) => (
                 <option key={model.name} value={model.name}>{model.name} ({model.count})</option>
               ))}
@@ -201,7 +219,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
           <div className="flex gap-2">
             {([
-              ["all", "Ð’ÑÐµ Ð³Ð¾Ð´Ñ‹"],
+              ["all", RU.allYears],
               ["2014", "2014+"],
               ["2021", "2021+"],
             ] as [YearFilter, string][]).map(([value, label]) => (
@@ -226,22 +244,22 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             onChange={(event) => updateSort(event.target.value as SortFilter)}
             className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
           >
-            <option value="order_asc">Порядок: сначала первые</option>
-            <option value="order_desc">Порядок: сначала последние</option>
-            <option value="year_desc">Год: сначала новые</option>
-            <option value="year_asc">Год: сначала старые</option>
-            <option value="price_asc">Цена: сначала дешевые</option>
-            <option value="price_desc">Цена: сначала дорогие</option>
+            <option value="order_asc">{RU.sortOrderAsc}</option>
+            <option value="order_desc">{RU.sortOrderDesc}</option>
+            <option value="year_desc">{RU.sortYearDesc}</option>
+            <option value="year_asc">{RU.sortYearAsc}</option>
+            <option value="price_asc">{RU.sortPriceAsc}</option>
+            <option value="price_desc">{RU.sortPriceDesc}</option>
           </select>
           <div className="text-sm font-semibold text-gray-500">
-          ÐÐ°Ð¹Ð´ÐµÐ½Ð¾: <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
+            {RU.found} <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
           </div>
         </div>
       </div>
 
       {filteredCars.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-gray-500">
-          ÐÐ²Ñ‚Ð¾Ð¼Ð¾Ð±Ð¸Ð»Ð¸ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹.
+          {RU.noCars}
         </div>
       ) : (
         <>
@@ -262,7 +280,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
                 </svg>
-                ÐÐ°Ð·Ð°Ð´
+                {RU.prev}
               </button>
 
               <div className="flex items-center gap-1">
@@ -286,7 +304,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
               </div>
 
               <div className="text-xs font-semibold text-gray-500 sm:hidden">
-                Ð¡Ñ‚Ñ€Ð°Ð½Ð¸Ñ†Ð° {currentPage} Ð¸Ð· {totalPages}
+                {RU.page} {currentPage} {RU.of} {totalPages}
               </div>
 
               <button
@@ -295,7 +313,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
                 disabled={currentPage === totalPages}
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Ð”Ð°Ð»ÐµÐµ
+                {RU.next}
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
                 </svg>

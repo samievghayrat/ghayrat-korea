@@ -15,11 +15,11 @@ interface AuctionDetailPageProps {
 
 export async function generateMetadata({ params }: AuctionDetailPageProps): Promise<Metadata> {
   const car = await getKCarAuctionCar(params.id);
-  if (!car) return { title: "Auction car not found" };
+  if (!car) return { title: "\u0410\u0432\u0442\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e" };
   const title = formatKCarName(car);
 
   return {
-    title: `${title} ${car.year} - KCar Auction`,
+    title: `${title} ${car.year} - \u0410\u0443\u043a\u0446\u0438\u043e\u043d`,
     description: `${title}, ${car.year}, ${car.mileage.toLocaleString("ru-RU")} km.`,
   };
 }

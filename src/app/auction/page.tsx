@@ -4,8 +4,8 @@ import AuctionCatalogClient from "@/components/auction/AuctionCatalogClient";
 import { getKCarAuctionCars } from "@/lib/kcar-auction";
 
 export const metadata: Metadata = {
-  title: "KCar Auction",
-  description: "Live Korean auction cars from KCar.",
+  title: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d",
+  description: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d\u043d\u044b\u0435 \u0430\u0432\u0442\u043e \u0438\u0437 \u041a\u043e\u0440\u0435\u0438.",
 };
 
 export default async function AuctionPage() {

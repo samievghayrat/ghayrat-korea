@@ -64,7 +64,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
-    { href: '/auction', label: 'Auction' },
+    { href: '/auction', label: '\u0410\u0443\u043a\u0446\u0438\u043e\u043d' },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },

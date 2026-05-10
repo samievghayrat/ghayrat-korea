@@ -16,7 +16,6 @@ interface AuctionDetailClientProps {
   images: string[];
 }
 
-const USD_TO_KRW_FOR_AUCTION_FEES = 1400;
 const HIGH_VALUE_THRESHOLD_KRW = 10000000;
 const LOW_VALUE_EXTRA_COST_USD = 300;
 const HIGH_VALUE_BASE_EXTRA_COST_USD = 200;
@@ -85,7 +84,7 @@ function translateValue(value: string | null | undefined): string {
 }
 
 export default function AuctionDetailClient({ car, images }: AuctionDetailClientProps) {
-  const { currency, convertKrwPrice, convertCurrentToKrw, formatKrwPrice } = useApp();
+  const { currency, convertKrwPrice, convertCurrentToKrw, convertUsdToKrw, formatKrwPrice } = useApp();
   const searchParams = useSearchParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -94,12 +93,13 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const [bidKrw, setBidKrw] = useState(startPriceKrw);
   const price = formatKrwPrice(startPriceKrw);
   const bidInputValue = convertKrwPrice(bidKrw);
+  const minBidInputValue = convertKrwPrice(startPriceKrw);
   const currencySymbol = { RUB: "\u20bd", USD: "$", EUR: "\u20ac", KRW: "\u20a9" }[currency];
   const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : 10000;
   const extraCostsKrw =
     bidKrw > HIGH_VALUE_THRESHOLD_KRW
-      ? Math.round(HIGH_VALUE_BASE_EXTRA_COST_USD * USD_TO_KRW_FOR_AUCTION_FEES + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
-      : LOW_VALUE_EXTRA_COST_USD * USD_TO_KRW_FOR_AUCTION_FEES;
+      ? Math.round(convertUsdToKrw(HIGH_VALUE_BASE_EXTRA_COST_USD) + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
+      : convertUsdToKrw(LOW_VALUE_EXTRA_COST_USD);
   const totalKrw = bidKrw + extraCostsKrw;
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
@@ -257,10 +257,13 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                     </span>
                     <input
                       type="number"
-                      min={0}
+                      min={minBidInputValue}
                       step={bidStep}
                       value={bidInputValue}
-                      onChange={(event) => setBidKrw(convertCurrentToKrw(Math.max(0, Number(event.target.value) || 0)))}
+                      onChange={(event) => {
+                        const nextBidKrw = convertCurrentToKrw(Number(event.target.value) || 0);
+                        setBidKrw(Math.max(startPriceKrw, nextBidKrw));
+                      }}
                       className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
                     />
                   </label>

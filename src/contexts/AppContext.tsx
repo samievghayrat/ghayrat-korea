@@ -19,6 +19,7 @@ interface AppContextType {
   convertPrice: (rubAmount: number) => number;
   convertKrwPrice: (krwAmount: number) => number;
   convertCurrentToKrw: (amount: number) => number;
+  convertUsdToKrw: (amount: number) => number;
   formatPrice: (rubAmount: number) => string;
   formatKrwPrice: (krwAmount: number) => string;
   formatMileage: (km: number) => string;
@@ -51,6 +52,10 @@ function targetToKrw(amount: number, currency: Currency, rates: ExchangeRates): 
     case 'USD': return Math.round(amount * rates.USD / rates.KRW);
     case 'EUR': return Math.round(amount * rates.EUR / rates.KRW);
   }
+}
+
+function usdToKrw(amount: number, rates: ExchangeRates): number {
+  return Math.round(amount * rates.USD / rates.KRW);
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -102,6 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const convertPrice = (rubAmount: number) => rubToTarget(rubAmount, currency, rates);
   const convertKrwPrice = (krwAmount: number) => krwToTarget(krwAmount, currency, rates);
   const convertCurrentToKrw = (amount: number) => targetToKrw(amount, currency, rates);
+  const convertUsdToKrw = (amount: number) => usdToKrw(amount, rates);
   const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubAmount, 'RUB');
   const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
@@ -110,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       lang, setLang, t,
       currency, setCurrency,
-      convertPrice, convertKrwPrice, convertCurrentToKrw, formatPrice: formatPriceFn, formatKrwPrice, formatMileage,
+      convertPrice, convertKrwPrice, convertCurrentToKrw, convertUsdToKrw, formatPrice: formatPriceFn, formatKrwPrice, formatMileage,
     }}>
       {children}
     </AppContext.Provider>

@@ -136,7 +136,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     }
     return formatKrwPrice(amountKrw);
   };
-  const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
+  const contactMessage = [
+    `KCar auction: ${title}`,
+    car.lotNumber ? `Lot: ${car.lotNumber}` : null,
+    `Start price: ${price}`,
+    `My bid: ${formatAuctionAmount(bidKrw)}`,
+    `Other costs: ${formatAuctionAmount(extraCostsKrw)}`,
+    `Total: ${formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}`,
+  ].filter(Boolean).join("\n");
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
   const currentImage = images[selectedImage] || images[0] || "/images/no-image.svg";

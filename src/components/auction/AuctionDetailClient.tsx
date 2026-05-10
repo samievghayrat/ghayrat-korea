@@ -187,19 +187,19 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      <div className="bg-gray-950">
-        <div className="mx-auto max-w-5xl">
-          <div className="relative aspect-[16/10] bg-gray-900 sm:aspect-[16/8]">
+      <div className="bg-gray-50 px-4 pt-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="relative aspect-[16/10] bg-gray-100 sm:aspect-[16/9]">
             {!imageLoaded && (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-gray-900/40">
-                <div className="h-9 w-9 animate-spin rounded-full border-4 border-white/25 border-t-white" />
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-gray-100/70">
+                <div className="h-9 w-9 animate-spin rounded-full border-4 border-gray-300 border-t-red-600" />
               </div>
             )}
             <img
               key={currentImage}
               src={currentImage}
               alt={title}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-cover"
               loading="eager"
               decoding="async"
               fetchPriority="high"
@@ -240,7 +240,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
             )}
           </div>
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto bg-gray-950 px-3 py-3">
+            <div className="flex gap-2 overflow-x-auto bg-white px-3 py-3">
               {images.map((image, index) => (
                 <button
                   key={`${image}-${index}`}
@@ -250,7 +250,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                     setSelectedImage(index);
                   }}
                   className={`relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-md border ${
-                    selectedImage === index ? "border-red-400" : "border-white/20"
+                    selectedImage === index ? "border-red-500" : "border-gray-200"
                   }`}
                   aria-label={`${RU.showPhoto} ${index + 1}`}
                 >

@@ -301,7 +301,9 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 </label>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-gray-500">{RU.extraCosts}</span>
+                    <span className="text-gray-500">
+                      <strong className="font-bold text-gray-700">{RU.extraCosts}</strong>: комиссия аукциона, доставка и услуга.
+                    </span>
                     <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-3">

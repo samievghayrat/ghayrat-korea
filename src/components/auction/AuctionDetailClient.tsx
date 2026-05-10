@@ -20,6 +20,7 @@ const HIGH_VALUE_THRESHOLD_KRW = 10000000;
 const LOW_VALUE_EXTRA_COST_USD = 300;
 const HIGH_VALUE_BASE_EXTRA_COST_USD = 200;
 const HIGH_VALUE_EXTRA_COST_RATE = 0.022;
+const AUCTION_USD_TO_KRW = 1450;
 
 const RU = {
   auction: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d",
@@ -84,7 +85,7 @@ function translateValue(value: string | null | undefined): string {
 }
 
 export default function AuctionDetailClient({ car, images }: AuctionDetailClientProps) {
-  const { currency, convertKrwPrice, convertCurrentToKrw, convertUsdToKrw, formatKrwPrice } = useApp();
+  const { currency, convertKrwPrice, convertCurrentToKrw, formatKrwPrice } = useApp();
   const searchParams = useSearchParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -98,8 +99,8 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : 10000;
   const extraCostsKrw =
     bidKrw > HIGH_VALUE_THRESHOLD_KRW
-      ? Math.round(convertUsdToKrw(HIGH_VALUE_BASE_EXTRA_COST_USD) + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
-      : convertUsdToKrw(LOW_VALUE_EXTRA_COST_USD);
+      ? Math.round(HIGH_VALUE_BASE_EXTRA_COST_USD * AUCTION_USD_TO_KRW + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
+      : LOW_VALUE_EXTRA_COST_USD * AUCTION_USD_TO_KRW;
   const totalKrw = bidKrw + extraCostsKrw;
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;

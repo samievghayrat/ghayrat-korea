@@ -17,6 +17,8 @@ interface AppContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   convertPrice: (rubAmount: number) => number;
+  convertKrwPrice: (krwAmount: number) => number;
+  convertCurrentToKrw: (amount: number) => number;
   formatPrice: (rubAmount: number) => string;
   formatKrwPrice: (krwAmount: number) => string;
   formatMileage: (km: number) => string;
@@ -39,6 +41,15 @@ function krwToTarget(krwAmount: number, currency: Currency, rates: ExchangeRates
     case 'RUB': return Math.round(krwAmount * rates.KRW);
     case 'USD': return Math.round(krwAmount * rates.KRW / rates.USD);
     case 'EUR': return Math.round(krwAmount * rates.KRW / rates.EUR);
+  }
+}
+
+function targetToKrw(amount: number, currency: Currency, rates: ExchangeRates): number {
+  switch (currency) {
+    case 'KRW': return Math.round(amount);
+    case 'RUB': return Math.round(amount / rates.KRW);
+    case 'USD': return Math.round(amount * rates.USD / rates.KRW);
+    case 'EUR': return Math.round(amount * rates.EUR / rates.KRW);
   }
 }
 
@@ -89,6 +100,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: TranslationKey) => getTranslation(key, lang);
 
   const convertPrice = (rubAmount: number) => rubToTarget(rubAmount, currency, rates);
+  const convertKrwPrice = (krwAmount: number) => krwToTarget(krwAmount, currency, rates);
+  const convertCurrentToKrw = (amount: number) => targetToKrw(amount, currency, rates);
   const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubAmount, 'RUB');
   const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
@@ -97,7 +110,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       lang, setLang, t,
       currency, setCurrency,
-      convertPrice, formatPrice: formatPriceFn, formatKrwPrice, formatMileage,
+      convertPrice, convertKrwPrice, convertCurrentToKrw, formatPrice: formatPriceFn, formatKrwPrice, formatMileage,
     }}>
       {children}
     </AppContext.Provider>

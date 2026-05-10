@@ -268,19 +268,13 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           </section>
 
           <section className="rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-2 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="text-sm font-extrabold uppercase tracking-wide text-gray-500">{RU.startPrice}</div>
-                <p className="mt-1 text-sm font-semibold leading-snug text-gray-500">{RU.priceNote}</p>
-              </div>
+            <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-4">
+              <div className="text-sm font-extrabold uppercase tracking-wide text-gray-500">{RU.startPrice}</div>
               <div className="text-2xl font-extrabold text-red-700 sm:text-right">{price}</div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50">
-              <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
-                {RU.bidCalc}
-              </div>
-              <div className="space-y-3 p-4">
+            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="space-y-3">
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">
                     {RU.yourBid}, {currencySymbol}
@@ -307,10 +301,6 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 </label>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-gray-500">{RU.bidAmount}</span>
-                    <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
                     <span className="text-gray-500">{RU.extraCosts}</span>
                     <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
                   </div>
@@ -319,7 +309,6 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                       <span className="font-extrabold text-gray-950">{RU.total}</span>
                       <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
                     </div>
-                    <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">{RU.extraCostsNote}</p>
                   </div>
                 </div>
               </div>

@@ -113,8 +113,8 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const title = formatKCarName(car);
   const startPriceKrw = kcarPriceToKrw(car.price);
   const [bidKrw, setBidKrw] = useState(startPriceKrw);
+  const [bidInput, setBidInput] = useState(() => String(convertKrwPrice(startPriceKrw)));
   const price = formatKrwPrice(startPriceKrw);
-  const bidInputValue = convertKrwPrice(bidKrw);
   const minBidInputValue = convertKrwPrice(startPriceKrw);
   const currencySymbol = { RUB: "\u20bd", USD: "$", EUR: "\u20ac", KRW: "\u20a9" }[currency];
   const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : 10000;
@@ -150,6 +150,10 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     }, 60000);
     return () => window.clearInterval(timer);
   }, [car.auctionDate]);
+
+  useEffect(() => {
+    setBidInput(String(convertKrwPrice(bidKrw)));
+  }, [bidKrw, convertKrwPrice, currency]);
 
   const showPreviousImage = () => {
     setImageLoaded(false);
@@ -285,10 +289,18 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                     type="number"
                     min={minBidInputValue}
                     step={bidStep}
-                    value={bidInputValue}
+                    value={bidInput}
                     onChange={(event) => {
-                      const nextBidKrw = convertCurrentToKrw(Number(event.target.value) || 0);
-                      setBidKrw(Math.max(startPriceKrw, nextBidKrw));
+                      const value = event.target.value;
+                      setBidInput(value);
+                      if (value === "") return;
+                      setBidKrw(convertCurrentToKrw(Number(value) || 0));
+                    }}
+                    onBlur={() => {
+                      const nextBidKrw = convertCurrentToKrw(Number(bidInput) || 0);
+                      const clampedBidKrw = Math.max(startPriceKrw, nextBidKrw);
+                      setBidKrw(clampedBidKrw);
+                      setBidInput(String(convertKrwPrice(clampedBidKrw)));
                     }}
                     className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
                   />

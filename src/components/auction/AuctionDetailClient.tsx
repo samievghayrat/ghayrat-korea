@@ -232,62 +232,65 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           </section>
 
           <section className="rounded-xl border border-red-100 bg-white p-4 shadow-sm sm:p-5">
-            <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-              <div className="rounded-xl bg-red-50 p-4">
-                <div className="text-xs font-bold uppercase tracking-wide text-red-700">{RU.startPrice}</div>
-                <div className="mt-2 text-3xl font-extrabold text-red-700">{price}</div>
-                <p className="mt-3 text-sm font-semibold leading-snug text-red-800">{RU.priceNote}</p>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex w-full justify-center rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:w-auto"
-                >
-                  {RU.makeBid}
-                </a>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-gray-50">
-                <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
-                  {RU.bidCalc}
+            <div className="rounded-xl bg-red-50 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-red-700">{RU.startPrice}</div>
+                  <div className="mt-2 text-3xl font-extrabold text-red-700">{price}</div>
                 </div>
-                <div className="space-y-3 p-4">
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">
-                      {RU.yourBid}, {currencySymbol}
-                    </span>
-                    <input
-                      type="number"
-                      min={minBidInputValue}
-                      step={bidStep}
-                      value={bidInputValue}
-                      onChange={(event) => {
-                        const nextBidKrw = convertCurrentToKrw(Number(event.target.value) || 0);
-                        setBidKrw(Math.max(startPriceKrw, nextBidKrw));
-                      }}
-                      className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
-                    />
-                  </label>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">{RU.bidAmount}</span>
-                      <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
+                <p className="max-w-md text-sm font-semibold leading-snug text-red-800">{RU.priceNote}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50">
+              <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
+                {RU.bidCalc}
+              </div>
+              <div className="space-y-3 p-4">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">
+                    {RU.yourBid}, {currencySymbol}
+                  </span>
+                  <input
+                    type="number"
+                    min={minBidInputValue}
+                    step={bidStep}
+                    value={bidInputValue}
+                    onChange={(event) => {
+                      const nextBidKrw = convertCurrentToKrw(Number(event.target.value) || 0);
+                      setBidKrw(Math.max(startPriceKrw, nextBidKrw));
+                    }}
+                    className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                  />
+                </label>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-gray-500">{RU.bidAmount}</span>
+                    <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-gray-500">{RU.extraCosts}</span>
+                    <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="flex items-center justify-between gap-3 text-base">
+                      <span className="font-extrabold text-gray-950">{RU.total}</span>
+                      <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">{RU.extraCosts}</span>
-                      <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex items-center justify-between gap-3 text-base">
-                        <span className="font-extrabold text-gray-950">{RU.total}</span>
-                        <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
-                      </div>
-                      <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">{RU.extraCostsNote}</p>
-                    </div>
+                    <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">{RU.extraCostsNote}</p>
                   </div>
                 </div>
               </div>
             </div>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex w-full justify-center rounded-lg bg-emerald-600 px-6 py-4 text-center text-base font-extrabold text-white transition hover:bg-emerald-700"
+            >
+              {RU.makeBid}
+            </a>
           </section>
         </div>
       </div>

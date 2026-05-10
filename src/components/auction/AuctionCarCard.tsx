@@ -18,13 +18,8 @@ interface AuctionCarCardProps {
 
 const RU = {
   auction: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d",
-  auctionStarted: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d \u043d\u0430\u0447\u0430\u043b\u0441\u044f",
-  untilAuction: "\u0414\u043e \u0430\u0443\u043a\u0446\u0438\u043e\u043d\u0430",
   startPrice: "\u0421\u0442\u0430\u0440\u0442\u043e\u0432\u0430\u044f \u0446\u0435\u043d\u0430",
   km: "\u043a\u043c",
-  day: "\u0434",
-  hour: "\u0447",
-  min: "\u043c\u0438\u043d",
 };
 
 function translateFuel(value: string): string {
@@ -36,17 +31,6 @@ function translateFuel(value: string): string {
     LPG: "\u0413\u0430\u0437 (LPG)",
   };
   return map[value] || value;
-}
-
-function formatRemainingTime(date: string): string {
-  const target = new Date(`${date}T09:00:00+09:00`).getTime();
-  const diff = target - Date.now();
-  if (!date || diff <= 0) return RU.auctionStarted;
-  const totalMinutes = Math.ceil(diff / 60000);
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  if (days > 0) return `${RU.untilAuction}: ${days}${RU.day} ${hours}${RU.hour}`;
-  return `${RU.untilAuction}: ${hours}${RU.hour} ${totalMinutes % 60}${RU.min}`;
 }
 
 export default function AuctionCarCard({ car, priority = false, href }: AuctionCarCardProps) {
@@ -76,7 +60,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
         </div>
         {car.lotNumber && (
           <div className="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-[11px] font-bold text-gray-800 shadow-sm">
-            #{car.lotNumber}
+            {car.lotNumber}
           </div>
         )}
       </div>
@@ -99,8 +83,6 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
             </>
           )}
         </div>
-        <div className="mt-2 text-[12px] font-bold text-red-700">{formatRemainingTime(car.auctionDate)}</div>
-
         <div className="mt-2.5 rounded-md bg-red-50/80 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-semibold text-red-700/75">{RU.startPrice}</div>

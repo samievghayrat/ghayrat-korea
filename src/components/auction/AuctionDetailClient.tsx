@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -123,6 +123,19 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
       ? Math.round(HIGH_VALUE_BASE_EXTRA_COST_USD * AUCTION_USD_TO_KRW + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
       : LOW_VALUE_EXTRA_COST_USD * AUCTION_USD_TO_KRW;
   const totalKrw = bidKrw + extraCostsKrw;
+  const formatAuctionAmount = (amountKrw: number, options?: { baseKrw?: number }) => {
+    if (currency === "USD") {
+      const amountUsd = Math.round(amountKrw / AUCTION_USD_TO_KRW);
+      return `${amountUsd.toLocaleString("en-US")} $`;
+    }
+    if (currency === "KRW") return `${amountKrw.toLocaleString("ko-KR")} \u20a9`;
+    if (options?.baseKrw) {
+      const baseDisplay = convertKrwPrice(options.baseKrw);
+      const extraDisplay = Math.round((amountKrw - options.baseKrw) / AUCTION_USD_TO_KRW);
+      return `${(baseDisplay + extraDisplay).toLocaleString("ru-RU")} ${currencySymbol}`;
+    }
+    return formatKrwPrice(amountKrw);
+  };
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
@@ -215,7 +228,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
             </div>
             {car.lotNumber && (
               <div className="absolute right-3 top-3 z-20 rounded bg-white/90 px-3 py-1 text-sm font-bold text-gray-950">
-                {RU.lot} #{car.lotNumber}
+                {car.lotNumber}
               </div>
             )}
           </div>
@@ -250,9 +263,6 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
         <div className="grid gap-4">
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
             <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
-            <p className="mt-1 text-sm font-semibold text-gray-500">
-              {RU.lot} #{car.lotNumber || "-"} · {RU.auction} {formatKcarAuctionDate(car.auctionDate)}
-            </p>
             <div className="mt-3 inline-flex rounded-lg bg-red-50 px-3 py-2 text-sm font-extrabold text-red-700">
               {RU.remaining}: {remainingTime}
             </div>
@@ -302,14 +312,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-gray-500">
-                      <strong className="font-bold text-gray-700">{RU.extraCosts}</strong>: комиссия аукциона, доставка и услуга.
+                      <strong className="font-bold text-gray-700">{RU.extraCosts}</strong>: {"\u043a\u043e\u043c\u0438\u0441\u0441\u0438\u044f \u0430\u0443\u043a\u0446\u0438\u043e\u043d\u0430, \u0434\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0438 \u0443\u0441\u043b\u0443\u0433\u0430."}
                     </span>
-                    <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
+                    <span className="font-bold text-gray-950">{formatAuctionAmount(extraCostsKrw)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-3">
                     <div className="flex items-center justify-between gap-3 text-base">
                       <span className="font-extrabold text-gray-950">{RU.total}</span>
-                      <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
+                      <span className="font-extrabold text-red-700">{formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}</span>
                     </div>
                   </div>
                 </div>

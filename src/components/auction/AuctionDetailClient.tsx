@@ -17,9 +17,10 @@ interface AuctionDetailClientProps {
 }
 
 const USD_TO_KRW_FOR_AUCTION_FEES = 1400;
-const HIGH_VALUE_COMMISSION_THRESHOLD_KRW = 10000000;
-const LOW_VALUE_COMMISSION_USD = 150;
-const SHIPPING_USD = 100;
+const HIGH_VALUE_THRESHOLD_KRW = 10000000;
+const LOW_VALUE_EXTRA_COST_USD = 300;
+const HIGH_VALUE_BASE_EXTRA_COST_USD = 200;
+const HIGH_VALUE_EXTRA_COST_RATE = 0.022;
 
 function translateValue(value: string | null | undefined): string {
   if (!value) return "-";
@@ -53,12 +54,11 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const startPriceKrw = kcarPriceToKrw(car.price);
   const [bidKrw, setBidKrw] = useState(startPriceKrw);
   const price = formatKrwPrice(startPriceKrw);
-  const auctionCommissionKrw =
-    bidKrw > HIGH_VALUE_COMMISSION_THRESHOLD_KRW
-      ? Math.round(bidKrw * 0.025)
-      : LOW_VALUE_COMMISSION_USD * USD_TO_KRW_FOR_AUCTION_FEES;
-  const shippingKrw = SHIPPING_USD * USD_TO_KRW_FOR_AUCTION_FEES;
-  const totalKrw = bidKrw + auctionCommissionKrw + shippingKrw;
+  const extraCostsKrw =
+    bidKrw > HIGH_VALUE_THRESHOLD_KRW
+      ? Math.round(HIGH_VALUE_BASE_EXTRA_COST_USD * USD_TO_KRW_FOR_AUCTION_FEES + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
+      : LOW_VALUE_EXTRA_COST_USD * USD_TO_KRW_FOR_AUCTION_FEES;
+  const totalKrw = bidKrw + extraCostsKrw;
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
@@ -173,14 +173,10 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
 
         <div className="grid gap-4">
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
-                <p className="mt-1 text-sm font-semibold text-gray-500">
-                  Лот #{car.lotNumber || "-"} · Аукцион {formatKcarAuctionDate(car.auctionDate)}
-                </p>
-              </div>
-            </div>
+            <h1 className="text-2xl font-extrabold text-gray-950">{title}</h1>
+            <p className="mt-1 text-sm font-semibold text-gray-500">
+              Лот #{car.lotNumber || "-"} · Аукцион {formatKcarAuctionDate(car.auctionDate)}
+            </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {specs.map(([label, value]) => (
@@ -198,7 +194,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 <div className="text-xs font-bold uppercase tracking-wide text-red-700">Стартовая цена аукциона</div>
                 <div className="mt-2 text-3xl font-extrabold text-red-700">{price}</div>
                 <p className="mt-3 text-sm font-semibold leading-snug text-red-800">
-                  Эта цена указана без аукционной комиссии и доставки.
+                  Эта цена указана без дополнительных расходов.
                 </p>
                 <a
                   href={whatsappUrl}
@@ -206,7 +202,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex w-full justify-center rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700 sm:w-auto"
                 >
-                  WhatsApp
+                  Сделать ставку
                 </a>
               </div>
 
@@ -232,12 +228,8 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                       <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">Комиссия аукциона</span>
-                      <span className="font-bold text-gray-950">{formatKrwPrice(auctionCommissionKrw)}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">Доставка</span>
-                      <span className="font-bold text-gray-950">{formatKrwPrice(shippingKrw)}</span>
+                      <span className="text-gray-500">Другие расходы</span>
+                      <span className="font-bold text-gray-950">{formatKrwPrice(extraCostsKrw)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex items-center justify-between gap-3 text-base">
@@ -245,7 +237,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                         <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
                       </div>
                       <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">
-                        Комиссия: 2.5% для авто дороже 10,000,000 ₩, для авто дешевле - $150. Доставка - $100.
+                        Другие расходы: комиссия аукциона, доставка и услуга. Для авто до 10,000,000 ₩ - $300, для авто дороже - $200 + 2.2% от цены авто.
                       </p>
                     </div>
                   </div>

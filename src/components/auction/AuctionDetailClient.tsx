@@ -16,6 +16,11 @@ interface AuctionDetailClientProps {
   images: string[];
 }
 
+const USD_TO_KRW_FOR_AUCTION_FEES = 1400;
+const HIGH_VALUE_COMMISSION_THRESHOLD_KRW = 10000000;
+const LOW_VALUE_COMMISSION_USD = 150;
+const SHIPPING_USD = 100;
+
 function translateValue(value: string | null | undefined): string {
   if (!value) return "-";
   const map: Record<string, string> = {
@@ -45,7 +50,15 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const title = formatKCarName(car);
-  const price = formatKrwPrice(kcarPriceToKrw(car.price));
+  const startPriceKrw = kcarPriceToKrw(car.price);
+  const [bidKrw, setBidKrw] = useState(startPriceKrw);
+  const price = formatKrwPrice(startPriceKrw);
+  const auctionCommissionKrw =
+    bidKrw > HIGH_VALUE_COMMISSION_THRESHOLD_KRW
+      ? Math.round(bidKrw * 0.025)
+      : LOW_VALUE_COMMISSION_USD * USD_TO_KRW_FOR_AUCTION_FEES;
+  const shippingKrw = SHIPPING_USD * USD_TO_KRW_FOR_AUCTION_FEES;
+  const totalKrw = bidKrw + auctionCommissionKrw + shippingKrw;
   const contactMessage = `KCar auction: ${title}, lot ${car.lotNumber}, ${price}`;
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
@@ -163,6 +176,47 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
           <div className="mt-1 text-3xl font-extrabold text-red-700">{price}</div>
           <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold leading-snug text-red-800">
             Эта цена указана без аукционной комиссии и доставки.
+          </div>
+          <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50">
+            <div className="border-b border-gray-200 px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-500">
+              Расчет ставки
+            </div>
+            <div className="space-y-3 p-4">
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">Ваша ставка, ₩</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={100000}
+                  value={bidKrw}
+                  onChange={(event) => setBidKrw(Math.max(0, Number(event.target.value) || 0))}
+                  className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                />
+              </label>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-gray-500">Сумма ставки</span>
+                  <span className="font-bold text-gray-950">{formatKrwPrice(bidKrw)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-gray-500">Комиссия аукциона</span>
+                  <span className="font-bold text-gray-950">{formatKrwPrice(auctionCommissionKrw)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-gray-500">Доставка</span>
+                  <span className="font-bold text-gray-950">{formatKrwPrice(shippingKrw)}</span>
+                </div>
+                <div className="border-t border-gray-200 pt-3">
+                  <div className="flex items-center justify-between gap-3 text-base">
+                    <span className="font-extrabold text-gray-950">Итого</span>
+                    <span className="font-extrabold text-red-700">{formatKrwPrice(totalKrw)}</span>
+                  </div>
+                  <p className="mt-2 text-xs font-semibold leading-snug text-gray-500">
+                    Комиссия: 2.5% для авто дороже 10,000,000 ₩, для авто дешевле - $150. Доставка - $100.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="mt-4">
             <a

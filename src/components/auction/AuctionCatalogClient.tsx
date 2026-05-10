@@ -10,6 +10,7 @@ interface AuctionCatalogClientProps {
 }
 
 type YearFilter = "all" | "2014" | "2021";
+type SortFilter = "year_desc" | "year_asc" | "price_asc" | "price_desc";
 const PAGE_SIZE = 9;
 
 function getDisplayYear(car: KCarAuctionCar): number {
@@ -28,6 +29,9 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   const selectedModel = searchParams.get("model") || "";
   const yearParam = searchParams.get("year");
   const yearFilter: YearFilter = yearParam === "2014" || yearParam === "2021" ? yearParam : "all";
+  const sortParam = searchParams.get("sort");
+  const sortFilter: SortFilter =
+    sortParam === "year_asc" || sortParam === "price_asc" || sortParam === "price_desc" ? sortParam : "year_desc";
   const pageParam = Number(searchParams.get("page") || "1");
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
@@ -77,9 +81,18 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     });
   }, [cars, selectedBrand, selectedModel, yearFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredCars.length / PAGE_SIZE));
+  const sortedCars = useMemo(() => {
+    return [...filteredCars].sort((a, b) => {
+      if (sortFilter === "year_asc") return getDisplayYear(a) - getDisplayYear(b);
+      if (sortFilter === "price_asc") return a.price - b.price;
+      if (sortFilter === "price_desc") return b.price - a.price;
+      return getDisplayYear(b) - getDisplayYear(a);
+    });
+  }, [filteredCars, sortFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedCars.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pagedCars = filteredCars.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedCars = sortedCars.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const pageItems = useMemo(() => {
     if (totalPages <= 5) {
@@ -127,6 +140,10 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
   const updateYear = (value: YearFilter) => {
     updateFilters({ year: value, page: null });
+  };
+
+  const updateSort = (value: SortFilter) => {
+    updateFilters({ sort: value === "year_desc" ? null : value, page: null });
   };
 
   const updatePage = (value: number) => {
@@ -190,8 +207,20 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             ))}
           </div>
         </div>
-        <div className="mt-3 flex justify-end text-sm font-semibold text-gray-500">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <select
+            value={sortFilter}
+            onChange={(event) => updateSort(event.target.value as SortFilter)}
+            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+          >
+            <option value="year_desc">Год: сначала новые</option>
+            <option value="year_asc">Год: сначала старые</option>
+            <option value="price_asc">Цена: сначала дешевые</option>
+            <option value="price_desc">Цена: сначала дорогие</option>
+          </select>
+          <div className="text-sm font-semibold text-gray-500">
           Найдено: <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
+          </div>
         </div>
       </div>
 

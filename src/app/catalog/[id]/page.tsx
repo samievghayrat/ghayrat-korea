@@ -56,10 +56,11 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t, formatPrice, formatKrwPrice } = useApp();
+  const { t } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
+  const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -86,6 +87,21 @@ export default function CarDetailPage() {
         setCar(data);
         setApiLoaded(true);
         setLoading(false);
+
+        // Pan Auto uses a protected, sometimes slow public endpoint. Refine the
+        // selected car in the background without delaying the first render.
+        fetch(`/api/cars/${id}/pan-auto`)
+          .then(res => res.status === 204 ? null : (res.ok ? res.json() : null))
+          .then(enhanced => {
+            if (enhanced) {
+              setCar(current => ({
+                ...enhanced,
+                imageUrl: current?.images?.[0] || enhanced.imageUrl,
+                images: current?.images?.length ? current.images : enhanced.images,
+              }));
+            }
+          })
+          .catch(() => {});
       })
       .catch(() => {
         if (!sessionCar) {
@@ -97,10 +113,29 @@ export default function CarDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Use server-calculated turnkey price (available immediately from session car)
-  const turnkeyPrice = destination === 'russia'
-    ? car?.price_turnkey_russia
-    : car?.price_turnkey_tajikistan;
+  useEffect(() => {
+    setGalleryLoaded(false);
+    const controller = new AbortController();
+
+    fetch(`/api/encar-gallery/${id}`, { signal: controller.signal })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data?.images?.length) return;
+        setCar(current => current ? {
+          ...current,
+          imageUrl: data.images[0],
+          images: data.images,
+        } : current);
+      })
+      .catch(error => {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          console.error('Gallery fetch failed:', error);
+        }
+      })
+      .finally(() => setGalleryLoaded(true));
+
+    return () => controller.abort();
+  }, [id]);
 
   // Client-side breakdown only for the detailed breakdown view (uses API data)
   const breakdown = useMemo(() => {
@@ -108,6 +143,7 @@ export default function CarDetailPage() {
     return calculateImportCost({
       priceKrw: car.price_krw,
       priceRub: car.price_rub,
+      priceUsd: car.price_usd,
       displacement: car.displacement || 0,
       year: car.year,
       month: car.month,
@@ -116,6 +152,9 @@ export default function CarDetailPage() {
       brand: car.brand,
       model: car.model,
       destination,
+      eurRate: car.eur_to_rub,
+      usdRate: car.usd_to_rub,
+      russiaCustomsOverride: destination === 'russia' ? car.panAutoCustoms : undefined,
     });
   }, [car, destination, apiLoaded]);
 
@@ -134,12 +173,27 @@ export default function CarDetailPage() {
   const priceLabel = destination === 'russia'
     ? t('card.turnkeyVladivostok')
     : t('card.turnkeyTajikistan');
-  const displayPrice = turnkeyPrice || breakdown?.total;
-  const displayPriceLabel = displayPrice
-    ? destination === 'russia'
-      ? formatPrice(displayPrice)
-      : `$${displayPrice.toLocaleString('en-US')}`
-    : formatKrwPrice(car.price_krw);
+  const turnkeyPriceRub = car.price_turnkey_russia || (destination === 'russia' ? breakdown?.total : undefined);
+  const fallbackUsdToRub = car.price_rub > 0 && car.price_usd ? car.price_rub / car.price_usd : 87.5;
+  const usdToRub = car.usd_to_rub || fallbackUsdToRub;
+  const turnkeyPriceUsd = destination === 'russia'
+    ? car.price_turnkey_russia_usd || (turnkeyPriceRub ? Math.round(turnkeyPriceRub / usdToRub) : undefined)
+    : car.price_turnkey_tajikistan || breakdown?.total;
+  const calculationReady = destination === 'tajikistan'
+    || (breakdown?.calculationComplete ?? car.russia_calculation_complete ?? Boolean(turnkeyPriceRub));
+  const fuelLower = car.fuel.toLowerCase();
+  const isElectricPower = fuelLower.includes('электро') || fuelLower.includes('electric');
+  const isHybridPower = fuelLower.includes('гибрид') || fuelLower.includes('hybrid');
+  const calculationHp = breakdown?.calculationHp ?? car.hp ?? 0;
+  const powerLimitHp = breakdown?.preferentialPowerLimitHp ?? (isElectricPower ? 80 : 160);
+  const hasHighPower = calculationHp > powerLimitHp;
+  const isPowerBoundary = calculationHp === powerLimitHp;
+  const hasPreferentialPower = calculationHp > 0
+    && calculationHp < powerLimitHp
+    && !isHybridPower
+    && (isElectricPower || (car.displacement || 0) <= 3000);
+  const formatUsd = (value: number) => `$${value.toLocaleString('en-US')}`;
+  const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
   const galleryImages = car.images && car.images.length > 0
     ? car.images
@@ -194,7 +248,7 @@ export default function CarDetailPage() {
               images={galleryImages}
               alt={`${car.brand} ${car.model}`}
             />
-            {!apiLoaded && galleryImages.length <= 1 && (
+            {!galleryLoaded && galleryImages.length <= 1 && (
               <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
                 <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -259,20 +313,36 @@ export default function CarDetailPage() {
               </button>
             </div>
 
-            {/* Total price - shows immediately from server-calculated value */}
-            <div className="mt-4 rounded-2xl bg-gray-950 p-4 text-white">
-              {displayPrice ? (
+            {/* Keep the catalog price visible, then show the separate delivery estimate. */}
+            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+              <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKoreaUsd')}</div>
+              <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
+                {formatUsd(car.price_usd || Math.round(car.price_rub / usdToRub))}
+              </div>
+              <div className="mt-1 text-xs font-medium text-emerald-700/70">
+                ₩{car.price_krw.toLocaleString('ko-KR')}
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
+              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>
+              {calculationReady && turnkeyPriceUsd ? (
                 <>
-                  <div className="mb-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                    {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
-                  </div>
                   <div className="text-3xl font-extrabold tracking-tight">
-                    {displayPriceLabel}
+                    {formatUsd(turnkeyPriceUsd)}
                   </div>
+                  {destination === 'russia' && turnkeyPriceRub && (
+                    <div className="mt-1 text-sm font-semibold text-white/75">≈ {formatRub(turnkeyPriceRub)}</div>
+                  )}
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>
                 </>
+              ) : apiLoaded ? (
+                <div>
+                  <div className="text-base font-bold text-amber-300">{t('price.needsEngineData')}</div>
+                  <div className="mt-1 text-sm leading-5 text-white/65">{t('price.needsEngineDataDesc')}</div>
+                </div>
               ) : (
                 <div className="animate-pulse space-y-2">
                   <div className="h-9 w-48 bg-gray-200 rounded" />
@@ -280,6 +350,48 @@ export default function CarDetailPage() {
                   <div className="h-3 w-44 bg-gray-200 rounded" />
                 </div>
               )}
+
+              {destination === 'russia' && hasHighPower && (
+                <div className="mt-4 rounded-xl border border-amber-300/35 bg-amber-400/10 p-3" role="note">
+                  <div className="flex items-center gap-2 text-sm font-bold text-amber-300">
+                    <span aria-hidden="true">⚠</span>
+                    {t('price.highPowerTitle')}
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-white/75">
+                    {t('price.highPowerDesc')
+                      .replace('{hp}', calculationHp.toLocaleString('ru-RU'))
+                      .replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
+                  </p>
+                </div>
+              )}
+
+              {destination === 'russia' && isPowerBoundary && (
+                <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-400/10 p-3" role="note">
+                  <div className="text-sm font-bold text-sky-200">{t('price.powerBoundaryTitle')}</div>
+                  <p className="mt-1 text-xs leading-5 text-white/70">
+                    {t('price.powerBoundaryDesc').replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
+                  </p>
+                </div>
+              )}
+
+              {destination === 'russia' && isHybridPower && (
+                <div className="mt-3 rounded-xl border border-sky-300/25 bg-sky-400/10 p-3" role="note">
+                  <div className="text-sm font-bold text-sky-200">{t('price.hybridPowerTitle')}</div>
+                  <p className="mt-1 text-xs leading-5 text-white/70">{t('price.hybridPowerDesc')}</p>
+                </div>
+              )}
+
+              {destination === 'russia' && hasPreferentialPower && (
+                <div className="mt-3 rounded-xl border border-emerald-300/25 bg-emerald-400/10 p-3" role="note">
+                  <div className="text-sm font-bold text-emerald-300">{t('price.preferentialUtilTitle')}</div>
+                  <p className="mt-1 text-xs leading-5 text-white/70">
+                    {t('price.preferentialUtilDesc')
+                      .replace('{hp}', calculationHp.toLocaleString('ru-RU'))
+                      .replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
+                  </p>
+                </div>
+              )}
+
             </div>
 
             <a
@@ -295,7 +407,7 @@ export default function CarDetailPage() {
             </a>
 
             {/* Detailed calculation */}
-            {breakdown && (
+            {breakdown && (destination === 'tajikistan' || breakdown.calculationComplete) && (
               <>
                 <button
                   onClick={() => setShowBreakdown(!showBreakdown)}
@@ -311,8 +423,10 @@ export default function CarDetailPage() {
                   <PriceBreakdown
                     breakdown={breakdown}
                     priceKrw={car.price_krw}
+                    priceUsd={car.price_usd}
+                    usdToRub={usdToRub}
                     destination={destination}
-                    totalOverride={turnkeyPrice}
+                    totalOverride={destination === 'russia' ? turnkeyPriceRub : car.price_turnkey_tajikistan}
                   />
                 )}
               </>
@@ -338,7 +452,7 @@ export default function CarDetailPage() {
           <CarSpecs car={car} />
           <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
-          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
+          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} destination={destination} />
         </div>
 
       </div>

@@ -6,48 +6,55 @@ import { useApp } from '@/contexts/AppContext';
 interface PriceBreakdownProps {
   breakdown: PriceBreakdownData;
   priceKrw: number;
+  priceUsd?: number;
+  usdToRub?: number;
   destination?: 'russia' | 'tajikistan';
   totalOverride?: number;
 }
 
-export default function PriceBreakdown({ breakdown, priceKrw, destination = 'russia', totalOverride }: PriceBreakdownProps) {
-  const { t, formatPrice } = useApp();
+export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, usdToRub, destination = 'russia', totalOverride }: PriceBreakdownProps) {
+  const { t } = useApp();
   const isRussia = destination === 'russia';
 
   const fmtUsd = (v: number) => `$${v.toLocaleString('en-US')}`;
+  const fmtRub = (v: number) => `${v.toLocaleString('ru-RU')} ₽`;
+  const effectiveUsdToRub = usdToRub || (priceUsd && priceUsd > 0 ? breakdown.carPrice / priceUsd : 87.5);
+  const rubToUsd = (v: number) => Math.round(v / effectiveUsdToRub);
+  const rubDetails = (value: number, details?: string) =>
+    [fmtRub(value), details].filter(Boolean).join(' · ');
 
   const rows = isRussia
     ? [
         {
           label: t('price.carPriceKorea'),
-          value: formatPrice(breakdown.carPrice),
-          sublabel: `${priceKrw.toLocaleString()} KRW`,
+          value: fmtUsd(priceUsd || rubToUsd(breakdown.carPrice)),
+          sublabel: `${fmtRub(breakdown.carPrice)} · ₩${priceKrw.toLocaleString('ko-KR')}`,
         },
         {
           label: t('price.customsDuty'),
-          value: formatPrice(breakdown.customsDuty),
-          sublabel: breakdown.customsDutyDetails,
+          value: fmtUsd(rubToUsd(breakdown.customsDuty)),
+          sublabel: rubDetails(breakdown.customsDuty, breakdown.customsDutyDetails),
         },
         {
           label: t('price.customsFee'),
-          value: formatPrice(breakdown.customsFee),
-          sublabel: t('price.customsFeeDesc'),
+          value: fmtUsd(rubToUsd(breakdown.customsFee)),
+          sublabel: rubDetails(breakdown.customsFee, t('price.customsFeeDesc')),
         },
         {
           label: t('price.utilizationFee'),
-          value: formatPrice(breakdown.utilizationFee),
-          sublabel: breakdown.utilizationWarning,
+          value: fmtUsd(rubToUsd(breakdown.utilizationFee)),
+          sublabel: rubDetails(breakdown.utilizationFee, breakdown.utilizationWarning),
           warning: breakdown.utilizationFee > 10000,
         },
         {
           label: t('price.delivery'),
-          value: formatPrice(breakdown.serviceFee),
-          sublabel: `$${breakdown.serviceFeeUsd.toLocaleString('en-US')} — ${t('price.deliveryDesc')}`,
+          value: fmtUsd(breakdown.serviceFeeUsd),
+          sublabel: rubDetails(breakdown.serviceFee, t('price.deliveryDesc')),
         },
         {
           label: t('price.broker'),
-          value: formatPrice(breakdown.brokerFee),
-          sublabel: t('price.brokerDesc'),
+          value: fmtUsd(rubToUsd(breakdown.brokerFee)),
+          sublabel: rubDetails(breakdown.brokerFee, t('price.brokerDesc')),
         },
       ]
     : [
@@ -55,38 +62,6 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           label: t('price.carPriceKorea'),
           value: fmtUsd(breakdown.carPrice),
           sublabel: `${priceKrw.toLocaleString('ko-KR')} KRW`,
-        },
-        ...(breakdown.customsValue && breakdown.customsValue !== breakdown.carPrice
-          ? [{
-              label: t('price.customsValue'),
-              value: fmtUsd(breakdown.customsValue),
-              sublabel: t('price.customsClearanceDesc'),
-            }]
-          : []),
-        {
-          label: t('price.customsDuty'),
-          value: fmtUsd(breakdown.customsDuty),
-          sublabel: breakdown.customsDutyDetails,
-        },
-        {
-          label: t('price.exciseTax'),
-          value: fmtUsd(breakdown.exciseTax || 0),
-          sublabel: breakdown.exciseTaxDetails,
-        },
-        {
-          label: t('price.vat'),
-          value: fmtUsd(breakdown.vatTax || 0),
-          sublabel: undefined,
-        },
-        {
-          label: t('price.procedureFee'),
-          value: fmtUsd(breakdown.procedureFee || 0),
-          sublabel: t('price.procedureFeeDesc'),
-        },
-        {
-          label: t('price.utilizationFee'),
-          value: fmtUsd(breakdown.utilizationFee || 0),
-          sublabel: undefined,
         },
         {
           label: t('price.deliveryTj'),
@@ -96,10 +71,28 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
       ];
 
   const totalValue = totalOverride ?? breakdown.total;
-  const formattedTotal = isRussia ? formatPrice(totalValue) : fmtUsd(totalValue);
+  const formattedTotal = isRussia ? fmtUsd(rubToUsd(totalValue)) : fmtUsd(totalValue);
 
   return (
     <div className="space-y-3 pt-4">
+      {isRussia && breakdown.highPowerUtilization && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3" role="note">
+          <div className="text-sm font-bold text-amber-800">{t('price.highPowerTitle')}</div>
+          <p className="mt-1 text-xs leading-5 text-amber-700">
+            {t('price.highPowerDesc')
+              .replace('{hp}', (breakdown.calculationHp || 0).toLocaleString('ru-RU'))
+              .replace('{limit}', (breakdown.preferentialPowerLimitHp || 160).toLocaleString('ru-RU'))}
+          </p>
+        </div>
+      )}
+
+      {isRussia && breakdown.powerRequiresConfirmation && (
+        <div className="rounded-xl border border-sky-200 bg-sky-50 p-3" role="note">
+          <div className="text-sm font-bold text-sky-800">{t('price.hybridPowerTitle')}</div>
+          <p className="mt-1 text-xs leading-5 text-sky-700">{t('price.hybridPowerDesc')}</p>
+        </div>
+      )}
+
       <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4">
         {rows.map((row) => (
           <div key={row.label} className="flex justify-between items-start">
@@ -119,13 +112,16 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
       <div className="border-t-2 border-primary/20 pt-4">
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-base font-bold text-gray-900">{t('price.totalTurnkey')}</span>
+            <span className="text-base font-bold text-gray-900">{isRussia ? t('price.totalTurnkey') : t('price.totalDelivered')}</span>
             <div className="text-xs text-gray-400">{isRussia ? t('price.inVladivostok') : t('price.inTajikistan')}</div>
           </div>
           <div className="text-right">
             <div className="text-xl font-bold text-primary">
               {formattedTotal}
             </div>
+            {isRussia && (
+              <div className="mt-0.5 text-xs font-medium text-gray-400">≈ {fmtRub(totalValue)}</div>
+            )}
           </div>
         </div>
       </div>

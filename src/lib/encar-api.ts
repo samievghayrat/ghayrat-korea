@@ -4,14 +4,29 @@ import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
 import { getSnapshotCarById, getSnapshotSearch } from './encar-snapshot';
+import { ENCAR_API_BASE, ENCAR_INSPECTION_BASE, ENCAR_READSIDE_BASE } from './encar-endpoints';
+import { getPanAutoVehicleReference } from './pan-auto';
 
-const ENCAR_API_BASE = process.env.ENCAR_API_BASE_URL
-  || 'https://api.encar.com/search/car/list/general';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
-const ENCAR_READSIDE_BASE = process.env.ENCAR_READSIDE_BASE_URL
-  || 'https://api.encar.com/v1/readside';
 const ENCAR_OPTIONS_API = `${ENCAR_READSIDE_BASE}/vehicles/car/options/standard`;
 const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
+
+function getEncarDisplayImageUrl(path: string, width: number, height: number): string {
+  const imagePath = path.endsWith('_') ? `${path}001.jpg` : path;
+  const canonicalPath = imagePath.startsWith('/carpicture/')
+    ? imagePath
+    : `/carpicture${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
+  const params = new URLSearchParams({
+    impolicy: 'heightRate',
+    rh: String(height),
+    cw: String(width),
+    ch: String(height),
+    cg: 'Center',
+    wtmk: `${ENCAR_IMAGE_CDN}/wt_mark/w_mark_04.png`,
+  });
+
+  return `${ENCAR_IMAGE_CDN}${canonicalPath}?${params.toString()}`;
+}
 
 const transmissionMap: Record<string, string> = {
   '오토': 'Автомат',
@@ -132,18 +147,155 @@ function getDisplacementVariants(displacement: number): number[] {
   return variants;
 }
 
+// Encar sometimes appends eligibility notes to the fuel value, for example
+// "LPG(일반인 구입)". Engine reference keys use the shorter canonical names.
+function getFuelLookupVariants(fuel: string): string[] {
+  const variants = [fuel];
+  const lower = fuel.toLowerCase();
+
+  if (lower.includes('lpg')) variants.push('LPG');
+  if (fuel.includes('가솔린+전기')) variants.push('가솔린+전기', '하이브리드');
+  if (fuel.includes('디젤+전기')) variants.push('디젤+전기', '하이브리드');
+  if (fuel.includes('가솔린')) variants.push('가솔린');
+  if (fuel.includes('디젤')) variants.push('디젤');
+  if (fuel.includes('전기')) variants.push('전기');
+
+  return Array.from(new Set(variants.filter(Boolean)));
+}
+
+// Many snapshot listings omit engine volume but include it in the badge
+// (for example, "2.0 TDI" or "3.3 GDI"). Restrict the parser to a decimal
+// litre value so model names such as 520d are never mistaken for engine size.
+function parseDisplacementFromBadge(badge: string): number | undefined {
+  const match = badge.match(/(?:^|\s)([0-6]\.\d{1,2})(?=\s|$)/);
+  if (!match) return undefined;
+  const litres = Number.parseFloat(match[1]);
+  return litres > 0 ? Math.round(litres * 1000) : undefined;
+}
+
+interface EngineVariantRule {
+  brand: RegExp;
+  model: RegExp;
+  badge?: RegExp;
+  fuel: string;
+  hp: number;
+  cc: number;
+  yearFrom?: number;
+  yearTo?: number;
+}
+
+// Curated specifications supplied by the business for common Russia-friendly
+// Korean-market variants. Badge matching is deliberately used where one model
+// name can contain several engines with very different utilization fees.
+const CURATED_ENGINE_VARIANTS: EngineVariantRule[] = [
+  // BMW
+  { brand: /^BMW$/i, model: /1시리즈/, badge: /118i/i, fuel: '가솔린', hp: 140, cc: 1499 },
+  { brand: /^BMW$/i, model: /1시리즈/, badge: /116d/i, fuel: '디젤', hp: 116, cc: 1995 },
+  { brand: /^BMW$/i, model: /1시리즈/, badge: /118d/i, fuel: '디젤', hp: 150, cc: 1995 },
+  { brand: /^BMW$/i, model: /^X1\b/, badge: /18d/i, fuel: '디젤', hp: 150, cc: 1995 },
+  { brand: /^BMW$/i, model: /2시리즈 그란쿠페/, badge: /218d/i, fuel: '디젤', hp: 150, cc: 1995 },
+
+  // MINI
+  { brand: /^미니$/, model: /^쿠퍼(?!\s+(?:S|D|SD|일렉트릭))(?:\s|$)/i, fuel: '가솔린', hp: 136, cc: 1499 },
+  { brand: /^미니$/, model: /쿠퍼|미니/, badge: /\bOne\b/i, fuel: '가솔린', hp: 102, cc: 1499 },
+
+  // Mercedes-Benz
+  { brand: /^(?:벤츠|메르세데스벤츠)$/, model: /A-클래스/, badge: /A\s?180(?!.*CDI)/i, fuel: '가솔린', hp: 136, cc: 1332 },
+  { brand: /^(?:벤츠|메르세데스벤츠)$/, model: /GLB-클래스/, badge: /GLB\s?200\s*d/i, fuel: '디젤', hp: 150, cc: 1950 },
+
+  // Audi
+  { brand: /^아우디$/, model: /^Q2\b/, badge: /35 TFSI/i, fuel: '가솔린', hp: 150, cc: 1395 },
+  { brand: /^아우디$/, model: /^(?:뉴 )?A3\b/, badge: /35 TFSI/i, fuel: '가솔린', hp: 150, cc: 1395 },
+  { brand: /^아우디$/, model: /^Q3\b/, badge: /35 TDI/i, fuel: '디젤', hp: 150, cc: 1968 },
+
+  // Volkswagen
+  { brand: /^폭스바겐$/, model: /제타/, badge: /1\.4 TSI/i, fuel: '가솔린', hp: 150, cc: 1395 },
+  { brand: /^폭스바겐$/, model: /티구안/, badge: /2\.0 TDI/i, fuel: '디젤', hp: 150, cc: 1968 },
+  { brand: /^폭스바겐$/, model: /티록/, badge: /2\.0 TDI/i, fuel: '디젤', hp: 150, cc: 1968 },
+
+  // Peugeot
+  { brand: /^푸조$/, model: /^2008\b/, badge: /1\.2/i, fuel: '가솔린', hp: 130, cc: 1199 },
+  { brand: /^푸조$/, model: /^3008\b/, badge: /1\.5 BlueHDi/i, fuel: '디젤', hp: 130, cc: 1499 },
+  { brand: /^푸조$/, model: /^508(?:\s|$)/, badge: /1\.5 BlueHDi/i, fuel: '디젤', hp: 130, cc: 1499 },
+
+  // Renault Korea / Renault Samsung
+  { brand: /^(?:르노삼성|르노코리아\(삼성\))$/, model: /XM3/, badge: /1\.3/i, fuel: '가솔린', hp: 152, cc: 1332 },
+  { brand: /^(?:르노삼성|르노코리아\(삼성\))$/, model: /XM3/, badge: /1\.6/i, fuel: '가솔린', hp: 123, cc: 1598 },
+  { brand: /^(?:르노삼성|르노코리아\(삼성\))$/, model: /QM6/, fuel: '가솔린', hp: 144, cc: 1997 },
+  { brand: /^(?:르노삼성|르노코리아\(삼성\))$/, model: /SM6/, badge: /1\.5/i, fuel: '가솔린', hp: 156, cc: 1497 },
+  { brand: /^(?:르노삼성|르노코리아\(삼성\))$/, model: /SM6/, badge: /2\.0/i, fuel: '가솔린', hp: 140, cc: 1997 },
+
+  // Hyundai
+  { brand: /^현대$/, model: /아반떼/, badge: /1\.6|HEV/i, fuel: '가솔린+전기', hp: 141, cc: 1580 },
+  { brand: /^현대$/, model: /아반떼/, badge: /1\.6|GDI|VVT/i, fuel: '가솔린', hp: 123, cc: 1598 },
+  { brand: /^현대$/, model: /베뉴/, fuel: '가솔린', hp: 123, cc: 1598 },
+  { brand: /^현대$/, model: /코나/, badge: /2\.0/i, fuel: '가솔린', hp: 149, cc: 1999 },
+  { brand: /^현대$/, model: /코나.*하이브리드/, fuel: '가솔린+전기', hp: 141, cc: 1580 },
+  { brand: /^현대$/, model: /쏘나타/, badge: /2\.0/i, fuel: '가솔린', hp: 160, cc: 1999 },
+  { brand: /^현대$/, model: /쏘나타/, fuel: 'LPG', hp: 146, cc: 1999 },
+
+  // Kia
+  { brand: /^기아$/, model: /K3/, badge: /1\.6|GDI/i, fuel: '가솔린', hp: 123, cc: 1598 },
+  { brand: /^기아$/, model: /K5/, badge: /2\.0/i, fuel: '가솔린', hp: 160, cc: 1999 },
+  { brand: /^기아$/, model: /K5/, fuel: 'LPG', hp: 146, cc: 1999 },
+  { brand: /^기아$/, model: /셀토스/, badge: /1\.6/i, fuel: '디젤', hp: 136, cc: 1598 },
+  { brand: /^기아$/, model: /니로(?!.*EV)/, fuel: '가솔린+전기', hp: 141, cc: 1580 },
+  { brand: /^기아$/, model: /스포티지 5세대/, fuel: 'LPG', hp: 146, cc: 1999 },
+
+  // KGM / SsangYong
+  { brand: /^(?:쌍용|KG모빌리티\(쌍용\))$/, model: /티볼리/, badge: /1\.6|VX|IX|RX/i, fuel: '가솔린', hp: 128, cc: 1597 },
+  { brand: /^(?:쌍용|KG모빌리티\(쌍용\))$/, model: /코란도(?!.*(?:스포츠|투리스모))/, fuel: '디젤', hp: 136, cc: 1598, yearFrom: 2020, yearTo: 2023 },
+
+  // Chevrolet
+  { brand: /^쉐보레(?:\(GM대우\))?$/, model: /트레일블레이저/, badge: /1\.2/i, fuel: '가솔린', hp: 139, cc: 1199 },
+  { brand: /^쉐보레(?:\(GM대우\))?$/, model: /트레일블레이저/, badge: /1\.3/i, fuel: '가솔린', hp: 156, cc: 1341 },
+  { brand: /^쉐보레(?:\(GM대우\))?$/, model: /말리부/, badge: /1\.35/i, fuel: '가솔린', hp: 156, cc: 1341 },
+];
+
+function lookupCuratedEngine(
+  brand: string,
+  model: string,
+  badge: string,
+  fuel: string,
+  year?: number,
+): { hp: number; cc: number } | undefined {
+  const fuels = getFuelLookupVariants(fuel);
+  const rule = CURATED_ENGINE_VARIANTS.find((candidate) =>
+    candidate.brand.test(brand)
+    && candidate.model.test(model)
+    && (!candidate.badge || candidate.badge.test(badge))
+    && fuels.includes(candidate.fuel)
+    && (!candidate.yearFrom || (year || 0) >= candidate.yearFrom)
+    && (!candidate.yearTo || (year || Number.MAX_SAFE_INTEGER) <= candidate.yearTo)
+  );
+  return rule ? { hp: rule.hp, cc: rule.cc } : undefined;
+}
+
 // Look up HP and displacement from local data
 // Returns { hp, cc } — cc is only set if we inferred it (displacement was 0)
-function lookupEngine(brand: string, model: string, displacement: number, fuel: string): { hp?: number; cc?: number } {
+function lookupEngine(
+  brand: string,
+  model: string,
+  displacement: number,
+  fuel: string,
+  badge = '',
+  year?: number,
+): { hp?: number; cc?: number } {
+  const curated = lookupCuratedEngine(brand, model, badge, fuel, year);
+  if (curated) return curated;
+
   const displacements = getDisplacementVariants(displacement);
   const models = getModelVariants(model);
+  const fuels = getFuelLookupVariants(fuel);
 
   // 1. Try HP_DATA with exact displacement (when displacement is known)
   if (displacement > 0) {
     for (const m of models) {
       for (const d of displacements) {
-        const key = `${brand}|${m}|${d}|${fuel}`;
-        if (HP_DATA[key]) return { hp: HP_DATA[key] };
+        for (const f of fuels) {
+          const key = `${brand}|${m}|${d}|${f}`;
+          if (HP_DATA[key]) return { hp: HP_DATA[key] };
+        }
       }
     }
   }
@@ -151,13 +303,15 @@ function lookupEngine(brand: string, model: string, displacement: number, fuel: 
   // 2. Try ENGINE_FALLBACK: brand|model|fuel → { hp, cc }
   // This handles displacement=0 AND fills in missing displacement
   for (const m of models) {
-    const fbKey = `${brand}|${m}|${fuel}`;
-    if (ENGINE_FALLBACK[fbKey]) {
-      const fb = ENGINE_FALLBACK[fbKey];
-      return {
-        hp: fb.hp,
-        cc: displacement === 0 ? fb.cc : undefined, // only override cc if it was missing
-      };
+    for (const f of fuels) {
+      const fbKey = `${brand}|${m}|${f}`;
+      if (ENGINE_FALLBACK[fbKey]) {
+        const fb = ENGINE_FALLBACK[fbKey];
+        return {
+          hp: fb.hp,
+          cc: displacement === 0 ? fb.cc : undefined, // only override cc if it was missing
+        };
+      }
     }
   }
 
@@ -167,7 +321,7 @@ function lookupEngine(brand: string, model: string, displacement: number, fuel: 
       const matches = new Set<number>();
       for (const [key, hp] of Object.entries(HP_DATA)) {
         const [kb, km, , kf] = key.split('|');
-        if (kb === brand && km === m && kf === fuel) matches.add(hp);
+        if (kb === brand && km === m && fuels.includes(kf)) matches.add(hp);
       }
       if (matches.size === 1) return { hp: matches.values().next().value };
     }
@@ -177,20 +331,6 @@ function lookupEngine(brand: string, model: string, displacement: number, fuel: 
 }
 
 // Parse displacement from badge string like "가솔린 1.6 터보 2WD" → 1600
-
-// Fetch HP from pan-auto.ru API (they maintain HP lookup tables for Encar cars)
-async function fetchHpFromPanAuto(carId: string): Promise<number | undefined> {
-  try {
-    const res = await fetch(`http://zefir.pan-auto.ru/api/cars/${carId}/`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return undefined;
-    const data = await res.json();
-    return data.hp || undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 const bodyTypeMap: Record<string, string> = {
   'SUV': 'Кроссовер/Внедорожник',
@@ -543,16 +683,27 @@ async function transformSearchResults(
       const manufacturer = (item.Manufacturer as string) || '';
       const fuelType = (item.FuelType as string) || '';
       const modelName = (item.Model as string) || '';
+      const badge = (item.Badge as string) || '';
+      const badgeDisplacement = parseDisplacementFromBadge(badge);
+      if (badgeDisplacement) {
+        (item as Record<string, unknown>).Displacement = badgeDisplacement;
+        displacementCache.set(id, badgeDisplacement);
+        continue;
+      }
       const models = getModelVariants(modelName);
+      const fuels = getFuelLookupVariants(fuelType);
       let found = false;
       for (const m of models) {
-        const fbKey = `${manufacturer}|${m}|${fuelType}`;
-        if (ENGINE_FALLBACK[fbKey]) {
-          (item as Record<string, unknown>).Displacement = ENGINE_FALLBACK[fbKey].cc;
-          displacementCache.set(id, ENGINE_FALLBACK[fbKey].cc);
-          found = true;
-          break;
+        for (const f of fuels) {
+          const fbKey = `${manufacturer}|${m}|${f}`;
+          if (ENGINE_FALLBACK[fbKey]) {
+            (item as Record<string, unknown>).Displacement = ENGINE_FALLBACK[fbKey].cc;
+            displacementCache.set(id, ENGINE_FALLBACK[fbKey].cc);
+            found = true;
+            break;
+          }
         }
+        if (found) break;
       }
       if (!found && allowRemoteEnrichment) {
         needsReadside.push({ index: i, id });
@@ -575,43 +726,34 @@ async function transformSearchResults(
     }
   }
 
-  // Step 2: Resolve HP for each car using local lookup, then pan-auto.ru for misses
-  const needsPanAuto: { index: number; id: string }[] = [];
-  const engineResults: { hp?: number; cc?: number }[] = searchResults.map((item, i) => {
-    const searchHp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
-    if (searchHp) return { hp: searchHp };
-
+  // Step 2: Resolve HP from Encar and the local engine map. Pan Auto's
+  // protected endpoint is intentionally used only for a selected detail page,
+  // not multiplied across a catalog batch.
+  const engineResults: { hp?: number; cc?: number }[] = searchResults.map((item) => {
     const id = String(item.Id || '');
-    if (hpCache.has(id)) return { hp: hpCache.get(id) };
-
     const displacement = (item.Displacement as number) || 0;
     const manufacturer = (item.Manufacturer as string) || '';
     const modelName = (item.Model as string) || '';
     const fuelType = (item.FuelType as string) || '';
-    const engine = lookupEngine(manufacturer, modelName, displacement, fuelType);
-    if (engine.hp) {
-      hpCache.set(id, engine.hp);
+    const badge = (item.Badge as string) || '';
+    const itemYear = Number.parseInt(String(item.Year || '').substring(0, 4)) || undefined;
+
+    // Always run the curated/local lookup before the HP-only caches. Curated
+    // variants can supply both horsepower and a missing engine volume; returning
+    // a cached HP first would silently discard that volume on later requests.
+    const engine = lookupEngine(manufacturer, modelName, displacement, fuelType, badge, itemYear);
+    if (engine.hp || engine.cc) {
+      if (engine.hp) hpCache.set(id, engine.hp);
       return engine;
     }
 
-    // Need to fetch from pan-auto.ru
-    if (id && allowRemoteEnrichment) needsPanAuto.push({ index: i, id });
+    const searchHp = (item.MaxPower as number) || (item.HorsePower as number) || 0;
+    if (searchHp) return { hp: searchHp };
+
+    if (hpCache.has(id)) return { hp: hpCache.get(id) };
+
     return {};
   });
-
-  // Fetch HP from pan-auto.ru only for cars not in local lookup (parallel)
-  if (needsPanAuto.length > 0) {
-    const panAutoResults = await Promise.all(
-      needsPanAuto.map(({ id }) => fetchHpFromPanAuto(id))
-    );
-    for (let i = 0; i < needsPanAuto.length; i++) {
-      const hp = panAutoResults[i];
-      if (hp) {
-        hpCache.set(needsPanAuto[i].id, hp);
-        engineResults[needsPanAuto[i].index] = { ...engineResults[needsPanAuto[i].index], hp };
-      }
-    }
-  }
 
   const normalSaleResults = searchResults.map((item, index) => ({ item, index })).filter(({ item }) => {
     const sellType = item.SellType;
@@ -623,7 +765,7 @@ async function transformSearchResults(
       const carId = String(item.Id || '');
       const priceKrw = ((item.Price as number) || 0) * 10000;
       const [priceRub, priceUsd] = await Promise.all([
-        convertKrwToRub(priceKrw, 1.03),
+        convertKrwToRub(priceKrw),
         convertKrwToUsd(priceKrw),
       ]);
 
@@ -634,16 +776,17 @@ async function transformSearchResults(
       const month = parseInt(yearStr.substring(4, 6)) || undefined;
 
       const photo = item.Photo as string;
+      const displayImageUrl = photo ? getEncarDisplayImageUrl(photo, 640, 480) : '';
       const imageUrl = photo
         ? directImages
-          ? `${ENCAR_IMAGE_CDN}${photo}001.jpg`
-          : `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
+          ? displayImageUrl
+          : `/api/proxy-image?url=${encodeURIComponent(displayImageUrl)}`
         : '/images/no-image.svg';
 
       const engineData = engineResults[idx] || {};
       const hp = engineData.hp || 0;
       // Use Encar displacement first, then fallback to ENGINE_FALLBACK cc from local lookup
-      const displacement = (item.Displacement as number) || 0 || engineData.cc || 0;
+      const displacement = engineData.cc || (item.Displacement as number) || 0;
       const fuel = translateFuel((item.FuelType as string) || '');
 
       // Pre-calculate turnkey prices on server with accurate HP and live rates
@@ -651,7 +794,7 @@ async function transformSearchResults(
         priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
+        priceKrw, priceRub, priceUsd, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
       });
 
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
@@ -686,8 +829,13 @@ async function transformSearchResults(
         price_krw: priceKrw,
         price_rub: priceRub,
         price_usd: priceUsd,
+        eur_to_rub: eurRate,
+        usd_to_rub: usdRate,
         price_turnkey_russia: russiaBreakdown.total,
-        price_turnkey_russia_usd: priceRub > 0 ? Math.round(russiaBreakdown.total * priceUsd / priceRub) : 0,
+        price_turnkey_russia_usd: russiaBreakdown.total > 0
+          ? Math.round(russiaBreakdown.total / (usdRate || (priceRub / priceUsd)))
+          : 0,
+        russia_calculation_complete: russiaBreakdown.calculationComplete,
         price_turnkey_tajikistan: tjBreakdown.total,
         imageUrl,
         images: [],
@@ -730,6 +878,26 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
   const cacheTtl = cached?.data.source === 'snapshot' ? SNAPSHOT_CACHE_TTL : CACHE_TTL;
   if (cached && Date.now() - cached.timestamp < cacheTtl) {
     return cached.data;
+  }
+
+  // Encar blocks requests from the production hosting network. Serve the full
+  // downloaded inventory immediately when its local filters can satisfy the request.
+  const savedSearch = getSnapshotSearch(filters);
+  if (savedSearch) {
+    const cars = await transformSearchResults(savedSearch.rows, {
+      allowRemoteEnrichment: false,
+      directImages: true,
+    });
+    const result: CatalogResponse = {
+      cars,
+      total: savedSearch.total,
+      page: savedSearch.page,
+      totalPages: savedSearch.totalPages,
+      source: 'snapshot',
+      snapshotGeneratedAt: savedSearch.generatedAt,
+    };
+    catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   }
 
   try {
@@ -997,7 +1165,7 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
 
     // Fetch inspection data from the legacy JSON API
     const res = await fetch(
-      `https://api.encar.com/legacy/usedcar/inspect/${vehicleId}`,
+      `${ENCAR_INSPECTION_BASE}/${vehicleId}`,
       { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return null;
@@ -1054,6 +1222,65 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
   }
 }
 
+export async function enrichDetailWithPanAuto(car: CarListing): Promise<CarListing> {
+  const reference = await getPanAutoVehicleReference(car.id);
+  if (!reference) return car;
+
+  const hp = reference.hp || car.hp;
+  const now = new Date();
+  const ageMonths = (now.getFullYear() - car.year) * 12 + (now.getMonth() + 1 - (car.month || 1));
+  const standardCustoms = reference.customsRub;
+  const usableStandardCustoms = standardCustoms
+    && standardCustoms.customsDuty > 0
+    && standardCustoms.customsFee > 0
+    && standardCustoms.utilizationFee > 0
+    ? standardCustoms
+    : undefined;
+  const olderVehicleCustoms = ageMonths >= 60
+    && reference.highCustomsRub
+    && reference.highCustomsRub.customsDuty > 0
+    && reference.highCustomsRub.customsFee > 0
+    && reference.highCustomsRub.utilizationFee > 0
+    ? reference.highCustomsRub
+    : undefined;
+  const selectedCustoms = usableStandardCustoms || olderVehicleCustoms;
+  const panAutoCustoms = selectedCustoms
+    ? { ...selectedCustoms, checkedAt: reference.checkedAt }
+    : undefined;
+  const eurRate = car.eur_to_rub || await getLiveEurRate() || 100;
+  const usdRate = car.usd_to_rub || await getLiveUsdRate() || 87.5;
+  const russiaBreakdown = calculateImportCost({
+    priceKrw: car.price_krw,
+    priceRub: car.price_rub,
+    priceUsd: car.price_usd,
+    displacement: car.displacement || 0,
+    year: car.year,
+    month: car.month,
+    fuel: car.fuel,
+    hp,
+    brand: car.brand,
+    model: car.model,
+    destination: 'russia',
+    eurRate,
+    usdRate,
+    russiaCustomsOverride: panAutoCustoms,
+  });
+
+  return {
+    ...car,
+    hp,
+    horsepowerSource: reference.hp ? 'pan-auto' : car.horsepowerSource,
+    panAutoCustoms,
+    eur_to_rub: eurRate,
+    usd_to_rub: usdRate,
+    price_turnkey_russia: russiaBreakdown.total,
+    price_turnkey_russia_usd: russiaBreakdown.total > 0
+      ? Math.round(russiaBreakdown.total / usdRate)
+      : 0,
+    russia_calculation_complete: russiaBreakdown.calculationComplete,
+  };
+}
+
 export async function getCarDetail(carId: string): Promise<CarListing | null> {
   const getSavedCar = async () => {
     const snapshotCar = getSnapshotCarById(carId);
@@ -1064,6 +1291,9 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     });
     return car || null;
   };
+
+  const savedCar = await getSavedCar();
+  if (savedCar) return savedCar;
 
   try {
     // Fetch readside and search API in parallel for faster loading
@@ -1124,7 +1354,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     const priceKrw = price * 10000;
     const [priceRub, priceUsd] = await Promise.all([
-      convertKrwToRub(priceKrw, 1.03),
+      convertKrwToRub(priceKrw),
       convertKrwToUsd(priceKrw),
     ]);
 
@@ -1141,12 +1371,12 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
         const nb = parseInt(b.path.match(/_(\d+)\.\w+$/)?.[1] || '0');
         return na - nb;
       })
-      .map((p: { path: string }) => `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${p.path}`)}`);
+      .map((p: { path: string }) => `/api/proxy-image?url=${encodeURIComponent(getEncarDisplayImageUrl(p.path, 1280, 768))}`);
 
     // If no photos from readside, try search result photo prefix
     if (imageUrls.length === 0 && searchItem?.Photo) {
       const photo = searchItem.Photo as string;
-      imageUrls.push(`/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`);
+      imageUrls.push(`/api/proxy-image?url=${encodeURIComponent(getEncarDisplayImageUrl(photo, 1280, 768))}`);
     }
 
     // Resolve option codes to translated names
@@ -1160,10 +1390,9 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       }
     }
 
-    const [equipment, inspectionData, panAutoHp, vinData] = await Promise.all([
+    const [equipment, inspectionData, vinData] = await Promise.all([
       resolveOptionCodes(optionCodes),
       fetchInspectionData(carId),
-      fetchHpFromPanAuto(carId),
       fetchDataFromVin(readData.vin),
     ]);
 
@@ -1188,10 +1417,10 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     const detailBadgeParts = [translatedDetailBadge, translateBadgeDetail(rawDetailBadgeDetail)].filter(Boolean);
     const detailBadge = detailBadgeParts.join(' ') || undefined;
 
-    const engineLookup = lookupEngine(manufacturer, modelGroupName, displacement, fuelName);
-    const finalDisplacement = displacement || engineLookup.cc || vinData.displacement || 0;
-    // HP priority: pan-auto.ru → local lookup (using Korean names) → VIN decoder → Encar search fields
-    const finalHp = panAutoHp || engineLookup.hp || vinData.hp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined;
+    const detailYear = parseInt(yearMonth.substring(0, 4)) || undefined;
+    const engineLookup = lookupEngine(manufacturer, modelGroupName, displacement, fuelName, rawDetailBadge, detailYear);
+    const finalDisplacement = engineLookup.cc || displacement || vinData.displacement || 0;
+    const finalHp = engineLookup.hp || vinData.hp || (searchItem?.MaxPower as number) || (searchItem?.HorsePower as number) || undefined;
     const finalFuel = translateFuel(fuelName);
     const carYear = parseInt(yearMonth.substring(0, 4)) || 0;
     const carMonth = parseInt(yearMonth.substring(4, 6)) || undefined;
@@ -1203,11 +1432,11 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
     const tjBreakdown = calculateImportCost({
-      priceKrw, priceRub, displacement: finalDisplacement,
+      priceKrw, priceRub, priceUsd, displacement: finalDisplacement,
       year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
 
-    return {
+    const car: CarListing = {
       id: carId,
       source: 'encar',
       brand,
@@ -1230,8 +1459,13 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       price_krw: priceKrw,
       price_rub: priceRub,
       price_usd: priceUsd,
+      eur_to_rub: detailEurRate,
+      usd_to_rub: detailUsdRate,
       price_turnkey_russia: russiaBreakdown.total,
-      price_turnkey_russia_usd: priceRub > 0 ? Math.round(russiaBreakdown.total * priceUsd / priceRub) : 0,
+      price_turnkey_russia_usd: russiaBreakdown.total > 0
+        ? Math.round(russiaBreakdown.total / (detailUsdRate || (priceRub / priceUsd)))
+        : 0,
+      russia_calculation_complete: russiaBreakdown.calculationComplete,
       price_turnkey_tajikistan: tjBreakdown.total,
       imageUrl: imageUrls[0] || '/images/no-image.svg',
       images: imageUrls,
@@ -1240,6 +1474,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       accidentHistory: [],
       inspectionData: inspectionData || undefined,
     };
+    return car;
   } catch (error) {
     console.error('Encar detail fetch error:', error);
     return getSavedCar();

@@ -5,6 +5,7 @@ import { TJ_MIN_PRICES } from './tj-min-prices';
 interface CalcInput {
   priceKrw: number;
   priceRub: number;
+  priceUsd?: number;
   displacement: number; // in cc
   year: number;
   month?: number;
@@ -15,6 +16,11 @@ interface CalcInput {
   destination?: 'russia' | 'tajikistan';
   eurRate?: number; // live EUR/RUB rate, falls back to EXCHANGE_RATES.EUR
   usdRate?: number; // live USD/RUB rate, falls back to EXCHANGE_RATES.USD
+  russiaCustomsOverride?: {
+    customsDuty: number;
+    customsFee: number;
+    utilizationFee: number;
+  };
 }
 
 // --- tks.ru customs duty rate tables ---
@@ -308,7 +314,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   if (destination === 'tajikistan') {
     // Tajikistan customs calculation (all in USD)
     // Based on rastamojka.tj formulas (Tax Code of Tajikistan)
-    const actualPriceUsd = Math.round(carPrice / usdToRub);
+    const actualPriceUsd = input.priceUsd || Math.round(carPrice / usdToRub);
 
     // Use minimum customs value from rastamojka.tj database
     const minPrice = lookupTjMinPrice(input.brand || '', input.model || '', input.year);
@@ -345,15 +351,14 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     // 5. Utilization fee: 144 × 78 somoni ≈ ~$1,030 (11,232 TJS / ~10.9 TJS/USD)
     const utilizationUsd = 1030;
 
-    // 6. Delivery: Korea → Vladivostok ($700) + Vladivostok → Khujand (~$3,000)
-    const deliveryVladivostok = 700;
+    // Delivery to Tajikistan is quoted separately from customs clearance.
+    // $3,000 is the baseline container estimate and may vary by vehicle.
+    const deliveryVladivostok = 0;
     const deliveryKhujand = 3000;
-    const serviceFeeUsd = deliveryVladivostok + deliveryKhujand;
+    const serviceFeeUsd = deliveryKhujand;
 
-    // Customs total (duty + excise + VAT + procedure + utilization)
-    const customsTotal = customsDutyUsd + exciseTaxUsd + vatUsd + procedureFeeUsd + utilizationUsd;
-
-    const totalUsd = actualPriceUsd + customsTotal + serviceFeeUsd;
+    // The customer-facing Tajikistan total excludes customs clearance.
+    const totalUsd = actualPriceUsd + serviceFeeUsd;
 
     return {
       carPrice: actualPriceUsd,
@@ -373,6 +378,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
       brokerFee: 0,
       total: totalUsd,
       currency: 'USD',
+      calculationComplete: true,
     };
   }
 
@@ -383,6 +389,25 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   // Car age
   const ageYears = getCarAgeYears(input.year, input.month);
 
+  // Never present a low "turnkey" total when Encar omitted data used by
+  // Russian customs. HP determines the utilization fee; engine volume
+  // determines the customs duty for combustion vehicles.
+  const missingData: Array<'displacement' | 'hp'> = [];
+  if (!isElectric && input.displacement <= 0) missingData.push('displacement');
+  if (!input.hp || input.hp <= 0) missingData.push('hp');
+  const calculationComplete = missingData.length === 0;
+
+  const panAutoCustoms = input.russiaCustomsOverride;
+  const hasPanAutoCustoms = Boolean(
+    panAutoCustoms
+    && Number.isFinite(panAutoCustoms.customsDuty)
+    && panAutoCustoms.customsDuty >= 0
+    && Number.isFinite(panAutoCustoms.customsFee)
+    && panAutoCustoms.customsFee >= 0
+    && Number.isFinite(panAutoCustoms.utilizationFee)
+    && panAutoCustoms.utilizationFee >= 0
+  );
+
   // 2. Customs duty (единый таможенный платёж для физлиц)
   const { dutyEur, details: customsDutyDetails } = calculateCustomsDutyEur(
     priceEur,
@@ -390,18 +415,28 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     ageYears,
     isElectric,
   );
-  const customsDuty = Math.round(dutyEur * eurToRub) + 20000;
+  const customsDuty = hasPanAutoCustoms
+    ? Math.round(panAutoCustoms!.customsDuty)
+    : Math.round(dutyEur * eurToRub);
 
   // 3. Customs processing fee (таможенный сбор за оформление)
-  const customsFee = calculateCustomsFee(carPrice);
+  const customsFee = hasPanAutoCustoms
+    ? Math.round(panAutoCustoms!.customsFee)
+    : calculateCustomsFee(carPrice);
 
   // 4. Utilization fee (Постановление No 1713)
-  // For hybrids, Russian customs uses combined system power (engine + electric motor).
-  // Typical Korean hybrid electric motors add ~40-50hp to the engine output.
+  // Use the documented power value as-is. Applying a generic multiplier to a
+  // hybrid is unsafe: sequential hybrids use maximum 30-minute electric power,
+  // while other hybrids use ICE power plus maximum 30-minute electric power.
   const engineHp = input.hp || 0;
-  const hp = isHybrid ? Math.round(engineHp * 1.3) : engineHp;
-  const { fee: utilizationFee, details: utilizationWarning } =
+  const hp = engineHp;
+  const preferentialPowerLimitHp = isElectric ? 80 : 160;
+  const highPowerUtilization = hp > preferentialPowerLimitHp;
+  const { fee: localUtilizationFee, details: utilizationWarning } =
     calculateUtilizationFee(input.displacement, hp, ageYears, isElectric);
+  const utilizationFee = hasPanAutoCustoms
+    ? Math.round(panAutoCustoms!.utilizationFee)
+    : localUtilizationFee;
 
   // 5. Service fee: $1,600 (shipping Korea→Vladivostok + company services)
   const serviceFeeUsd = 1600;
@@ -410,7 +445,9 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   // 6. Broker fee: 100,000 RUB
   const brokerFee = 100000;
 
-  const total = carPrice + customsDuty + customsFee + utilizationFee + serviceFee + brokerFee;
+  const total = calculationComplete
+    ? carPrice + customsDuty + customsFee + utilizationFee + serviceFee + brokerFee
+    : 0;
 
   return {
     carPrice,
@@ -424,5 +461,12 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     brokerFee,
     total,
     currency: 'RUB',
+    calculationComplete,
+    missingData: calculationComplete ? undefined : missingData,
+    calculationHp: hp,
+    preferentialPowerLimitHp,
+    highPowerUtilization,
+    powerRequiresConfirmation: isHybrid,
+    calculationSource: hasPanAutoCustoms ? 'pan-auto' : 'local',
   };
 }

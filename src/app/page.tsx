@@ -10,7 +10,6 @@ import EncarSearch from '@/components/catalog/EncarSearch';
 import { useApp } from '@/contexts/AppContext';
 
 type SourceTab = 'encar' | 'auction' | 'forSale';
-type DeliveryDestination = 'russia' | 'tajikistan';
 
 interface BrandCount {
   name: string;
@@ -21,7 +20,6 @@ interface BrandCount {
 function CatalogContent() {
   const { t } = useApp();
   const [activeTab] = useState<SourceTab>('encar');
-  const [deliveryDestination, setDeliveryDestination] = useState<DeliveryDestination>('russia');
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
@@ -35,18 +33,6 @@ function CatalogContent() {
   // Own cars state
   const [ownCars, setOwnCars] = useState<CarListing[]>([]);
   const [ownLoading, setOwnLoading] = useState(false);
-
-  useEffect(() => {
-    const savedDestination = localStorage.getItem('deliveryDestination');
-    if (savedDestination === 'russia' || savedDestination === 'tajikistan') {
-      setDeliveryDestination(savedDestination);
-    }
-  }, []);
-
-  const chooseDestination = (destination: DeliveryDestination) => {
-    setDeliveryDestination(destination);
-    localStorage.setItem('deliveryDestination', destination);
-  };
 
   // Fetch brand counts once on mount
   useEffect(() => {
@@ -129,7 +115,7 @@ function CatalogContent() {
       {/* For Sale tab - own cars */}
       {activeTab === 'forSale' && (
         <div>
-          <CarGrid cars={ownCars} loading={ownLoading} destination={deliveryDestination} />
+          <CarGrid cars={ownCars} loading={ownLoading} />
           {!ownLoading && ownCars.length === 0 && (
             <div className="text-center py-20">
               <p className="text-gray-500">{t('search.noCars')}</p>
@@ -147,29 +133,11 @@ function CatalogContent() {
           <h1 id="catalog-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">{t('home.catalogTitle')}</h1>
           <p className="mt-1 text-sm leading-6 text-gray-300">{t('home.catalogHint')}</p>
         </div>
-        <div className="mt-4 shrink-0 lg:mt-0">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">{t('home.destinationLabel')}</div>
-          <div className="grid grid-cols-2 gap-2" role="group" aria-label={t('home.destinationLabel')}>
-            {([
-              { value: 'russia' as const, flag: '🇷🇺', label: t('country.russia'), hint: t('home.russiaCalculation') },
-              { value: 'tajikistan' as const, flag: '🇹🇯', label: t('country.tajikistan'), hint: t('home.tajikistanCalculation') },
-            ]).map(option => (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={deliveryDestination === option.value}
-                onClick={() => chooseDestination(option.value)}
-                className={`min-w-0 rounded-xl border px-3 py-2.5 text-left transition-colors ${
-                  deliveryDestination === option.value
-                    ? 'border-white bg-white text-gray-950'
-                    : 'border-white/15 bg-white/5 text-white hover:bg-white/10'
-                }`}
-              >
-                <span className="block text-sm font-bold">{option.flag} {option.label}</span>
-                <span className={`mt-0.5 block text-xs ${deliveryDestination === option.value ? 'text-gray-500' : 'text-gray-400'}`}>{option.hint}</span>
-              </button>
-            ))}
-          </div>
+        <div className="mt-3 inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm font-semibold text-white lg:mt-0">
+          <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m5 13 4 4L19 7" />
+          </svg>
+          {t('home.catalogPriceNote')}
         </div>
       </section>
 
@@ -229,7 +197,6 @@ function CatalogContent() {
           <CarGrid
             cars={cars}
             loading={loading}
-            destination={deliveryDestination}
             error={catalogError}
             onRetry={() => setRetryKey(key => key + 1)}
           />

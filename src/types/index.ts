@@ -12,6 +12,14 @@ export interface CarListing {
   fuel: string;
   engine: string;
   hp?: number;
+  horsepowerSource?: 'pan-auto' | 'curated';
+  panAutoCustoms?: {
+    customsDuty: number;
+    customsFee: number;
+    utilizationFee: number;
+    totalFees?: number;
+    checkedAt: string;
+  };
   color?: string;
   bodyType?: string;
   transmission?: string;
@@ -19,8 +27,11 @@ export interface CarListing {
   price_krw: number;
   price_rub: number;
   price_usd?: number;
+  eur_to_rub?: number;                  // rate used for the server calculation
+  usd_to_rub?: number;                  // rate used for the server calculation
   price_turnkey_russia?: number;      // server-calculated turnkey price in RUB
   price_turnkey_russia_usd?: number;  // server-calculated turnkey price in USD
+  russia_calculation_complete?: boolean;
   price_turnkey_tajikistan?: number;  // server-calculated turnkey price in USD
   imageUrl: string;
   images: string[];
@@ -117,6 +128,13 @@ export interface PriceBreakdownData {
   deliveryKhujand?: number;    // Vladivostok → Khujand
   total: number;
   currency: 'RUB' | 'USD';
+  calculationComplete: boolean;
+  missingData?: Array<'displacement' | 'hp'>;
+  calculationHp?: number;
+  preferentialPowerLimitHp?: number;
+  highPowerUtilization?: boolean;
+  powerRequiresConfirmation?: boolean;
+  calculationSource?: 'pan-auto' | 'local';
 }
 
 export interface SiteSettings {

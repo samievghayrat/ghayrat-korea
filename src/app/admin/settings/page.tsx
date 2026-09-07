@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
         {/* Fees */}
         <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
           <h2 className="text-lg font-semibold">Сборы и услуги</h2>
-          <p className="text-sm text-gray-500">Таможенные пошлины рассчитываются автоматически по ставкам tks.ru</p>
+          <p className="text-sm text-gray-500">Таможенные пошлины рассчитываются автоматически по действующим ставкам</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Доставка + услуги ($)</label>

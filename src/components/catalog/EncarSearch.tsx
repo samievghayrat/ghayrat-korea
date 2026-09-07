@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { YEAR_OPTIONS } from '@/lib/constants';
+import { MILEAGE_OPTIONS, YEAR_OPTIONS } from '@/lib/constants';
 import { translateGenerationName, translateBadgeDetail } from '@/lib/translations';
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
@@ -141,21 +141,21 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   const isMobile = useIsMobile();
 
   return (
-    <div className="px-4 py-3" ref={ref}>
+    <div className="mb-2 last:mb-0" ref={ref}>
       {label && <label className="text-sm font-semibold text-gray-700 mb-1.5 block">{label}</label>}
       <div className="relative">
         <button
           onClick={onToggle}
-          className={`w-full border rounded-xl px-3 py-3 flex items-center justify-between gap-3 transition-all text-left shadow-sm ${
+          className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
             value
-              ? 'border-primary/40 bg-primary/5 hover:border-primary/70'
-              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow'
+              ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+              : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
           }`}
         >
           {value ? (
             <>
               <span className="flex min-w-0 items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
                   </svg>
@@ -175,14 +175,14 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
           ) : (
             <>
               <span className="flex min-w-0 items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-950 text-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm shadow-primary/20">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
                   </svg>
                 </span>
                 <span className="truncate text-sm font-semibold text-gray-700">{placeholder}</span>
               </span>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm">
                 <ChevronIcon open={open} />
               </span>
             </>
@@ -480,7 +480,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="rounded-[24px] border border-gray-200/80 bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
       {/* Brand selector */}
       <SelectBox
         label=""
@@ -561,6 +561,51 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           )}
         </SelectBox>
       ) : null}
+
+      {/* Quick year and mileage */}
+      <div className="mb-2 grid grid-cols-2 gap-2">
+        <label className="relative block">
+          <span className="sr-only">{t('filter.yearFrom')}</span>
+          <select
+            value={filters.yearFrom || ''}
+            onChange={(e) => update('yearFrom', e.target.value ? parseInt(e.target.value) : undefined)}
+            className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+              filters.yearFrom
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <option value="">{t('filter.year')}</option>
+            {YEAR_OPTIONS.map((year) => <option key={year} value={year}>{year}+</option>)}
+          </select>
+          <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
+          </svg>
+        </label>
+
+        <label className="relative block">
+          <span className="sr-only">{t('filter.mileage')}</span>
+          <select
+            value={filters.mileageTo || ''}
+            onChange={(e) => update('mileageTo', e.target.value ? parseInt(e.target.value) : undefined)}
+            className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+              filters.mileageTo
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <option value="">{t('filter.mileage')}</option>
+            {MILEAGE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                ≤ {Number(option.value).toLocaleString('ru-RU')} {t('filter.kmShort')}
+              </option>
+            ))}
+          </select>
+          <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
+          </svg>
+        </label>
+      </div>
 
 
       {/* Generation selector */}
@@ -798,67 +843,22 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       {/* Advanced filters */}
       <button
         onClick={() => setShowMoreFilters(!showMoreFilters)}
-        className="flex w-full items-center justify-between border-t border-gray-100 px-4 py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
       >
-        <span className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-          </span>
+        <span className="flex items-center gap-2.5">
+          <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
           {showMoreFilters ? t('search.hideFilters') : t('search.moreFilters')}
           {!showMoreFilters && activeFilterCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">{activeFilterCount}</span>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
           )}
         </span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
-          <ChevronIcon open={showMoreFilters} />
-        </span>
+        <ChevronIcon open={showMoreFilters} />
       </button>
-      <div className="border-t border-gray-100 px-4 py-3">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t('search.yearShortcut')}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => toggleYearShortcut(2014)}
-            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2014 && !filters.yearTo
-                ? 'bg-gray-950 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
-              filters.yearFrom === 2014 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
-            }`}>
-              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                filters.yearFrom === 2014 && !filters.yearTo ? 'translate-x-4' : ''
-              }`} />
-            </span>
-            {t('search.tajikistanYearFilter')}
-          </button>
-          <button
-            onClick={() => toggleYearShortcut(2021)}
-            className={`flex items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm font-semibold transition-all ${
-              filters.yearFrom === 2021 && !filters.yearTo
-                ? 'bg-gray-950 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span className={`h-6 w-10 rounded-full p-0.5 transition-colors ${
-              filters.yearFrom === 2021 && !filters.yearTo ? 'bg-white/25' : 'bg-gray-300'
-            }`}>
-              <span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                filters.yearFrom === 2021 && !filters.yearTo ? 'translate-x-4' : ''
-              }`} />
-            </span>
-            {t('search.russiaYearFilter')}
-          </button>
-        </div>
-      </div>
 
       {showMoreFilters && (
-      <div className="border-t border-gray-100 max-h-[500px] overflow-y-auto">
+      <div className="mt-2 max-h-[500px] overflow-y-auto rounded-xl border border-gray-100">
         {/* Year + Month */}
         <FilterSection title={t('filter.year')} defaultOpen={false} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
           <div className="space-y-2">
@@ -1106,6 +1106,40 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       </div>
 
       )}
+
+      <div className="mt-2 rounded-2xl bg-gray-50 p-2.5">
+        <div className="mb-2 px-1 text-sm font-semibold text-gray-700">
+          {t('search.yearShortcut')}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => toggleYearShortcut(2014)}
+            aria-pressed={filters.yearFrom === 2014 && !filters.yearTo}
+            aria-label={t('search.tajikistanYearFilter')}
+            className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2.5 text-center text-base font-bold transition-all ${
+              filters.yearFrom === 2014 && !filters.yearTo
+                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                : 'border-transparent bg-white/70 text-gray-700 hover:border-gray-200 hover:bg-white'
+            }`}
+          >
+            <span className="text-xl leading-none" aria-hidden="true">🇹🇯</span>
+            <span>2014+</span>
+          </button>
+          <button
+            onClick={() => toggleYearShortcut(2021)}
+            aria-pressed={filters.yearFrom === 2021 && !filters.yearTo}
+            aria-label={t('search.russiaYearFilter')}
+            className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2.5 text-center text-base font-bold transition-all ${
+              filters.yearFrom === 2021 && !filters.yearTo
+                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                : 'border-transparent bg-white/70 text-gray-700 hover:border-gray-200 hover:bg-white'
+            }`}
+          >
+            <span className="text-xl leading-none" aria-hidden="true">🇷🇺</span>
+            <span>2021+</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

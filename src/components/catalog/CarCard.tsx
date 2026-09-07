@@ -10,11 +10,10 @@ import { translateBadgeDetail } from '@/lib/translations';
 interface CarCardProps {
   car: CarListing;
   priority?: boolean;
-  destination?: 'russia' | 'tajikistan';
 }
 
-export default function CarCard({ car, priority = false, destination = 'russia' }: CarCardProps) {
-  const { t, formatKrwPrice, formatMileage } = useApp();
+export default function CarCard({ car, priority = false }: CarCardProps) {
+  const { t, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -31,10 +30,11 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
+  const priceUsd = car.price_usd ?? 0;
 
   return (
     <Link
-      href={`/catalog/${car.id}?destination=${destination}`}
+      href={`/catalog/${car.id}`}
       onClick={handleClick}
       className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
     >
@@ -88,9 +88,9 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
 
         <div className="mt-2.5 rounded-md bg-emerald-50/70 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
+            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKoreaUsd')}</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-emerald-700">
-              {formatKrwPrice(car.price_krw)}
+              {priceUsd > 0 ? `$${priceUsd.toLocaleString('en-US')}` : '—'}
             </div>
           </div>
         </div>

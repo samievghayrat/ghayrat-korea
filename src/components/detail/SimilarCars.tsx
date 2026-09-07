@@ -11,11 +11,12 @@ interface SimilarCarsProps {
   model: string;
   excludeId: string;
   priceRub: number;
+  destination?: 'russia' | 'tajikistan';
 }
 
-export default function SimilarCars({ brand, model, excludeId, priceRub }: SimilarCarsProps) {
+export default function SimilarCars({ brand, model, excludeId, priceRub, destination = 'russia' }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
-  const { formatPrice, formatMileage } = useApp();
+  const { t, formatMileage } = useApp();
 
   useEffect(() => {
     const params = new URLSearchParams({
@@ -42,7 +43,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
         {cars.map((car) => (
           <Link
             key={car.id}
-            href={`/catalog/${car.id}`}
+            href={`/catalog/${car.id}?destination=${destination}`}
             className="w-64 flex-shrink-0 snap-start rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
           >
             <div className="relative aspect-[16/10] bg-gray-100">
@@ -64,8 +65,11 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
               <div className="text-[11px] text-gray-400 mt-0.5">
                 {formatMileage(car.mileage)} · {car.fuel}
               </div>
-              <div className="font-bold text-primary mt-1.5 text-sm">
-                {formatPrice(car.price_turnkey_russia || 0)}
+              <div className="mt-1.5 text-[10px] font-semibold text-emerald-700/75">
+                {t('card.priceInKoreaUsd')}
+              </div>
+              <div className="font-bold text-primary text-sm">
+                ${(car.price_usd || 0).toLocaleString('en-US')}
               </div>
             </div>
           </Link>

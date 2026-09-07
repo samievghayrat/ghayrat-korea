@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSnapshotBrandCounts } from '@/lib/encar-snapshot';
+import { ENCAR_API_BASE } from '@/lib/encar-endpoints';
 
 export const maxDuration = 60;
 
-const ENCAR_API_BASE = process.env.ENCAR_API_BASE_URL
-  || 'https://api.encar.com/search/car/list/general';
 const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 const ALL_BRANDS = [
@@ -120,6 +119,12 @@ export async function GET() {
   if (cache && Date.now() - cache.timestamp < CACHE_TTL) {
     return NextResponse.json(cache.data);
   }
+
+  // The production host is blocked by Encar, so the downloaded full catalog is
+  // the authoritative fast source for navigation counts.
+  const savedCounts = getSnapshotBrandCounts(ALL_BRANDS);
+  cache = { data: savedCounts, timestamp: Date.now() };
+  return NextResponse.json(savedCounts);
 
   // A known-popular brand doubles as a quick upstream health check. If it
   // fails, avoid dozens of slow requests and use the downloaded catalog.

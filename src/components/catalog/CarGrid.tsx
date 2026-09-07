@@ -7,12 +7,11 @@ import CarCard from './CarCard';
 interface CarGridProps {
   cars: CarListing[];
   loading?: boolean;
-  destination?: 'russia' | 'tajikistan';
   error?: boolean;
   onRetry?: () => void;
 }
 
-export default function CarGrid({ cars, loading, destination = 'russia', error, onRetry }: CarGridProps) {
+export default function CarGrid({ cars, loading, error, onRetry }: CarGridProps) {
   const { t } = useApp();
 
   if (loading) {
@@ -89,7 +88,7 @@ export default function CarGrid({ cars, loading, destination = 'russia', error, 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {cars.map((car, index) => (
-        <CarCard key={car.id} car={car} priority={index < 6} destination={destination} />
+        <CarCard key={car.id} car={car} priority={index < 6} />
       ))}
     </div>
   );

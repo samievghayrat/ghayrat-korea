@@ -419,7 +419,10 @@ export function translateBadgeDetail(korean: string): string {
 
 export function translateFuel(korean: string): string {
   if (!korean) return korean;
-  return fuelMap[korean] || korean;
+  if (fuelMap[korean]) return fuelMap[korean];
+  const sortedKeys = Object.keys(fuelMap).sort((a, b) => b.length - a.length);
+  const matchedKey = sortedKeys.find((key) => korean.includes(key));
+  return matchedKey ? fuelMap[matchedKey] : korean;
 }
 
 export function translateColor(korean: string): string {

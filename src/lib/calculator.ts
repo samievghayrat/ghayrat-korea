@@ -312,15 +312,15 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
 
     // Use minimum customs value from rastamojka.tj database
     const minPrice = lookupTjMinPrice(input.brand || '', input.model || '', input.year);
-    const priceUsd = minPrice && minPrice > actualPriceUsd ? minPrice : actualPriceUsd;
+    const customsValueUsd = minPrice && minPrice > actualPriceUsd ? minPrice : actualPriceUsd;
 
     // 1. Customs duty: 10% of car price (0% for CIS-manufactured)
     const customsDutyRate = 0.10;
-    const customsDutyUsd = Math.round(priceUsd * customsDutyRate);
+    const customsDutyUsd = Math.round(customsValueUsd * customsDutyRate);
 
     // 2. Excise tax: MAX(excise by price, excise by engine displacement)
     // Excise by price: 14% of (price + duty)
-    const exciseByPrice = Math.round((priceUsd + customsDutyUsd) * 0.14);
+    const exciseByPrice = Math.round((customsValueUsd + customsDutyUsd) * 0.14);
     // Excise by engine: displacement_cc × 0.15 EUR, converted to USD
     const eurToUsd = eurToRub / usdToRub; // EUR/USD cross rate
     const exciseByEngine = isElectric
@@ -329,17 +329,17 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     const exciseTaxUsd = Math.max(exciseByPrice, exciseByEngine);
     const exciseDetails = exciseByEngine > exciseByPrice
       ? `${input.displacement} cc × 0.15 EUR`
-      : `14% × ($${(priceUsd + customsDutyUsd).toLocaleString('en-US')})`;
+      : `14% × ($${(customsValueUsd + customsDutyUsd).toLocaleString('en-US')})`;
 
     // 3. VAT: 14% of (price + duty + excise)
-    const vatUsd = Math.round((priceUsd + customsDutyUsd + exciseTaxUsd) * 0.14);
+    const vatUsd = Math.round((customsValueUsd + customsDutyUsd + exciseTaxUsd) * 0.14);
 
     // 4. Procedure fee (by price bracket in USD)
     let procedureFeeUsd = 70;
-    if (priceUsd <= 5000) procedureFeeUsd = 10;
-    else if (priceUsd <= 10000) procedureFeeUsd = 20;
-    else if (priceUsd <= 50000) procedureFeeUsd = 70;
-    else if (priceUsd <= 100000) procedureFeeUsd = 150;
+    if (customsValueUsd <= 5000) procedureFeeUsd = 10;
+    else if (customsValueUsd <= 10000) procedureFeeUsd = 20;
+    else if (customsValueUsd <= 50000) procedureFeeUsd = 70;
+    else if (customsValueUsd <= 100000) procedureFeeUsd = 150;
     else procedureFeeUsd = 450;
 
     // 5. Utilization fee: 144 × 78 somoni ≈ ~$1,030 (11,232 TJS / ~10.9 TJS/USD)
@@ -353,12 +353,13 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     // Customs total (duty + excise + VAT + procedure + utilization)
     const customsTotal = customsDutyUsd + exciseTaxUsd + vatUsd + procedureFeeUsd + utilizationUsd;
 
-    const totalUsd = priceUsd + customsTotal + serviceFeeUsd;
+    const totalUsd = actualPriceUsd + customsTotal + serviceFeeUsd;
 
     return {
-      carPrice: priceUsd,
+      carPrice: actualPriceUsd,
+      customsValue: customsValueUsd,
       customsDuty: customsDutyUsd,
-      customsDutyDetails: `10% × $${priceUsd.toLocaleString('en-US')}`,
+      customsDutyDetails: `10% × $${customsValueUsd.toLocaleString('en-US')}`,
       customsFee: 0,
       exciseTax: exciseTaxUsd,
       exciseTaxDetails: exciseDetails,

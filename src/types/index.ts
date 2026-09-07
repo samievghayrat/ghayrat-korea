@@ -108,6 +108,7 @@ export interface PriceBreakdownData {
   serviceFeeUsd: number; // raw USD amount
   brokerFee: number; // 100,000 RUB
   // Tajikistan-specific fields (all in USD)
+  customsValue?: number;
   exciseTax?: number;
   exciseTaxDetails?: string;
   vatTax?: number;
@@ -144,4 +145,7 @@ export interface CatalogResponse {
   total: number;
   page: number;
   totalPages: number;
+  error?: 'upstream_unavailable';
+  source?: 'live' | 'snapshot';
+  snapshotGeneratedAt?: string;
 }

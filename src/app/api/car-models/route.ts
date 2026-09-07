@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reverseTranslateBrand, reverseTranslateModel, translateModel } from '@/lib/translations';
+import { getSnapshotModelData } from '@/lib/encar-snapshot';
 
-const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = process.env.ENCAR_API_BASE_URL
+  || 'https://api.encar.com/search/car/list/general';
 const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 // In-memory cache
@@ -51,7 +53,9 @@ export async function GET(request: NextRequest) {
         cache: 'no-store',
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
       });
-      if (!res.ok) return NextResponse.json({ badges: [] });
+      if (!res.ok) {
+        return NextResponse.json(getSnapshotModelData(brand, model || undefined, variant));
+      }
       const data = await res.json();
       const results = data.SearchResults || [];
       const total = data.Count || results.length;
@@ -154,7 +158,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ models: [] });
+      return NextResponse.json(getSnapshotModelData(brand, model || undefined, variant || undefined));
     }
 
     const data = await res.json();
@@ -228,6 +232,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Car models fetch error:', error);
-    return NextResponse.json({ models: [] });
+    return NextResponse.json(getSnapshotModelData(brand, model || undefined, variant || undefined));
   }
 }

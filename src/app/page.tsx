@@ -21,18 +21,32 @@ interface BrandCount {
 function CatalogContent() {
   const { t } = useApp();
   const [activeTab] = useState<SourceTab>('encar');
-  const [deliveryDestination] = useState<DeliveryDestination>('russia');
+  const [deliveryDestination, setDeliveryDestination] = useState<DeliveryDestination>('russia');
   const { filters, setFilters, resetFilters } = useFilters();
   const [cars, setCars] = useState<CarListing[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [brandCounts, setBrandCounts] = useState<BrandCount[]>([]);
   const [totalCars, setTotalCars] = useState(0);
 
   // Own cars state
   const [ownCars, setOwnCars] = useState<CarListing[]>([]);
   const [ownLoading, setOwnLoading] = useState(false);
+
+  useEffect(() => {
+    const savedDestination = localStorage.getItem('deliveryDestination');
+    if (savedDestination === 'russia' || savedDestination === 'tajikistan') {
+      setDeliveryDestination(savedDestination);
+    }
+  }, []);
+
+  const chooseDestination = (destination: DeliveryDestination) => {
+    setDeliveryDestination(destination);
+    localStorage.setItem('deliveryDestination', destination);
+  };
 
   // Fetch brand counts once on mount
   useEffect(() => {
@@ -61,6 +75,7 @@ function CatalogContent() {
   useEffect(() => {
     if (activeTab !== 'encar') return;
     setLoading(true);
+    setCatalogError(false);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '') {
@@ -72,16 +87,32 @@ function CatalogContent() {
       }
     });
 
-    fetch(`/api/cars?${params.toString()}`)
-      .then(res => res.json())
+    const controller = new AbortController();
+
+    fetch(`/api/cars?${params.toString()}`, { signal: controller.signal })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'catalog_unavailable');
+        return data;
+      })
       .then(data => {
         setCars(data.cars || []);
         setTotal(data.total || 0);
         setTotalPages(data.totalPages || 0);
+        setCatalogError(false);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [filters, activeTab]);
+      .catch(error => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setCars([]);
+        setTotal(0);
+        setTotalPages(0);
+        setCatalogError(true);
+        setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [filters, activeTab, retryKey]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,6 +142,37 @@ function CatalogContent() {
       {activeTab === 'encar' && (
         <>
 
+      <section className="mb-4 overflow-hidden rounded-2xl bg-gray-950 px-4 py-4 text-white shadow-sm sm:px-5 lg:flex lg:items-center lg:justify-between lg:gap-8" aria-labelledby="catalog-title">
+        <div className="max-w-xl">
+          <h1 id="catalog-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">{t('home.catalogTitle')}</h1>
+          <p className="mt-1 text-sm leading-6 text-gray-300">{t('home.catalogHint')}</p>
+        </div>
+        <div className="mt-4 shrink-0 lg:mt-0">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">{t('home.destinationLabel')}</div>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label={t('home.destinationLabel')}>
+            {([
+              { value: 'russia' as const, flag: '🇷🇺', label: t('country.russia'), hint: t('home.russiaCalculation') },
+              { value: 'tajikistan' as const, flag: '🇹🇯', label: t('country.tajikistan'), hint: t('home.tajikistanCalculation') },
+            ]).map(option => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={deliveryDestination === option.value}
+                onClick={() => chooseDestination(option.value)}
+                className={`min-w-0 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                  deliveryDestination === option.value
+                    ? 'border-white bg-white text-gray-950'
+                    : 'border-white/15 bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                <span className="block text-sm font-bold">{option.flag} {option.label}</span>
+                <span className={`mt-0.5 block text-xs ${deliveryDestination === option.value ? 'text-gray-500' : 'text-gray-400'}`}>{option.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Mobile: compact inline filters */}
       <div className="lg:hidden">
         <div className="mb-4">
@@ -126,8 +188,8 @@ function CatalogContent() {
         </div>
 
         {/* Sort row */}
-        <div className="mb-4 flex items-center justify-end">
-          <div className="sr-only" aria-live="polite">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-gray-700" aria-live="polite">
             {loading ? t('search.searching') : `${total.toLocaleString('ru-RU')} ${t('search.cars')}`}
           </div>
           <SortSelect
@@ -155,13 +217,22 @@ function CatalogContent() {
         {/* Car grid */}
         <div className="flex-1 min-w-0">
           {/* Desktop controls bar */}
-          <div className="hidden lg:flex mb-4 items-center justify-end bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <div className="hidden lg:flex mb-4 items-center justify-between gap-4 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+            <div className="text-sm font-semibold text-gray-700" aria-live="polite">
+              {loading ? t('search.searching') : `${t('search.found')}: ${total.toLocaleString('ru-RU')} ${t('search.cars')}`}
+            </div>
             <SortSelect
               value={filters.sort || 'year_desc'}
               onChange={(sort) => setFilters({ ...filters, sort: sort as typeof filters.sort, page: 1 })}
             />
           </div>
-          <CarGrid cars={cars} loading={loading} destination={deliveryDestination} />
+          <CarGrid
+            cars={cars}
+            loading={loading}
+            destination={deliveryDestination}
+            error={catalogError}
+            onRetry={() => setRetryKey(key => key + 1)}
+          />
           <Pagination
             currentPage={filters.page || 1}
             totalPages={totalPages}

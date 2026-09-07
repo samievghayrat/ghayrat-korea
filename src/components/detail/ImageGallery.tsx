@@ -146,6 +146,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
 
   // Show 4 big thumbnails, last one shows "+N фото" overlay
   const maxThumbnails = 4;
+  const isDirectEncarImage = (src: string) => src.startsWith('https://ci.encar.com');
 
   return (
     <>
@@ -163,6 +164,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 60vw"
           priority
+          unoptimized={isDirectEncarImage(images[activeIndex])}
         />
 
         {/* Navigation arrows - desktop */}
@@ -234,7 +236,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                     : 'border-transparent hover:border-gray-300'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="25vw" />
+                <Image src={img} alt="" fill className="object-cover" sizes="25vw" unoptimized={isDirectEncarImage(img)} />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">+ {extraCount} фото</span>
@@ -297,6 +299,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                 fill
                 className="object-contain"
                 sizes="90vw"
+                unoptimized={isDirectEncarImage(images[activeIndex])}
               />
             </div>
           </div>
@@ -313,7 +316,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                     : 'border-transparent opacity-50 hover:opacity-80'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="48px" />
+                <Image src={img} alt="" fill className="object-cover" sizes="48px" unoptimized={isDirectEncarImage(img)} />
               </button>
             ))}
           </div>

@@ -3,10 +3,14 @@ import { convertKrwToRub, convertKrwToUsd, getEurToRub, getUsdToRub } from './cu
 import { calculateImportCost } from './calculator';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
+import { getSnapshotCarById, getSnapshotSearch } from './encar-snapshot';
 
-const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = process.env.ENCAR_API_BASE_URL
+  || 'https://api.encar.com/search/car/list/general';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
-const ENCAR_OPTIONS_API = 'https://api.encar.com/v1/readside/vehicles/car/options/standard';
+const ENCAR_READSIDE_BASE = process.env.ENCAR_READSIDE_BASE_URL
+  || 'https://api.encar.com/v1/readside';
+const ENCAR_OPTIONS_API = `${ENCAR_READSIDE_BASE}/vehicles/car/options/standard`;
 const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 const transmissionMap: Record<string, string> = {
@@ -429,7 +433,7 @@ async function filterByOptions(
     carIds.map(async (id) => {
       try {
         const res = await fetch(
-          `https://api.encar.com/v1/readside/vehicle/${id}?include=OPTIONS`,
+          `${ENCAR_READSIDE_BASE}/vehicle/${id}?include=OPTIONS`,
           { headers: { 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' }
         );
         if (!res.ok) return null;
@@ -456,6 +460,7 @@ async function filterByOptions(
 // Cache for catalog responses
 const catalogCache = new Map<string, { data: CatalogResponse; timestamp: number }>();
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+const SNAPSHOT_CACHE_TTL = 60 * 1000; // Retry live Encar after one minute
 
 // How many Encar results to fetch per batch when option filtering is active
 const OPTION_FILTER_BATCH = 200;
@@ -468,7 +473,7 @@ const displacementCache = new Map<string, number>();
 async function fetchDisplacementFromReadside(carId: string): Promise<number> {
   try {
     const res = await fetch(
-      `https://api.encar.com/v1/readside/vehicle/${carId}?include=SPEC`,
+      `${ENCAR_READSIDE_BASE}/vehicle/${carId}?include=SPEC`,
       { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(2000) }
     );
     if (!res.ok) return 0;
@@ -508,8 +513,12 @@ async function getLiveUsdRate(): Promise<number | undefined> {
 }
 
 async function transformSearchResults(
-  searchResults: Record<string, unknown>[]
+  searchResults: Record<string, unknown>[],
+  options: { allowRemoteEnrichment?: boolean; directImages?: boolean } = {},
 ): Promise<CarListing[]> {
+  const allowRemoteEnrichment = options.allowRemoteEnrichment !== false;
+  const directImages = options.directImages === true;
+
   // Fetch live rates for customs calculations
   const [eurRate, usdRate] = await Promise.all([getLiveEurRate(), getLiveUsdRate()]);
 
@@ -545,7 +554,7 @@ async function transformSearchResults(
           break;
         }
       }
-      if (!found) {
+      if (!found && allowRemoteEnrichment) {
         needsReadside.push({ index: i, id });
       }
     }
@@ -586,7 +595,7 @@ async function transformSearchResults(
     }
 
     // Need to fetch from pan-auto.ru
-    if (id) needsPanAuto.push({ index: i, id });
+    if (id && allowRemoteEnrichment) needsPanAuto.push({ index: i, id });
     return {};
   });
 
@@ -626,7 +635,9 @@ async function transformSearchResults(
 
       const photo = item.Photo as string;
       const imageUrl = photo
-        ? `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
+        ? directImages
+          ? `${ENCAR_IMAGE_CDN}${photo}001.jpg`
+          : `/api/proxy-image?url=${encodeURIComponent(`${ENCAR_IMAGE_CDN}${photo}001.jpg`)}`
         : '/images/no-image.svg';
 
       const engineData = engineResults[idx] || {};
@@ -716,7 +727,8 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
 
   // Check cache
   const cached = catalogCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  const cacheTtl = cached?.data.source === 'snapshot' ? SNAPSHOT_CACHE_TTL : CACHE_TTL;
+  if (cached && Date.now() - cached.timestamp < cacheTtl) {
     return cached.data;
   }
 
@@ -882,7 +894,32 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
     return result;
   } catch (error) {
     console.error('Encar API search error:', error);
-    return { cars: [], total: 0, page: 1, totalPages: 0 };
+
+    const snapshotResult = getSnapshotSearch(filters);
+    if (snapshotResult) {
+      const cars = await transformSearchResults(snapshotResult.rows, {
+        allowRemoteEnrichment: false,
+        directImages: true,
+      });
+      const result: CatalogResponse = {
+        cars,
+        total: snapshotResult.total,
+        page: snapshotResult.page,
+        totalPages: snapshotResult.totalPages,
+        source: 'snapshot',
+        snapshotGeneratedAt: snapshotResult.generatedAt,
+      };
+      catalogCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return result;
+    }
+
+    return {
+      cars: [],
+      total: 0,
+      page,
+      totalPages: 0,
+      error: 'upstream_unavailable',
+    };
   }
 }
 
@@ -951,7 +988,7 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
   try {
     // Resolve vehicleId (listing ID and vehicleId can differ)
     const readRes = await fetch(
-      `https://api.encar.com/v1/readside/vehicle/${carId}`,
+      `${ENCAR_READSIDE_BASE}/vehicle/${carId}`,
       { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
     );
     if (!readRes.ok) return null;
@@ -1018,12 +1055,22 @@ async function fetchInspectionData(carId: string): Promise<InspectionData | null
 }
 
 export async function getCarDetail(carId: string): Promise<CarListing | null> {
+  const getSavedCar = async () => {
+    const snapshotCar = getSnapshotCarById(carId);
+    if (!snapshotCar) return null;
+    const [car] = await transformSearchResults([snapshotCar], {
+      allowRemoteEnrichment: false,
+      directImages: true,
+    });
+    return car || null;
+  };
+
   try {
     // Fetch readside and search API in parallel for faster loading
     const searchQuery = `(And.Hidden.N._.SellType.${NORMAL_SELL_TYPE}._.CarId.${carId}.)`;
     const [readRes, searchRes] = await Promise.all([
       fetch(
-        `https://api.encar.com/v1/readside/vehicle/${carId}`,
+        `${ENCAR_READSIDE_BASE}/vehicle/${carId}`,
         {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
           cache: 'no-store',
@@ -1042,7 +1089,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     if (!readRes.ok) {
       console.error(`Readside API error: ${readRes.status} for car ${carId}`);
-      return null;
+      return getSavedCar();
     }
 
     const readData = await readRes.json();
@@ -1195,7 +1242,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     };
   } catch (error) {
     console.error('Encar detail fetch error:', error);
-    return null;
+    return getSavedCar();
   }
 }
 

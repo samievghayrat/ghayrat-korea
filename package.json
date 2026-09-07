@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:auction-worker": "npm run dev --prefix auction-worker",
+    "download:encar": "node scripts/download-encar-snapshot.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

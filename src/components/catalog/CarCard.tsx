@@ -14,7 +14,7 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false, destination = 'russia' }: CarCardProps) {
-  const { t, formatPrice, formatKrwPrice, formatMileage } = useApp();
+  const { t, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -30,19 +30,11 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
-  const turnkeyPrice = destination === 'russia'
-    ? car.price_turnkey_russia
-    : car.price_turnkey_tajikistan;
-  const turnkeyLabel = destination === 'russia'
-    ? 'под ключ до Владивостока'
-    : t('card.turnkeyTajikistan');
-  const formattedTurnkeyPrice = destination === 'russia'
-    ? turnkeyPrice ? formatPrice(turnkeyPrice) : ''
-    : turnkeyPrice ? `$${turnkeyPrice.toLocaleString('en-US')}` : '';
+  const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
 
   return (
     <Link
-      href={`/catalog/${car.id}`}
+      href={`/catalog/${car.id}?destination=${destination}`}
       onClick={handleClick}
       className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
     >
@@ -54,6 +46,7 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           priority={priority}
+          unoptimized={usesDirectEncarImage}
         />
         <div className="absolute top-2 right-2">
           <FavoriteButton carId={car.id} size="sm" />
@@ -100,16 +93,12 @@ export default function CarCard({ car, priority = false, destination = 'russia' 
               {formatKrwPrice(car.price_krw)}
             </div>
           </div>
-          {turnkeyPrice && (
-            <div className="mt-1 border-t border-emerald-100 pt-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <div className="text-[10px] font-medium leading-snug text-gray-500">{turnkeyLabel}</div>
-                <div className="shrink-0 text-sm font-bold leading-tight text-gray-900">
-                  {formattedTurnkeyPrice}
-                </div>
-              </div>
-            </div>
-          )}
+        </div>
+        <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-700 transition-colors group-hover:text-primary">
+          <span>{t('card.viewAndCalculate')}</span>
+          <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 18 6-6-6-6" />
+          </svg>
         </div>
       </div>
     </Link>

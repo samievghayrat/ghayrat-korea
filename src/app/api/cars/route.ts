@@ -37,6 +37,10 @@ export async function GET(request: NextRequest) {
 
   const result = await searchCars(filters);
 
+  if (result.error) {
+    return NextResponse.json(result, { status: 503 });
+  }
+
   // Inject reservation statuses
   try {
     await dbConnect();

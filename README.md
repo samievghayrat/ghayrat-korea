@@ -19,6 +19,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Refresh the saved Encar catalog used when the live Encar API is unavailable:
+
+```bash
+npm run download:encar
+```
+
+The command downloads up to 1,000 current normal-sale listings into
+`src/data/encar-snapshot.json` (duplicate listings are removed). Set `ENCAR_SNAPSHOT_SIZE` to a value from 1 to
+2,000 to change the snapshot size.
+
 Run the auction data worker locally when changing the scraper/API:
 
 ```bash
@@ -36,6 +46,8 @@ npm run deploy:auction-worker
 Website:
 
 - `KCAR_API_URL` or `NEXT_PUBLIC_KCAR_API_URL`: optional override for the KCar worker API. Defaults to the current deployed worker.
+- `ENCAR_API_BASE_URL`: optional Encar-compatible search proxy. When the live request fails, the site automatically serves the downloaded snapshot.
+- `ENCAR_READSIDE_BASE_URL`: optional Encar-compatible vehicle-detail proxy.
 
 Auction worker:
 

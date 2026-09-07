@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
@@ -53,6 +53,7 @@ function buildCarTitle(car: CarListing): string {
 
 export default function CarDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
 
   const { t, formatPrice, formatKrwPrice } = useApp();
@@ -62,7 +63,18 @@ export default function CarDetailPage() {
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [destination, setDestination] = useState<'russia' | 'tajikistan'>('russia');
+  const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
+    searchParams.get('destination') === 'tajikistan' ? 'tajikistan' : 'russia',
+  );
+
+  const chooseDestination = (nextDestination: 'russia' | 'tajikistan') => {
+    setDestination(nextDestination);
+    setShowBreakdown(false);
+    localStorage.setItem('deliveryDestination', nextDestination);
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('destination', nextDestination);
+    window.history.replaceState(null, '', nextUrl);
+  };
 
   useEffect(() => {
     fetch(`/api/cars/${id}`)
@@ -122,10 +134,11 @@ export default function CarDetailPage() {
   const priceLabel = destination === 'russia'
     ? t('card.turnkeyVladivostok')
     : t('card.turnkeyTajikistan');
-  // Keep the headline stable with the server-calculated price shown on catalog cards.
   const displayPrice = turnkeyPrice || breakdown?.total;
-  const displayPriceLabel = destination === 'russia' && displayPrice
-    ? formatPrice(displayPrice)
+  const displayPriceLabel = displayPrice
+    ? destination === 'russia'
+      ? formatPrice(displayPrice)
+      : `$${displayPrice.toLocaleString('en-US')}`
     : formatKrwPrice(car.price_krw);
 
   const galleryImages = car.images && car.images.length > 0
@@ -215,10 +228,16 @@ export default function CarDetailPage() {
             )}
 
             {/* Destination toggle */}
-            <div className="flex mt-5 lg:mt-0 bg-gray-100 rounded-xl p-1">
+            <div className="mt-5 lg:mt-0">
+              <h2 className="text-base font-bold text-gray-950">{t('detail.destinationTitle')}</h2>
+              <p className="mt-1 text-sm leading-5 text-gray-500">{t('detail.destinationHint')}</p>
+            </div>
+            <div className="mt-3 flex rounded-xl bg-gray-100 p-1" role="group" aria-label={t('detail.destinationTitle')}>
               <button
-                onClick={() => setDestination('russia')}
-                className={`flex-1 text-sm font-medium py-2 px-3 rounded-lg transition-all ${
+                type="button"
+                aria-pressed={destination === 'russia'}
+                onClick={() => chooseDestination('russia')}
+                className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                   destination === 'russia'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
@@ -227,8 +246,10 @@ export default function CarDetailPage() {
                 {'\u{1F1F7}\u{1F1FA}'} {t('country.russia')}
               </button>
               <button
-                onClick={() => setDestination('tajikistan')}
-                className={`flex-1 text-sm font-medium py-2 px-3 rounded-lg transition-all ${
+                type="button"
+                aria-pressed={destination === 'tajikistan'}
+                onClick={() => chooseDestination('tajikistan')}
+                className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                   destination === 'tajikistan'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
@@ -242,22 +263,15 @@ export default function CarDetailPage() {
             <div className="mt-4 rounded-2xl bg-gray-950 p-4 text-white">
               {displayPrice ? (
                 <>
-                  {destination === 'russia' && (
-                    <div className="rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                      {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
-                    </div>
-                  )}
-                  <div className="text-3xl font-extrabold">
+                  <div className="mb-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
+                    {t('price.priceInKorea')} <span className="font-semibold text-white">{formatKrwPrice(car.price_krw)}</span>
+                  </div>
+                  <div className="text-3xl font-extrabold tracking-tight">
                     {displayPriceLabel}
                   </div>
                   <div className="text-sm text-white/65 mt-1">
-                    {destination === 'russia' ? priceLabel : t('price.carPriceKorea')}
+                    {priceLabel}
                   </div>
-                  {destination === 'tajikistan' && (
-                    <div className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/70">
-                      {car.price_krw.toLocaleString()} KRW
-                    </div>
-                  )}
                 </>
               ) : (
                 <div className="animate-pulse space-y-2">
@@ -268,22 +282,20 @@ export default function CarDetailPage() {
               )}
             </div>
 
-            {destination === 'russia' && (
-              <a
-                href="https://t.me/ghayrat_korea"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-cta-green mt-5"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                </svg>
-                {t('nav.writeManager')}
-              </a>
-            )}
+            <a
+              href="https://t.me/ghayrat_korea"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cta-green mt-5"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              {t('nav.writeManager')}
+            </a>
 
-            {/* Toggle breakdown - only available after API loads */}
-            {breakdown && destination === 'russia' && (
+            {/* Detailed calculation */}
+            {breakdown && (
               <>
                 <button
                   onClick={() => setShowBreakdown(!showBreakdown)}
@@ -299,34 +311,10 @@ export default function CarDetailPage() {
                   <PriceBreakdown
                     breakdown={breakdown}
                     priceKrw={car.price_krw}
-                    priceUsd={car.price_usd}
                     destination={destination}
                     totalOverride={turnkeyPrice}
                   />
                 )}
-              </>
-            )}
-
-            {/* Tajikistan breakdown - always visible */}
-            {breakdown && destination === 'tajikistan' && (
-              <>
-                <PriceBreakdown
-                  breakdown={breakdown}
-                  priceKrw={car.price_krw}
-                  priceUsd={car.price_usd}
-                  destination={destination}
-                />
-                <a
-                  href="https://t.me/ghayrat_korea"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-cta-green mt-5"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                  </svg>
-                  {t('nav.writeManager')}
-                </a>
               </>
             )}
 

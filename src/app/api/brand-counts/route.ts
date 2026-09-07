@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { getSnapshotBrandCounts } from '@/lib/encar-snapshot';
 
 export const maxDuration = 60;
 
-const ENCAR_API_BASE = 'https://api.encar.com/search/car/list/general';
+const ENCAR_API_BASE = process.env.ENCAR_API_BASE_URL
+  || 'https://api.encar.com/search/car/list/general';
 const NORMAL_SELL_TYPE = '\uC77C\uBC18'; // 일반: normal sale, excludes lease/rent listings
 
 const ALL_BRANDS = [
@@ -119,11 +121,21 @@ export async function GET() {
     return NextResponse.json(cache.data);
   }
 
+  // A known-popular brand doubles as a quick upstream health check. If it
+  // fails, avoid dozens of slow requests and use the downloaded catalog.
+  const firstBrand = ALL_BRANDS[0];
+  const firstCount = await fetchBrandCount(firstBrand.nameKo);
+  if (firstCount === 0) {
+    return NextResponse.json(getSnapshotBrandCounts(ALL_BRANDS));
+  }
+
   // Batch in groups of 4 with delays to avoid Encar rate limiting
-  const counts: { name: string; nameKo: string; count: number }[] = [];
+  const counts: { name: string; nameKo: string; count: number }[] = [
+    { ...firstBrand, count: firstCount },
+  ];
   const batchSize = 4;
-  for (let i = 0; i < ALL_BRANDS.length; i += batchSize) {
-    if (i > 0) await new Promise(r => setTimeout(r, 800)); // delay between batches
+  for (let i = 1; i < ALL_BRANDS.length; i += batchSize) {
+    if (i > 1) await new Promise(r => setTimeout(r, 800)); // delay between batches
     const batch = ALL_BRANDS.slice(i, i + batchSize);
     const batchResults = await Promise.all(
       batch.map(async (brand) => {

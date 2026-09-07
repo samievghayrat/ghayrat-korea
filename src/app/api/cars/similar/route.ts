@@ -20,6 +20,10 @@ export async function GET(request: NextRequest) {
     limit: 20,
   });
 
+  if (result.error) {
+    return NextResponse.json({ error: result.error }, { status: 503 });
+  }
+
   // Filter by ±30% price range and exclude current car
   const minPrice = priceRub * 0.7;
   const maxPrice = priceRub * 1.3;

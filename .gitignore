@@ -41,3 +41,4 @@ auction-worker/node_modules/
 next-env.d.ts
 
 .vercel
+.env*

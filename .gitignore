@@ -42,3 +42,11 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Android Studio
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+/android/**/build/
+/android/ghayrat-korea-check*.png
+*.iml

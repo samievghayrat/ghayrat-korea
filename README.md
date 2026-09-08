@@ -41,6 +41,19 @@ Deploy the website through Vercel as usual. Deploy the auction worker separately
 npm run deploy:auction-worker
 ```
 
+## Android app
+
+The `android/` directory contains the native Android wrapper for the live website. Open that directory in Android Studio, select a phone or emulator, and press **Run**.
+
+To build it from a terminal:
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+The debug APK is generated at `android/app/build/outputs/apk/debug/app-debug.apk`.
+
 ## Environment
 
 Website:

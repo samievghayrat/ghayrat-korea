@@ -135,6 +135,13 @@ const t = {
   'body.convertible': { ru: 'Кабриолет', en: 'Convertible', tj: 'Кабриолет', uz: 'Kabriolet' },
   'body.minivan': { ru: 'Минивэн', en: 'Minivan', tj: 'Минивэн', uz: 'Miniven' },
   'body.pickup': { ru: 'Пикап', en: 'Pickup', tj: 'Пикап', uz: 'Pikap' },
+  'body.city': { ru: 'Городской автомобиль', en: 'City car', tj: 'Мошини шаҳрӣ', uz: 'Shahar avtomobili' },
+  'body.small': { ru: 'Малый класс', en: 'Small car', tj: 'Синфи хурд', uz: 'Kichik avtomobil' },
+  'body.compact': { ru: 'Компактный класс', en: 'Compact car', tj: 'Синфи паймон', uz: 'Ixcham avtomobil' },
+  'body.midsize': { ru: 'Средний класс', en: 'Mid-size car', tj: 'Синфи миёна', uz: 'O‘rta sinf' },
+  'body.executive': { ru: 'Бизнес-класс', en: 'Executive car', tj: 'Бизнес-класс', uz: 'Biznes-klass' },
+  'body.large': { ru: 'Большой легковой автомобиль', en: 'Large passenger car', tj: 'Мошини калони сабукрав', uz: 'Katta yengil avtomobil' },
+  'body.sports': { ru: 'Спорткар', en: 'Sports car', tj: 'Мошини варзишӣ', uz: 'Sport avtomobil' },
 
   // Transmission types
   'trans.auto': { ru: 'Автомат', en: 'Automatic', tj: 'Автомат', uz: 'Avtomat' },
@@ -146,6 +153,7 @@ const t = {
   'drive.fwd': { ru: 'Передний', en: 'FWD', tj: 'Пеш', uz: 'Oldingi' },
   'drive.rwd': { ru: 'Задний', en: 'RWD', tj: 'Ақиб', uz: 'Orqa' },
   'drive.awd': { ru: 'Полный (AWD)', en: 'AWD', tj: 'Пурра (AWD)', uz: 'To\'liq (AWD)' },
+  'drive.2wd': { ru: '2WD', en: '2WD', tj: '2WD', uz: '2WD' },
 
   // Color options
   'color.white': { ru: 'Белый', en: 'White', tj: 'Сафед', uz: 'Oq' },
@@ -209,7 +217,7 @@ const t = {
   'spec.trans': { ru: 'КПП', en: 'Transmission', tj: 'КПП', uz: 'Uzatmalar qutisi' },
   'spec.drivetrain': { ru: 'Привод', en: 'Drivetrain', tj: 'Ҳаракат', uz: 'Yetakchi g‘ildirak' },
   'spec.color': { ru: 'Цвет', en: 'Color', tj: 'Ранг', uz: 'Rang' },
-  'spec.body': { ru: 'Кузов', en: 'Body', tj: 'Кузов', uz: 'Kuzov' },
+  'spec.body': { ru: 'Кузов / класс', en: 'Body / class', tj: 'Кузов / синф', uz: 'Kuzov / sinf' },
   'spec.seats': { ru: 'Кол-во мест', en: 'Seats', tj: 'Ҷойҳо', uz: 'Oʻrindiqlar' },
   'spec.listingId': { ru: 'Номер объявления', en: 'Listing number', tj: 'Рақами эълон', uz: 'E’lon raqami' },
   'spec.hp': { ru: 'л.с.', en: 'hp', tj: 'қ.о.', uz: 'o.k.' },
@@ -375,8 +383,9 @@ export function formatLocaleMileage(km: number, lang: Lang): string {
 
 const vehicleValueKeys: Array<{ key: TranslationKey; aliases: string[] }> = [
   { key: 'drive.awd', aliases: ['awd', '4wd', 'полный привод', 'полный (awd)', '4륜구동', '사륜'] },
-  { key: 'drive.fwd', aliases: ['fwd', 'ff', 'передний привод', 'передний', '전륜구동', '2wd', '이륜'] },
+  { key: 'drive.fwd', aliases: ['fwd', 'ff', 'передний привод', 'передний', '전륜구동'] },
   { key: 'drive.rwd', aliases: ['rwd', 'fr', 'задний привод', 'задний', '후륜구동'] },
+  { key: 'drive.2wd', aliases: ['2wd', '이륜'] },
   { key: 'fuel.hybrid', aliases: ['hybrid', 'гибрид', '하이브리드', '가솔린+전기', '디젤+전기', 'gasoline+electric', 'diesel+electric'] },
   { key: 'fuel.electric', aliases: ['electric', 'электро', '전기'] },
   { key: 'fuel.gasoline', aliases: ['gasoline', 'бензин', '가솔린'] },
@@ -394,6 +403,13 @@ const vehicleValueKeys: Array<{ key: TranslationKey; aliases: string[] }> = [
   { key: 'body.convertible', aliases: ['convertible', 'кабриолет', '컨버터블'] },
   { key: 'body.minivan', aliases: ['minivan', 'минивэн', '미니밴'] },
   { key: 'body.pickup', aliases: ['pickup', 'пикап', '픽업'] },
+  { key: 'body.city', aliases: ['경차'] },
+  { key: 'body.small', aliases: ['소형차'] },
+  { key: 'body.compact', aliases: ['준중형차'] },
+  { key: 'body.midsize', aliases: ['중형차'] },
+  { key: 'body.executive', aliases: ['준대형차'] },
+  { key: 'body.large', aliases: ['대형차'] },
+  { key: 'body.sports', aliases: ['스포츠카'] },
   { key: 'color.white', aliases: ['white', 'белый', '흰색'] },
   { key: 'color.black', aliases: ['black', 'черный', 'чёрный', '검정색'] },
   { key: 'color.gray', aliases: ['gray', 'grey', 'серый', '회색'] },

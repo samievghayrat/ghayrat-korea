@@ -38,7 +38,7 @@ const transmissionMap: Record<string, string> = {
 };
 
 const drivetrainMap: Record<string, string> = {
-  '2WD': 'Передний привод',
+  '2WD': '2WD',
   'FF': 'Передний привод',
   '전륜구동': 'Передний привод',
   '후륜구동': 'Задний привод',
@@ -817,7 +817,9 @@ async function transformSearchResults(
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
       const rawBadge = (item.Badge as string) || '';
       const rawBadgeDetail = (item.BadgeDetail as string) || '';
-      const drivetrainFromBadge = rawBadge.match(/(?:^|\s)(2WD|4WD|AWD)(?:\s|$)/i)?.[1]?.toUpperCase() || '';
+      const explicitDrive = rawBadge.match(/(?:^|\s)(2\s*WD|4\s*WD|AWD)(?:\s|$)/i)?.[1]?.replace(/\s/g, '').toUpperCase();
+      const drivetrainFromBadge = explicitDrive
+        || (/콰트로|quattro|xDrive|4MATIC|ALL4/i.test(rawBadge) ? 'AWD' : '');
       const translatedBadge = rawBadge
         .replace(/가솔린\+전기/g, translateFuel('가솔린+전기'))
         .replace(/디젤\+전기/g, translateFuel('디젤+전기'))

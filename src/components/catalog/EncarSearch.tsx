@@ -762,18 +762,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange(next);
   };
 
-  const toggleYearShortcut = (yearFrom: number) => {
-    const enabled = filters.yearFrom === yearFrom && !filters.yearTo && !filters.monthFrom && !filters.monthTo;
-    onChange({
-      ...filters,
-      yearFrom: enabled ? undefined : yearFrom,
-      yearTo: undefined,
-      monthFrom: undefined,
-      monthTo: undefined,
-      page: 1,
-    });
-  };
-
   const activeFilterCount = [
     filters.fuel, filters.yearFrom, filters.yearTo,
     filters.monthFrom, filters.monthTo,
@@ -1272,40 +1260,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       </div>
 
       )}
-
-      <div className="mt-2 rounded-2xl bg-gray-50 p-2.5">
-        <div className="mb-2 px-1 text-sm font-semibold text-gray-700">
-          {t('search.yearShortcut')}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => toggleYearShortcut(2014)}
-            aria-pressed={filters.yearFrom === 2014 && !filters.yearTo}
-            aria-label={t('search.tajikistanYearFilter')}
-            className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2.5 text-center text-base font-bold transition-all ${
-              filters.yearFrom === 2014 && !filters.yearTo
-                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
-                : 'border-transparent bg-white/70 text-gray-700 hover:border-gray-200 hover:bg-white'
-            }`}
-          >
-            <span className="text-xl leading-none" aria-hidden="true">🇹🇯</span>
-            <span>2014+</span>
-          </button>
-          <button
-            onClick={() => toggleYearShortcut(2021)}
-            aria-pressed={filters.yearFrom === 2021 && !filters.yearTo}
-            aria-label={t('search.russiaYearFilter')}
-            className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border px-3 py-2.5 text-center text-base font-bold transition-all ${
-              filters.yearFrom === 2021 && !filters.yearTo
-                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
-                : 'border-transparent bg-white/70 text-gray-700 hover:border-gray-200 hover:bg-white'
-            }`}
-          >
-            <span className="text-xl leading-none" aria-hidden="true">🇷🇺</span>
-            <span>2021+</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

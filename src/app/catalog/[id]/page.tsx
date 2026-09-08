@@ -289,18 +289,6 @@ export default function CarDetailPage() {
             <div className="mt-3 flex rounded-xl bg-gray-100 p-1" role="group" aria-label={t('detail.destinationTitle')}>
               <button
                 type="button"
-                aria-pressed={destination === 'russia'}
-                onClick={() => chooseDestination('russia')}
-                className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
-                  destination === 'russia'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {'\u{1F1F7}\u{1F1FA}'} {t('country.russia')}
-              </button>
-              <button
-                type="button"
                 aria-pressed={destination === 'tajikistan'}
                 onClick={() => chooseDestination('tajikistan')}
                 className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
@@ -310,6 +298,18 @@ export default function CarDetailPage() {
                 }`}
               >
                 {'\u{1F1F9}\u{1F1EF}'} {t('country.tajikistan')}
+              </button>
+              <button
+                type="button"
+                aria-pressed={destination === 'russia'}
+                onClick={() => chooseDestination('russia')}
+                className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
+                  destination === 'russia'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {'\u{1F1F7}\u{1F1FA}'} {t('country.russia')}
               </button>
             </div>
 

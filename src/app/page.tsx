@@ -128,7 +128,7 @@ function CatalogContent() {
       {activeTab === 'encar' && (
         <>
 
-      <section className="mb-4 overflow-hidden rounded-2xl bg-gray-950 px-4 py-4 text-white shadow-sm sm:px-5 lg:flex lg:items-center lg:justify-between lg:gap-8" aria-labelledby="catalog-title">
+      <section className="mb-4 hidden overflow-hidden rounded-2xl bg-gray-950 px-5 py-4 text-white shadow-sm lg:flex lg:items-center lg:justify-between lg:gap-8" aria-labelledby="catalog-title">
         <div className="max-w-xl">
           <h1 id="catalog-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">{t('home.catalogTitle')}</h1>
           <p className="mt-1 text-sm leading-6 text-gray-300">{t('home.catalogHint')}</p>

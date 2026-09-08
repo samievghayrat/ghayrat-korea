@@ -240,9 +240,6 @@ function BrandModelPicker({
     chooseModel: string;
     searchBrand: string;
     searchModel: string;
-    popularBrands: string;
-    showAllBrands: string;
-    showPopularBrands: string;
     allModels: string;
     noModels: string;
     noMatches: string;
@@ -259,7 +256,6 @@ function BrandModelPicker({
   const [open, setOpen] = useState(false);
   const [brandQuery, setBrandQuery] = useState('');
   const [modelQuery, setModelQuery] = useState('');
-  const [showAllBrands, setShowAllBrands] = useState(false);
   const [mobileStep, setMobileStep] = useState<'brands' | 'models'>('brands');
 
   useEffect(() => {
@@ -288,16 +284,6 @@ function BrandModelPicker({
   const visibleBrands = brands.filter(brand =>
     brand.name.toLocaleLowerCase().includes(brandQuery.trim().toLocaleLowerCase())
   );
-  const popularBrandLimit = 8;
-  const selectedBrandItem = brands.find(brand => brand.name === selectedBrand);
-  const popularBrands = selectedBrandItem && !brands.slice(0, popularBrandLimit).includes(selectedBrandItem)
-    ? [selectedBrandItem, ...brands.filter(brand => brand.name !== selectedBrand).slice(0, popularBrandLimit - 1)]
-    : brands.slice(0, popularBrandLimit);
-  const displayedBrands = brandQuery.trim()
-    ? visibleBrands
-    : showAllBrands
-      ? brands
-      : popularBrands;
   const visibleModels = models.filter(model =>
     [model.name, model.nameKo]
       .filter(Boolean)
@@ -311,14 +297,12 @@ function BrandModelPicker({
       setMobileStep(selectedBrand ? 'models' : 'brands');
       setBrandQuery('');
       setModelQuery('');
-      setShowAllBrands(false);
     }
   };
 
   const selectBrand = (brand: string) => {
     onBrandSelect(brand);
     setModelQuery('');
-    setShowAllBrands(false);
     setMobileStep('models');
   };
 
@@ -352,46 +336,37 @@ function BrandModelPicker({
         </label>
       </div>
       <div className="min-h-0 overflow-y-auto p-3">
-        {brands.length > 0 && !brandQuery.trim() && (
-          <p className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-gray-400">
-            {showAllBrands ? labels.chooseBrand : labels.popularBrands}
-          </p>
+        {brands.length > 0 && (
+          <div className="mb-2 flex items-center justify-between px-1">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{labels.chooseBrand}</p>
+            <span className="text-xs font-semibold tabular-nums text-gray-400">{visibleBrands.length}</span>
+          </div>
         )}
-        <div className="space-y-1">
-        {brands.length === 0 && [1, 2, 3, 4, 5, 6].map(item => (
-          <div key={item} className="h-11 animate-pulse rounded-xl bg-gray-100" />
+        <div className="grid grid-cols-2 gap-2">
+        {brands.length === 0 && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(item => (
+          <div key={item} className="h-12 animate-pulse rounded-xl bg-gray-100" />
         ))}
-        {brands.length > 0 && displayedBrands.map(brand => (
+        {brands.length > 0 && visibleBrands.map(brand => (
           <button
             key={brand.name}
             type="button"
             onClick={() => selectBrand(brand.name)}
-            className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition-all ${
+            className={`flex min-h-12 min-w-0 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-all ${
               selectedBrand === brand.name
-                ? 'border-primary/25 bg-primary/10 text-primary'
-                : 'border-transparent bg-white text-gray-800 hover:border-gray-200 hover:bg-gray-50'
+                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50'
             }`}
           >
-            <span className="min-w-0 truncate text-sm font-bold">{brand.name}</span>
-            <span className="shrink-0 text-xs tabular-nums text-gray-400">
-              {brand.count.toLocaleString('ru-RU')}
+            <span className="w-full truncate text-sm font-bold">{brand.name}</span>
+            <span className={`mt-0.5 text-[11px] tabular-nums ${selectedBrand === brand.name ? 'text-white/75' : 'text-gray-400'}`}>
+              {brand.count.toLocaleString('ru-RU')} {labels.cars}
             </span>
           </button>
         ))}
         {brands.length > 0 && visibleBrands.length === 0 && (
-          <p className="py-8 text-center text-sm text-gray-400">{labels.noMatches}</p>
+          <p className="col-span-2 py-8 text-center text-sm text-gray-400">{labels.noMatches}</p>
         )}
         </div>
-        {brands.length > popularBrandLimit && !brandQuery.trim() && (
-          <button
-            type="button"
-            onClick={() => setShowAllBrands(current => !current)}
-            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-          >
-            {showAllBrands ? labels.showPopularBrands : labels.showAllBrands}
-            <ChevronIcon open={showAllBrands} />
-          </button>
-        )}
       </div>
     </section>
   );
@@ -525,8 +500,8 @@ function BrandModelPicker({
       </button>
 
       {open && !isMobile && (
-        <div className="absolute left-0 top-full z-40 mt-2 h-[min(540px,calc(100vh-180px))] w-[700px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-          <div className="grid h-full grid-cols-[300px_minmax(0,1fr)] divide-x divide-gray-100">
+        <div className="absolute left-0 top-full z-40 mt-2 h-[min(540px,calc(100vh-180px))] w-[760px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+          <div className="grid h-full grid-cols-[340px_minmax(0,1fr)] divide-x divide-gray-100">
             {brandPanel}
             {modelPanel}
           </div>
@@ -825,9 +800,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           chooseModel: t('search.chooseModel'),
           searchBrand: t('search.searchBrand'),
           searchModel: t('search.searchModel'),
-          popularBrands: t('search.popularBrands'),
-          showAllBrands: t('search.showAllBrands'),
-          showPopularBrands: t('search.showPopularBrands'),
           allModels: t('search.allModels'),
           noModels: t('search.noModels'),
           noMatches: t('search.noMatches'),

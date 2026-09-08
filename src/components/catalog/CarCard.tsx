@@ -82,11 +82,8 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         </div>
 
         <div className="mt-2.5 rounded-md bg-emerald-50/70 px-3 py-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
-            <div className="shrink-0 text-lg font-extrabold leading-tight text-emerald-700">
-              {hasPrice ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
-            </div>
+          <div className="text-right text-lg font-extrabold leading-tight text-emerald-700">
+            {hasPrice ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-700 transition-colors group-hover:text-primary">

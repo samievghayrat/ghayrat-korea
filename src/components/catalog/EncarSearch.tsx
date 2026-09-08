@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MILEAGE_OPTIONS, YEAR_OPTIONS } from '@/lib/constants';
+import { YEAR_OPTIONS } from '@/lib/constants';
 import { translateGenerationName, translateBadgeDetail } from '@/lib/translations';
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
@@ -70,11 +70,8 @@ async function fetchCachedJson<T>(key: string, url: string): Promise<T> {
   return data as T;
 }
 
-const MONTHS = [
-  { value: 1, label: '01' }, { value: 2, label: '02' }, { value: 3, label: '03' },
-  { value: 4, label: '04' }, { value: 5, label: '05' }, { value: 6, label: '06' },
-  { value: 7, label: '07' }, { value: 8, label: '08' }, { value: 9, label: '09' },
-  { value: 10, label: '10' }, { value: 11, label: '11' }, { value: 12, label: '12' },
+const MILEAGE_RANGE_VALUES = [
+  10_000, 30_000, 50_000, 70_000, 100_000, 150_000, 200_000, 250_000, 300_000,
 ];
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
@@ -782,6 +779,32 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange({ ...filters, [key]: value || undefined, page: 1 });
   };
 
+  const updateRange = (
+    key: 'yearFrom' | 'yearTo' | 'mileageFrom' | 'mileageTo',
+    value?: number,
+  ) => {
+    const next = { ...filters, [key]: value, page: 1 };
+
+    if (key === 'yearFrom') {
+      next.monthFrom = undefined;
+      next.monthTo = undefined;
+      if (value && next.yearTo && value > next.yearTo) next.yearTo = value;
+    }
+    if (key === 'yearTo') {
+      next.monthFrom = undefined;
+      next.monthTo = undefined;
+      if (value && next.yearFrom && value < next.yearFrom) next.yearFrom = value;
+    }
+    if (key === 'mileageFrom' && value && next.mileageTo && value > next.mileageTo) {
+      next.mileageTo = value;
+    }
+    if (key === 'mileageTo' && value && next.mileageFrom && value < next.mileageFrom) {
+      next.mileageFrom = value;
+    }
+
+    onChange(next);
+  };
+
   const toggleYearShortcut = (yearFrom: number) => {
     const enabled = filters.yearFrom === yearFrom && !filters.yearTo && !filters.monthFrom && !filters.monthTo;
     onChange({
@@ -834,49 +857,99 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         onClear={clearBrand}
       />
 
-      {/* Quick year and mileage */}
-      <div className="mb-2 grid grid-cols-2 gap-2">
-        <label className="relative block">
-          <span className="sr-only">{t('filter.yearFrom')}</span>
-          <select
-            value={filters.yearFrom || ''}
-            onChange={(e) => update('yearFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-            className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
-              filters.yearFrom
-                ? 'border-primary/30 bg-primary/5 text-primary'
-                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <option value="">{t('filter.year')}</option>
-            {YEAR_OPTIONS.map((year) => <option key={year} value={year}>{year}+</option>)}
-          </select>
-          <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
-          </svg>
-        </label>
+      {/* Primary year and mileage ranges */}
+      <div className="mb-2 rounded-2xl bg-gray-50 p-2.5">
+        <div className="pb-2.5">
+          <div className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold text-gray-700">
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 2v3m8-3v3M3.5 9.5h17M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+            </svg>
+            {t('filter.year')}
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <label className="relative block">
+              <span className="sr-only">{t('filter.yearFrom')}</span>
+              <select
+                value={filters.yearFrom || ''}
+                onChange={(event) => updateRange('yearFrom', event.target.value ? Number(event.target.value) : undefined)}
+                className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+                  filters.yearFrom ? 'border-primary/30 bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-700'
+                }`}
+              >
+                <option value="">{t('filter.from')}</option>
+                {YEAR_OPTIONS.map(year => <option key={year} value={year}>{year}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <ChevronIcon open={false} />
+              </span>
+            </label>
+            <span className="text-gray-300" aria-hidden="true">—</span>
+            <label className="relative block">
+              <span className="sr-only">{t('filter.yearTo')}</span>
+              <select
+                value={filters.yearTo || ''}
+                onChange={(event) => updateRange('yearTo', event.target.value ? Number(event.target.value) : undefined)}
+                className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+                  filters.yearTo ? 'border-primary/30 bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-700'
+                }`}
+              >
+                <option value="">{t('filter.to')}</option>
+                {YEAR_OPTIONS.map(year => <option key={year} value={year}>{year}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <ChevronIcon open={false} />
+              </span>
+            </label>
+          </div>
+        </div>
 
-        <label className="relative block">
-          <span className="sr-only">{t('filter.mileage')}</span>
-          <select
-            value={filters.mileageTo || ''}
-            onChange={(e) => update('mileageTo', e.target.value ? parseInt(e.target.value) : undefined)}
-            className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
-              filters.mileageTo
-                ? 'border-primary/30 bg-primary/5 text-primary'
-                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <option value="">{t('filter.mileage')}</option>
-            {MILEAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                ≤ {Number(option.value).toLocaleString('ru-RU')} {t('filter.kmShort')}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
-          </svg>
-        </label>
+        <div className="border-t border-gray-200/70 pt-2.5">
+          <div className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold text-gray-700">
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 17a8 8 0 1 1 16 0M12 13l3-3M6.5 17h11" />
+            </svg>
+            {t('filter.mileage')}
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <label className="relative block">
+              <span className="sr-only">{t('filter.fromKm')}</span>
+              <select
+                value={filters.mileageFrom || ''}
+                onChange={(event) => updateRange('mileageFrom', event.target.value ? Number(event.target.value) : undefined)}
+                className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+                  filters.mileageFrom ? 'border-primary/30 bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-700'
+                }`}
+              >
+                <option value="">{t('filter.from')}</option>
+                {MILEAGE_RANGE_VALUES.map(value => (
+                  <option key={value} value={value}>{value.toLocaleString('ru-RU')} {t('filter.kmShort')}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <ChevronIcon open={false} />
+              </span>
+            </label>
+            <span className="text-gray-300" aria-hidden="true">—</span>
+            <label className="relative block">
+              <span className="sr-only">{t('filter.toKm')}</span>
+              <select
+                value={filters.mileageTo || ''}
+                onChange={(event) => updateRange('mileageTo', event.target.value ? Number(event.target.value) : undefined)}
+                className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+                  filters.mileageTo ? 'border-primary/30 bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-700'
+                }`}
+              >
+                <option value="">{t('filter.to')}</option>
+                {MILEAGE_RANGE_VALUES.map(value => (
+                  <option key={value} value={value}>{value.toLocaleString('ru-RU')} {t('filter.kmShort')}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <ChevronIcon open={false} />
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
 
 
@@ -1131,52 +1204,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
       {showMoreFilters && (
       <div className="mt-2 max-h-[500px] overflow-y-auto rounded-xl border border-gray-100">
-        {/* Year + Month */}
-        <FilterSection title={t('filter.year')} defaultOpen={false} count={(filters.yearFrom || filters.yearTo) ? 1 : 0}>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <select
-                value={filters.yearFrom || ''}
-                onChange={(e) => update('yearFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="input-field"
-              >
-                <option value="">{t('filter.yearFrom')}</option>
-                {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-              {!compact && (
-                <select
-                  value={filters.monthFrom || ''}
-                  onChange={(e) => update('monthFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="input-field"
-                >
-                  <option value="">{t('filter.month')}</option>
-                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={filters.yearTo || ''}
-                onChange={(e) => update('yearTo', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="input-field"
-              >
-                <option value="">{t('filter.yearTo')}</option>
-                {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-              {!compact && (
-                <select
-                  value={filters.monthTo || ''}
-                  onChange={(e) => update('monthTo', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="input-field"
-                >
-                  <option value="">{t('filter.month')}</option>
-                  {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-              )}
-            </div>
-          </div>
-        </FilterSection>
-
         {/* Horsepower */}
         <FilterSection title={t('filter.hp')} defaultOpen={false} count={(filters.hpFrom || filters.hpTo) ? 1 : 0}>
           <div className="flex gap-2">
@@ -1212,26 +1239,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               value={filters.priceTo || ''}
               onChange={(e) => update('priceTo', e.target.value ? parseInt(e.target.value) : undefined)}
               placeholder={t('filter.to')}
-              className="input-field"
-            />
-          </div>
-        </FilterSection>
-
-        {/* Mileage */}
-        <FilterSection title={t('filter.mileage')} defaultOpen={false} count={(filters.mileageFrom || filters.mileageTo) ? 1 : 0}>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={filters.mileageFrom || ''}
-              onChange={(e) => update('mileageFrom', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder={t('filter.fromKm')}
-              className="input-field"
-            />
-            <input
-              type="number"
-              value={filters.mileageTo || ''}
-              onChange={(e) => update('mileageTo', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder={t('filter.toKm')}
               className="input-field"
             />
           </div>

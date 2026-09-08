@@ -61,6 +61,7 @@ export default function CarDetailPage() {
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
+  const [remoteGalleryImages, setRemoteGalleryImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -115,17 +116,14 @@ export default function CarDetailPage() {
 
   useEffect(() => {
     setGalleryLoaded(false);
+    setRemoteGalleryImages([]);
     const controller = new AbortController();
 
     fetch(`/api/encar-gallery/${id}`, { signal: controller.signal })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (!data?.images?.length) return;
-        setCar(current => current ? {
-          ...current,
-          imageUrl: data.images[0],
-          images: data.images,
-        } : current);
+        setRemoteGalleryImages(data.images);
       })
       .catch(error => {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
@@ -195,7 +193,9 @@ export default function CarDetailPage() {
   const formatUsd = (value: number) => `$${value.toLocaleString('en-US')}`;
   const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
-  const galleryImages = car.images && car.images.length > 0
+  const galleryImages = remoteGalleryImages.length > 0
+    ? remoteGalleryImages
+    : car.images && car.images.length > 0
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
 

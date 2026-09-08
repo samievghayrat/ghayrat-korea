@@ -44,6 +44,8 @@ const t = {
 
   // Search & Filters
   'search.brandPlaceholder': { ru: 'Марка, модель', en: 'Brand, model', tj: 'Бренд, модел', uz: 'Brend, model' },
+  'search.brandLabel': { ru: 'Марка', en: 'Brand', tj: 'Бренд', uz: 'Brend' },
+  'search.modelLabel': { ru: 'Модель', en: 'Model', tj: 'Модел', uz: 'Model' },
   'search.pickCarTitle': { ru: 'Подберите автомобиль', en: 'Find a car', tj: 'Мошинро интихоб кунед', uz: 'Avtomobil tanlang' },
   'search.pickCarHint': { ru: 'Сначала выберите марку', en: 'Start with the brand', tj: 'Аввал брендро интихоб кунед', uz: 'Avval brendni tanlang' },
   'search.modelAfterBrand': { ru: 'Сначала выберите марку', en: 'Choose a brand first', tj: 'Аввал брендро интихоб кунед', uz: 'Avval brendni tanlang' },

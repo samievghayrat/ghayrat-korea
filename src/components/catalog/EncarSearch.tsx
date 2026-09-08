@@ -234,8 +234,8 @@ function BrandModelPicker({
   modelLoading: boolean;
   totalCars?: number;
   labels: {
-    placeholder: string;
-    title: string;
+    brand: string;
+    model: string;
     chooseBrand: string;
     chooseModel: string;
     searchBrand: string;
@@ -253,16 +253,15 @@ function BrandModelPicker({
 }) {
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<'brands' | 'models' | null>(null);
   const [brandQuery, setBrandQuery] = useState('');
   const [modelQuery, setModelQuery] = useState('');
-  const [mobileStep, setMobileStep] = useState<'brands' | 'models'>('brands');
 
   useEffect(() => {
     if (!open) return;
     const closeOnOutsideClick = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setOpen(null);
       }
     };
     document.addEventListener('mousedown', closeOnOutsideClick);
@@ -272,14 +271,12 @@ function BrandModelPicker({
   const selectedModelLabel = models.find(
     model => model.name === selectedModel || model.nameKo === selectedModel
   )?.name || selectedModel;
-  const selectedCount = selectedModel
+  const selectedBrandCount = selectedBrand
+    ? brands.find(brand => brand.name === selectedBrand)?.count
+    : totalCars;
+  const selectedModelCount = selectedModel
     ? models.find(model => model.name === selectedModel || model.nameKo === selectedModel)?.count
-    : selectedBrand
-      ? brands.find(brand => brand.name === selectedBrand)?.count
-      : totalCars;
-  const selectionLabel = selectedBrand
-    ? `${selectedBrand} · ${selectedModelLabel || labels.allModels}`
-    : labels.placeholder;
+    : selectedBrandCount;
 
   const visibleBrands = brands.filter(brand =>
     brand.name.toLocaleLowerCase().includes(brandQuery.trim().toLocaleLowerCase())
@@ -290,30 +287,28 @@ function BrandModelPicker({
       .some(name => name!.toLocaleLowerCase().includes(modelQuery.trim().toLocaleLowerCase()))
   );
 
-  const openPicker = () => {
-    const nextOpen = !open;
+  const openPicker = (picker: 'brands' | 'models') => {
+    if (picker === 'models' && !selectedBrand) return;
+    const nextOpen = open === picker ? null : picker;
     setOpen(nextOpen);
-    if (nextOpen) {
-      setMobileStep(selectedBrand ? 'models' : 'brands');
-      setBrandQuery('');
-      setModelQuery('');
-    }
+    if (nextOpen === 'brands') setBrandQuery('');
+    if (nextOpen === 'models') setModelQuery('');
   };
 
   const selectBrand = (brand: string) => {
     onBrandSelect(brand);
     setModelQuery('');
-    setMobileStep('models');
+    setOpen(null);
   };
 
   const selectModel = (model: string) => {
     onModelSelect(model);
-    setOpen(false);
+    setOpen(null);
   };
 
   const selectAllModels = () => {
     onAllModels();
-    setOpen(false);
+    setOpen(null);
   };
 
   const searchIcon = (
@@ -375,18 +370,6 @@ function BrandModelPicker({
     <section className="flex min-h-0 flex-col" aria-label={labels.chooseModel}>
       <div className="border-b border-gray-100 p-3">
         <div className="mb-3 flex items-center gap-2">
-          {isMobile && (
-            <button
-              type="button"
-              onClick={() => setMobileStep('brands')}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700"
-              aria-label={labels.chooseBrand}
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m15 19-7-7 7-7" />
-              </svg>
-            </button>
-          )}
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{labels.chooseModel}</p>
             <p className="truncate text-lg font-extrabold text-gray-950">{selectedBrand || labels.chooseBrand}</p>
@@ -469,49 +452,90 @@ function BrandModelPicker({
   );
 
   return (
-    <div ref={containerRef} className="relative mb-2">
-      <button
-        type="button"
-        onClick={openPicker}
-        aria-expanded={open}
-        className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
-          selectedBrand
-            ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
-            : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
-        }`}
-      >
-        <span className="flex min-w-0 items-center gap-2">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-            selectedBrand ? 'bg-primary/10 text-primary' : 'bg-primary text-white shadow-sm shadow-primary/20'
-          }`}>
-            {searchIcon}
+    <div ref={containerRef} className="mb-2 space-y-2">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => openPicker('brands')}
+          aria-expanded={open === 'brands'}
+          className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
+            selectedBrand
+              ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+              : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
+          }`}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              selectedBrand ? 'bg-primary/10 text-primary' : 'bg-primary text-white shadow-sm shadow-primary/20'
+            }`}>
+              {searchIcon}
+            </span>
+            <span className={`truncate text-sm font-semibold ${selectedBrand ? 'text-primary' : 'text-gray-700'}`}>
+              {selectedBrand || labels.brand}
+            </span>
           </span>
-          <span className={`truncate text-sm font-semibold ${selectedBrand ? 'text-primary' : 'text-gray-700'}`}>
-            {selectionLabel}
+          <span className="flex shrink-0 items-center gap-2">
+            {selectedBrandCount !== undefined && (
+              <span className="text-sm tabular-nums text-gray-400">{selectedBrandCount.toLocaleString('ru-RU')}</span>
+            )}
+            {selectedBrand && <ClearIcon onClick={(event) => { event.stopPropagation(); onClear(); setOpen(null); }} />}
+            <ChevronIcon open={open === 'brands'} />
           </span>
-        </span>
-        <span className="flex shrink-0 items-center gap-2">
-          {selectedCount !== undefined && (
-            <span className="text-sm tabular-nums text-gray-400">{selectedCount.toLocaleString('ru-RU')}</span>
-          )}
-          {selectedBrand && <ClearIcon onClick={(event) => { event.stopPropagation(); onClear(); setOpen(false); }} />}
-          <ChevronIcon open={open} />
-        </span>
-      </button>
+        </button>
 
-      {open && !isMobile && (
-        <div className="absolute left-0 top-full z-40 mt-2 h-[min(540px,calc(100vh-180px))] w-[760px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-          <div className="grid h-full grid-cols-[340px_minmax(0,1fr)] divide-x divide-gray-100">
+        {open === 'brands' && !isMobile && (
+          <div className="absolute left-0 right-0 top-full z-40 mt-2 h-[min(480px,calc(100vh-180px))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
             {brandPanel}
+          </div>
+        )}
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          disabled={!selectedBrand}
+          onClick={() => openPicker('models')}
+          aria-expanded={open === 'models'}
+          className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
+            !selectedBrand
+              ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
+              : selectedModel
+                ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+          }`}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              selectedBrand ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+            }`}>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 16h14M6.5 16l1 3m9-3 1 3M5 16v-4l2-5h10l2 5v4M8 12h8M7.5 16a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+              </svg>
+            </span>
+            <span className={`truncate text-sm font-semibold ${selectedModel ? 'text-primary' : selectedBrand ? 'text-gray-700' : 'text-gray-400'}`}>
+              {selectedModelLabel || labels.model}
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            {selectedBrand && selectedModelCount !== undefined && (
+              <span className="text-sm tabular-nums text-gray-400">{selectedModelCount.toLocaleString('ru-RU')}</span>
+            )}
+            {selectedModel && <ClearIcon onClick={(event) => { event.stopPropagation(); onAllModels(); setOpen(null); }} />}
+            <ChevronIcon open={open === 'models'} />
+          </span>
+        </button>
+
+        {open === 'models' && !isMobile && (
+          <div className="absolute left-0 right-0 top-full z-40 mt-2 h-[min(480px,calc(100vh-180px))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
             {modelPanel}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {isMobile && (
-        <BottomSheet open={open} onClose={() => setOpen(false)} title={labels.title}>
+      {isMobile && open && (
+        <BottomSheet open={true} onClose={() => setOpen(null)} title={open === 'brands' ? labels.chooseBrand : labels.chooseModel}>
           <div className="min-h-[62vh]">
-            {mobileStep === 'brands' ? brandPanel : modelPanel}
+            {open === 'brands' ? brandPanel : modelPanel}
           </div>
         </BottomSheet>
       )}
@@ -782,8 +806,8 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         modelLoading={modelLoading}
         totalCars={totalCars}
         labels={{
-          placeholder: t('search.brandPlaceholder'),
-          title: t('search.brandModelTitle'),
+          brand: t('search.brandLabel'),
+          model: t('search.modelLabel'),
           chooseBrand: t('search.chooseBrand'),
           chooseModel: t('search.chooseModel'),
           searchBrand: t('search.searchBrand'),

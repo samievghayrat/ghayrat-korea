@@ -351,6 +351,13 @@ export function translateBrand(korean: string): string {
   return korean;
 }
 
+function normalizeModelSpacing(value: string): string {
+  return value
+    .replace(/(\d)Series\b/g, '$1 Series')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function translateModel(korean: string): string {
   if (!korean) return korean;
   let result = korean;
@@ -372,7 +379,7 @@ export function translateModel(korean: string): string {
     result = result.replaceAll(key, modelMap[key]);
   }
 
-  return result.replace(/\s+/g, ' ').trim();
+  return normalizeModelSpacing(result);
 }
 
 /** A short, customer-facing model name for catalog cards. */
@@ -519,5 +526,5 @@ export function translateGenerationName(koreanName: string, lang: Lang = 'ru'): 
     result = result.replaceAll(key, modelMap[key]);
   }
 
-  return (prefix + result).replace(/\s+/g, ' ').trim();
+  return normalizeModelSpacing(prefix + result);
 }

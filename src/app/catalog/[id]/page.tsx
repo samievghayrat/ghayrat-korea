@@ -34,7 +34,7 @@ function formatModelName(value?: string): string | undefined {
 }
 
 function buildCarTitle(car: CarListing, lang: Lang): string {
-  const model = formatModelName(car.model) || car.model;
+  const model = formatModelName(translateGenerationName(car.model, lang)) || car.model;
   let generation = formatModelName(car.generation ? translateGenerationName(car.generation, lang) : undefined);
 
   if (generation && model) {

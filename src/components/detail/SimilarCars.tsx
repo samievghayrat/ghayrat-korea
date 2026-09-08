@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { localizeVehicleValue } from '@/lib/i18n';
+import { translateGenerationName } from '@/lib/translations';
 
 interface SimilarCarsProps {
   brand: string;
@@ -61,7 +62,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
             </div>
             <div className="p-3">
               <div className="font-semibold text-gray-900 text-sm truncate">
-                {car.brand} {car.model}
+                {car.brand} {translateGenerationName(car.model, lang)}
               </div>
               <div className="text-[11px] text-gray-400 mt-0.5">
                 {formatMileage(car.mileage)} · {localizeVehicleValue(car.fuel, lang)}

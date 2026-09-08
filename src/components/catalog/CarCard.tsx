@@ -22,10 +22,11 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     } catch {}
   };
 
+  const localizedModel = translateGenerationName(car.model, lang);
   const localizedGeneration = car.generation ? translateGenerationName(car.generation, lang) : undefined;
-  const displayModel = localizedGeneration && !localizedGeneration.toLowerCase().startsWith(car.model.toLowerCase())
-    ? `${car.model} ${localizedGeneration}`
-    : car.model;
+  const displayModel = localizedGeneration && !localizedGeneration.toLowerCase().startsWith(localizedModel.toLowerCase())
+    ? `${localizedModel} ${localizedGeneration}`
+    : localizedModel;
   const displayTrim = translateBadgeDetail(car.badge || car.trim || '', lang);
 
   const yearLabel = car.month

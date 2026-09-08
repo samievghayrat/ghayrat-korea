@@ -36,6 +36,12 @@ interface ModelOption {
   count: number;
 }
 
+type BrandGroup = 'korean' | 'imported';
+
+const KOREAN_BRANDS = new Set([
+  'Hyundai', 'Kia', 'Genesis', 'Chevrolet', 'KG Mobility', 'Renault Korea',
+]);
+
 interface BadgeOption {
   name: string;
   count: number;
@@ -221,13 +227,339 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   );
 }
 
+function BrandModelPicker({
+  brands,
+  models,
+  selectedBrand,
+  selectedModel,
+  modelLoading,
+  totalCars,
+  labels,
+  onBrandSelect,
+  onModelSelect,
+  onAllModels,
+  onClear,
+}: {
+  brands: BrandCount[];
+  models: ModelOption[];
+  selectedBrand?: string;
+  selectedModel?: string;
+  modelLoading: boolean;
+  totalCars?: number;
+  labels: {
+    placeholder: string;
+    title: string;
+    chooseBrand: string;
+    chooseModel: string;
+    korean: string;
+    imported: string;
+    searchBrand: string;
+    searchModel: string;
+    allModels: string;
+    noModels: string;
+    noMatches: string;
+    loading: string;
+    cars: string;
+  };
+  onBrandSelect: (brand: string) => void;
+  onModelSelect: (model: string) => void;
+  onAllModels: () => void;
+  onClear: () => void;
+}) {
+  const isMobile = useIsMobile();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [brandGroup, setBrandGroup] = useState<BrandGroup>('korean');
+  const [brandQuery, setBrandQuery] = useState('');
+  const [modelQuery, setModelQuery] = useState('');
+  const [mobileStep, setMobileStep] = useState<'brands' | 'models'>('brands');
+
+  useEffect(() => {
+    if (selectedBrand) {
+      setBrandGroup(KOREAN_BRANDS.has(selectedBrand) ? 'korean' : 'imported');
+    }
+  }, [selectedBrand]);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [open]);
+
+  const selectedModelLabel = models.find(
+    model => model.name === selectedModel || model.nameKo === selectedModel
+  )?.name || selectedModel;
+  const selectedCount = selectedModel
+    ? models.find(model => model.name === selectedModel || model.nameKo === selectedModel)?.count
+    : selectedBrand
+      ? brands.find(brand => brand.name === selectedBrand)?.count
+      : totalCars;
+  const selectionLabel = selectedBrand
+    ? `${selectedBrand} · ${selectedModelLabel || labels.allModels}`
+    : labels.placeholder;
+
+  const visibleBrands = brands.filter(brand => {
+    const inGroup = brandGroup === 'korean'
+      ? KOREAN_BRANDS.has(brand.name)
+      : !KOREAN_BRANDS.has(brand.name);
+    return inGroup && brand.name.toLocaleLowerCase().includes(brandQuery.trim().toLocaleLowerCase());
+  });
+  const visibleModels = models.filter(model =>
+    [model.name, model.nameKo]
+      .filter(Boolean)
+      .some(name => name!.toLocaleLowerCase().includes(modelQuery.trim().toLocaleLowerCase()))
+  );
+
+  const openPicker = () => {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setMobileStep(selectedBrand ? 'models' : 'brands');
+      setBrandQuery('');
+      setModelQuery('');
+    }
+  };
+
+  const selectBrand = (brand: string) => {
+    onBrandSelect(brand);
+    setModelQuery('');
+    setMobileStep('models');
+  };
+
+  const selectModel = (model: string) => {
+    onModelSelect(model);
+    setOpen(false);
+  };
+
+  const selectAllModels = () => {
+    onAllModels();
+    setOpen(false);
+  };
+
+  const searchIcon = (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+    </svg>
+  );
+
+  const brandPanel = (
+    <section className="flex min-h-0 flex-col" aria-label={labels.chooseBrand}>
+      <div className="border-b border-gray-100 p-3">
+        <div className="mb-3 flex rounded-xl bg-gray-100 p-1">
+          {([
+            ['korean', labels.korean],
+            ['imported', labels.imported],
+          ] as [BrandGroup, string][]).map(([group, label]) => (
+            <button
+              key={group}
+              type="button"
+              onClick={() => { setBrandGroup(group); setBrandQuery(''); }}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+                brandGroup === group
+                  ? 'bg-white text-gray-950 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <label className="flex h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-gray-400 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+          {searchIcon}
+          <input
+            value={brandQuery}
+            onChange={(event) => setBrandQuery(event.target.value)}
+            placeholder={labels.searchBrand}
+            className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-2 gap-2 overflow-y-auto p-3">
+        {brands.length === 0 && [1, 2, 3, 4, 5, 6].map(item => (
+          <div key={item} className="h-14 animate-pulse rounded-xl bg-gray-100" />
+        ))}
+        {brands.length > 0 && visibleBrands.map(brand => (
+          <button
+            key={brand.name}
+            type="button"
+            onClick={() => selectBrand(brand.name)}
+            className={`flex min-h-14 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-all ${
+              selectedBrand === brand.name
+                ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <span className="max-w-full truncate text-sm font-bold">{brand.name}</span>
+            <span className={`mt-0.5 text-xs tabular-nums ${selectedBrand === brand.name ? 'text-white/75' : 'text-gray-400'}`}>
+              {brand.count.toLocaleString('ru-RU')} {labels.cars}
+            </span>
+          </button>
+        ))}
+        {brands.length > 0 && visibleBrands.length === 0 && (
+          <p className="col-span-2 py-8 text-center text-sm text-gray-400">{labels.noMatches}</p>
+        )}
+      </div>
+    </section>
+  );
+
+  const modelPanel = (
+    <section className="flex min-h-0 flex-col" aria-label={labels.chooseModel}>
+      <div className="border-b border-gray-100 p-3">
+        <div className="mb-3 flex items-center gap-2">
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setMobileStep('brands')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700"
+              aria-label={labels.chooseBrand}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m15 19-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{labels.chooseModel}</p>
+            <p className="truncate text-lg font-extrabold text-gray-950">{selectedBrand || labels.chooseBrand}</p>
+          </div>
+        </div>
+        {selectedBrand && (
+          <label className="flex h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-gray-400 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+            {searchIcon}
+            <input
+              value={modelQuery}
+              onChange={(event) => setModelQuery(event.target.value)}
+              placeholder={labels.searchModel}
+              className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+            />
+          </label>
+        )}
+      </div>
+      <div className="min-h-0 overflow-y-auto p-3">
+        {!selectedBrand ? (
+          <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center text-gray-400">
+            <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+              {searchIcon}
+            </span>
+            <p className="text-sm font-medium">{labels.chooseBrand}</p>
+          </div>
+        ) : modelLoading ? (
+          <div className="flex min-h-52 items-center justify-center gap-2 text-sm text-gray-400">
+            <svg className="h-4 w-4 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            {labels.loading}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={selectAllModels}
+              className={`col-span-2 flex min-h-12 items-center justify-between rounded-xl border px-3 text-left text-sm font-bold transition-all ${
+                !selectedModel
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-gray-200 text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              <span>{labels.allModels}</span>
+              <span className="text-xs font-semibold tabular-nums text-gray-400">
+                {brands.find(brand => brand.name === selectedBrand)?.count.toLocaleString('ru-RU')}
+              </span>
+            </button>
+            {visibleModels.map(model => {
+              const modelValue = model.nameKo || model.name;
+              const selected = selectedModel === modelValue;
+              return (
+                <button
+                  key={`${model.name}-${modelValue}`}
+                  type="button"
+                  onClick={() => selectModel(modelValue)}
+                  className={`flex min-h-14 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-all ${
+                    selected
+                      ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="max-w-full truncate text-sm font-bold">{model.name}</span>
+                  <span className={`mt-0.5 text-xs tabular-nums ${selected ? 'text-white/75' : 'text-gray-400'}`}>
+                    {model.count.toLocaleString('ru-RU')} {labels.cars}
+                  </span>
+                </button>
+              );
+            })}
+            {visibleModels.length === 0 && (
+              <p className="col-span-2 py-8 text-center text-sm text-gray-400">
+                {modelQuery ? labels.noMatches : labels.noModels}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
+  return (
+    <div ref={containerRef} className="relative mb-2">
+      <button
+        type="button"
+        onClick={openPicker}
+        aria-expanded={open}
+        className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
+          selectedBrand
+            ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+            : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
+        }`}
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+            selectedBrand ? 'bg-primary/10 text-primary' : 'bg-primary text-white shadow-sm shadow-primary/20'
+          }`}>
+            {searchIcon}
+          </span>
+          <span className={`truncate text-sm font-semibold ${selectedBrand ? 'text-primary' : 'text-gray-700'}`}>
+            {selectionLabel}
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          {selectedCount !== undefined && (
+            <span className="text-sm tabular-nums text-gray-400">{selectedCount.toLocaleString('ru-RU')}</span>
+          )}
+          {selectedBrand && <ClearIcon onClick={(event) => { event.stopPropagation(); onClear(); setOpen(false); }} />}
+          <ChevronIcon open={open} />
+        </span>
+      </button>
+
+      {open && !isMobile && (
+        <div className="absolute left-0 top-full z-40 mt-2 h-[min(540px,calc(100vh-180px))] w-[700px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+          <div className="grid h-full grid-cols-[300px_minmax(0,1fr)] divide-x divide-gray-100">
+            {brandPanel}
+            {modelPanel}
+          </div>
+        </div>
+      )}
+
+      {isMobile && (
+        <BottomSheet open={open} onClose={() => setOpen(false)} title={labels.title}>
+          <div className="min-h-[62vh]">
+            {mobileStep === 'brands' ? brandPanel : modelPanel}
+          </div>
+        </BottomSheet>
+      )}
+    </div>
+  );
+}
+
 export default function EncarSearch({ filters, onChange, brandCounts, totalCars, compact }: EncarSearchProps) {
   const { t } = useApp();
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
-  const [brandOpen, setBrandOpen] = useState(false);
-  const [modelOpen, setModelOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
@@ -392,7 +724,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     }
   }, [filters.brand, filters.model, filters.modelVariant]);
 
-  const selectedBrandCount = brandCounts?.find(b => b.name === filters.brand)?.count;
   const sortedGenerationVariants = [...generationVariants].sort((a, b) =>
     (b.yearTo || 0) - (a.yearTo || 0)
     || (b.yearFrom || 0) - (a.yearFrom || 0)
@@ -406,8 +737,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
   const handleBrandSelect = (brand: string) => {
     onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
-    setBrandOpen(false);
-    setModelOpen(true);
     setGenOpen(false);
 
     const cacheKey = `models:${brand}`;
@@ -421,7 +750,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
   const handleModelSelect = (model: string) => {
     onChange({ ...filters, model, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
-    setModelOpen(false);
     setGenOpen(false);
 
     if (filters.brand) {
@@ -442,14 +770,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
   const clearBrand = () => {
     onChange({ ...filters, brand: undefined, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
-    setBrandOpen(false);
-    setModelOpen(false);
     setGenOpen(false);
   };
 
   const clearModel = () => {
     onChange({ ...filters, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
-    setModelOpen(false);
     setGenOpen(false);
   };
 
@@ -480,87 +805,34 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="rounded-[24px] border border-gray-200/80 bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
-      {/* Brand selector */}
-      <SelectBox
-        label=""
-        value={filters.brand}
-        count={selectedBrandCount}
-        placeholder={t('search.brandPlaceholder')}
-        open={brandOpen}
-        onToggle={() => { setBrandOpen(!brandOpen); setModelOpen(false); setGenOpen(false); }}
-        onClear={filters.brand ? clearBrand : undefined}
-        sheetTitle={t('search.chooseBrand')}
-        showResultsLabel={totalCars ? `${t('search.showResults')} ${totalCars.toLocaleString('ru-RU')} ${t('search.cars')}` : undefined}
-      >
-        {brandCounts && brandCounts.length > 0 ? (
-          <div className="py-1">
-            {brandCounts.map((b) => (
-              <button
-                key={b.name}
-                onClick={() => handleBrandSelect(b.name)}
-                className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
-                  filters.brand === b.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
-                }`}
-              >
-                <span className="text-base lg:text-sm">{b.name}</span>
-                <span className="text-base lg:text-sm text-gray-400 tabular-nums">{b.count.toLocaleString('ru-RU')}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="p-3 space-y-2">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-            ))}
-          </div>
-        )}
-      </SelectBox>
-
-      {/* Model selector */}
-      {filters.brand ? (
-        <SelectBox
-          label=""
-          value={modelList.find(m => m.name === filters.model || m.nameKo === filters.model)?.name || filters.model}
-          count={totalGenCount || undefined}
-          placeholder={t('search.allModels')}
-          open={modelOpen}
-          onToggle={() => { setModelOpen(!modelOpen); setBrandOpen(false); setGenOpen(false); }}
-          onClear={filters.model ? clearModel : undefined}
-          sheetTitle={t('search.chooseModel')}
-        >
-          {modelLoading ? (
-            <div className="flex items-center gap-2 px-3 py-4 justify-center">
-              <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span className="text-sm text-gray-400">{t('search.loading')}</span>
-            </div>
-          ) : (
-            <div className="py-1">
-              {modelList.map((m) => {
-                const modelValue = m.nameKo || m.name;
-                return (
-                  <button
-                    key={m.name}
-                    onClick={() => handleModelSelect(modelValue)}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 lg:px-3 lg:py-2.5 transition-all text-left hover:bg-gray-50 ${
-                      filters.model === modelValue ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
-                    }`}
-                  >
-                    <span className="text-base lg:text-sm">{m.name}</span>
-                    <span className="text-base lg:text-sm text-gray-400 tabular-nums">{m.count.toLocaleString('ru-RU')}</span>
-                  </button>
-                );
-              })}
-              {modelList.length === 0 && (
-                <p className="px-4 py-2 text-base lg:text-sm text-gray-400">{t('search.noModels')}</p>
-              )}
-            </div>
-          )}
-        </SelectBox>
-      ) : null}
+    <div className="relative z-30 rounded-[24px] border border-gray-200/80 bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
+      <BrandModelPicker
+        brands={brandCounts || []}
+        models={modelList}
+        selectedBrand={filters.brand}
+        selectedModel={filters.model}
+        modelLoading={modelLoading}
+        totalCars={totalCars}
+        labels={{
+          placeholder: t('search.brandPlaceholder'),
+          title: t('search.brandModelTitle'),
+          chooseBrand: t('search.chooseBrand'),
+          chooseModel: t('search.chooseModel'),
+          korean: t('search.koreanBrands'),
+          imported: t('search.importedBrands'),
+          searchBrand: t('search.searchBrand'),
+          searchModel: t('search.searchModel'),
+          allModels: t('search.allModels'),
+          noModels: t('search.noModels'),
+          noMatches: t('search.noMatches'),
+          loading: t('search.loading'),
+          cars: t('search.cars'),
+        }}
+        onBrandSelect={handleBrandSelect}
+        onModelSelect={handleModelSelect}
+        onAllModels={clearModel}
+        onClear={clearBrand}
+      />
 
       {/* Quick year and mileage */}
       <div className="mb-2 grid grid-cols-2 gap-2">
@@ -618,7 +890,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
             : totalGenCount || undefined}
           placeholder={t('search.generationPlaceholder')}
           open={genOpen}
-          onToggle={() => { setGenOpen(!genOpen); setBrandOpen(false); setModelOpen(false); }}
+          onToggle={() => setGenOpen(!genOpen)}
           onClear={filters.modelVariant ? () => handleGenSelect(undefined) : undefined}
           sheetTitle={t('search.chooseGeneration')}
         >

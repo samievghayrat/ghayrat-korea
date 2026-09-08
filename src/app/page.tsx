@@ -169,7 +169,7 @@ function CatalogContent() {
 
       <div className="flex gap-6">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:block lg:w-[320px] flex-shrink-0">
+        <aside className="relative z-40 hidden flex-shrink-0 lg:block lg:w-[320px]">
           <div className="lg:sticky lg:top-[104px] space-y-4">
             <EncarSearch
               filters={filters}

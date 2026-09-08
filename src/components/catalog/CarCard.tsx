@@ -69,20 +69,21 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col p-3">
-        <h3 className="truncate text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
-          {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
-        </h3>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
+              {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
+            </h3>
 
-        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
-          <span>{yearLabel}</span>
-          <span className="text-gray-300">/</span>
-          <span>{formatMileage(car.mileage)}</span>
-          <span className="text-gray-300">/</span>
-          <span className="truncate">{localizeVehicleValue(car.fuel, lang)}</span>
-        </div>
-
-        <div className="mt-2.5 rounded-md bg-emerald-50/70 px-3 py-2">
-          <div className="text-right text-lg font-extrabold leading-tight text-emerald-700">
+            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
+              <span>{yearLabel}</span>
+              <span className="text-gray-300">/</span>
+              <span>{formatMileage(car.mileage)}</span>
+              <span className="text-gray-300">/</span>
+              <span className="truncate">{localizeVehicleValue(car.fuel, lang)}</span>
+            </div>
+          </div>
+          <div className="shrink-0 text-right text-base font-extrabold leading-tight text-emerald-700 sm:text-lg">
             {hasPrice ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
           </div>
         </div>

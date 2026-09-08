@@ -2,27 +2,30 @@
 
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import { localizeVehicleValue } from '@/lib/i18n';
 
 interface CarSpecsProps {
   car: CarListing;
 }
 
 export default function CarSpecs({ car }: CarSpecsProps) {
-  const { t, formatMileage } = useApp();
+  const { t, lang, formatMileage } = useApp();
+
+  const yearSuffix = t('spec.yearSuffix');
 
   const yearMonth = car.month
-    ? `${car.year}/${String(car.month).padStart(2, '0')} г.`
-    : `${car.year} г.`;
+    ? `${car.year}/${String(car.month).padStart(2, '0')}${yearSuffix ? ` ${yearSuffix}` : ''}`
+    : `${car.year}${yearSuffix ? ` ${yearSuffix}` : ''}`;
 
   const specs = [
     { label: t('spec.date'), value: yearMonth },
     { label: t('spec.mileage'), value: car.mileage ? formatMileage(car.mileage) : null },
-    { label: t('spec.displacement'), value: car.displacement ? `${car.displacement.toLocaleString()} см³` : null },
+    { label: t('spec.displacement'), value: car.displacement ? `${car.displacement.toLocaleString()} ${t('spec.cc')}` : null },
     { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
-    { label: t('spec.fuel'), value: car.fuel || null },
-    { label: t('spec.trans'), value: car.transmission || null },
-    { label: t('spec.body'), value: car.bodyType || null },
-    { label: t('spec.color'), value: car.color || null },
+    { label: t('spec.fuel'), value: localizeVehicleValue(car.fuel, lang) || null },
+    { label: t('spec.trans'), value: localizeVehicleValue(car.transmission, lang) || null },
+    { label: t('spec.body'), value: localizeVehicleValue(car.bodyType, lang) || null },
+    { label: t('spec.color'), value: localizeVehicleValue(car.color, lang) || null },
     { label: t('spec.seats'), value: car.seatCount ? String(car.seatCount) : null },
     { label: 'VIN', value: car.vin || null },
   ].filter(s => s.value);

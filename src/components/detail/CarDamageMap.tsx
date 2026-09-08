@@ -3,6 +3,7 @@
 import type { PanelDamage, DamageType } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import type { TranslationKey } from '@/lib/i18n';
+import type { Lang } from '@/lib/i18n';
 
 interface CarDamageMapProps {
   panels: PanelDamage[];
@@ -76,6 +77,19 @@ const structuralPositions: Record<string, { left: string; top: string }> = {
 const exteriorPanelSet = new Set(Object.keys(exteriorPositions));
 const structuralPanelSet = new Set(Object.keys(structuralPositions));
 
+const panelWords: Record<Exclude<Lang, 'ru'>, Record<string, string>> = {
+  en: { radiator: 'radiator', support: 'support', hood: 'hood', front: 'front', rear: 'rear', fender: 'fender', left: 'left', right: 'right', door: 'door', roof: 'roof', panel: 'panel', quarter: 'quarter', side: 'side', sill: 'sill', trunk: 'trunk', lead: 'lid', cross: 'cross', member: 'member', inside: 'inner', dash: 'dash', wheel: 'wheel', house: 'housing', pillar: 'pillar', middle: 'middle', floor: 'floor', package: 'package', tray: 'tray' },
+  tj: { radiator: 'радиатор', support: 'такягоҳ', hood: 'капот', front: 'пеш', rear: 'ақиб', fender: 'қанот', left: 'чап', right: 'рост', door: 'дар', roof: 'бом', panel: 'панел', quarter: 'паҳлӯ', side: 'паҳлӯ', sill: 'остона', trunk: 'багаж', lead: 'сарпӯш', cross: 'кӯндаланг', member: 'такягоҳ', inside: 'дохилӣ', dash: 'девор', wheel: 'чарх', house: 'қисм', pillar: 'сутун', middle: 'миёна', floor: 'фарш', package: 'раф', tray: 'ақиб' },
+  uz: { radiator: 'radiator', support: 'tayanch', hood: 'kapot', front: 'old', rear: 'orqa', fender: 'qanot', left: 'chap', right: 'o‘ng', door: 'eshik', roof: 'tom', panel: 'panel', quarter: 'yon', side: 'yon', sill: 'ostona', trunk: 'bagaj', lead: 'qopqoq', cross: 'ko‘ndalang', member: 'tayanch', inside: 'ichki', dash: 'to‘siq', wheel: 'g‘ildirak', house: 'qism', pillar: 'ustun', middle: 'o‘rta', floor: 'pol', package: 'tokcha', tray: 'orqa' },
+};
+
+function getPanelLabel(panel: PanelDamage, lang: Lang): string {
+  if (lang === 'ru') return panel.nameRu;
+  const words = panel.name.replace(/([a-z])([A-Z])/g, '$1 $2').toLocaleLowerCase().split(' ');
+  const label = words.map(word => panelWords[lang][word] || word).join(' ');
+  return label.charAt(0).toLocaleUpperCase() + label.slice(1);
+}
+
 function DamageMarker({ damage, style, label, damageText }: { damage: DamageType; style: React.CSSProperties; label: string; damageText: string }) {
   const m = damageMarker[damage];
   return (
@@ -95,12 +109,14 @@ function CarDiagram({
   panels,
   positions,
   getDamageLabel,
+  getPanelLabel,
 }: {
   title: string;
   bgImage: string;
   panels: PanelDamage[];
   positions: Record<string, { left: string; top: string }>;
   getDamageLabel: (d: DamageType) => string;
+  getPanelLabel: (panel: PanelDamage) => string;
 }) {
   const relevant = panels.filter((p) => positions[p.name]);
 
@@ -125,7 +141,7 @@ function CarDiagram({
             <DamageMarker
               key={panel.name}
               damage={panel.damages[0]}
-              label={panel.nameRu}
+              label={getPanelLabel(panel)}
               damageText={getDamageLabel(panel.damages[0])}
               style={{ left: pos.left, top: pos.top }}
             />
@@ -137,7 +153,7 @@ function CarDiagram({
 }
 
 export default function CarDamageMap({ panels }: CarDamageMapProps) {
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const exterior = panels.filter((p) => exteriorPanelSet.has(p.name));
   const structural = panels.filter((p) => structuralPanelSet.has(p.name));
 
@@ -152,6 +168,7 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
           panels={exterior}
           positions={exteriorPositions}
           getDamageLabel={getDamageLabel}
+          getPanelLabel={(panel) => getPanelLabel(panel, lang)}
         />
         <CarDiagram
           title={t('damage.structural')}
@@ -159,6 +176,7 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
           panels={structural}
           positions={structuralPositions}
           getDamageLabel={getDamageLabel}
+          getPanelLabel={(panel) => getPanelLabel(panel, lang)}
         />
       </div>
 
@@ -166,7 +184,7 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
           {panels.map((p) => (
             <span key={p.name} className="inline-flex items-center gap-1">
-              <span className="text-xs font-medium text-gray-700">{p.nameRu}</span>
+              <span className="text-xs font-medium text-gray-700">{getPanelLabel(p, lang)}</span>
               {p.damages.map((d) => (
                 <span
                   key={d}

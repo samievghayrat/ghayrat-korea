@@ -11,6 +11,9 @@ const t = {
   'nav.menu': { ru: 'Меню', en: 'Menu', tj: 'Меню', uz: 'Menyu' },
   'nav.closeMenu': { ru: 'Закрыть меню', en: 'Close menu', tj: 'Пӯшидани меню', uz: 'Menyuni yopish' },
   'nav.writeManager': { ru: 'Написать менеджеру', en: 'Contact manager', tj: 'Ба мудир навиштан', uz: 'Menejerga yozish' },
+  'nav.auction': { ru: 'Аукцион', en: 'Auction', tj: 'Музояда', uz: 'Auksion' },
+  'brand.subtitle': { ru: 'Авто из Кореи', en: 'Cars from Korea', tj: 'Мошинҳо аз Корея', uz: 'Koreyadan avtomobillar' },
+  'contact.carInterest': { ru: 'Интересует автомобиль', en: 'I am interested in car', tj: 'Ба ин мошин таваҷҷуҳ дорам', uz: 'Bu avtomobilga qiziqyapman' },
 
   // Source tabs
   'tab.encar': { ru: 'Encar', en: 'Encar', tj: 'Encar', uz: 'Encar' },
@@ -34,6 +37,10 @@ const t = {
   'home.catalogTitle': { ru: 'Ваш следующий автомобиль — из Кореи', en: 'Your next car — from Korea', tj: 'Мошини навбатии шумо — аз Корея', uz: 'Keyingi avtomobilingiz — Koreyadan' },
   'home.catalogHint': { ru: 'Выбирайте из тысяч предложений. Мы проверим автомобиль и организуем доставку до вашего города.', en: 'Choose from thousands of cars. We will inspect your vehicle and arrange delivery to your city.', tj: 'Аз байни ҳазорҳо мошин интихоб кунед. Мо мошинро месанҷем ва то шаҳри шумо мерасонем.', uz: 'Minglab avtomobillardan tanlang. Biz mashinani tekshirib, shahringizgacha yetkazamiz.' },
   'home.catalogPriceNote': { ru: 'Сопровождение от выбора до доставки', en: 'Support from selection to delivery', tj: 'Ҳамроҳӣ аз интихоб то расонидан', uz: 'Tanlovdan yetkazib berishgacha yordam' },
+  'welcome.label': { ru: 'Добро пожаловать', en: 'Welcome', tj: 'Хуш омадед', uz: 'Xush kelibsiz' },
+  'welcome.close': { ru: 'Закрыть', en: 'Close', tj: 'Пӯшидан', uz: 'Yopish' },
+  'welcome.title': { ru: 'Автомобиль из Кореи — проще, чем кажется', en: 'A car from Korea — easier than it seems', tj: 'Мошин аз Корея — осонтар аз он ки менамояд', uz: 'Koreyadan avtomobil — o‘ylaganingizdan osonroq' },
+  'welcome.text': { ru: 'Поможем выбрать, проверить и доставить автомобиль до вашего города.', en: 'We will help you choose, inspect, and deliver a car to your city.', tj: 'Барои интихоб, санҷиш ва расонидани мошин то шаҳри шумо кумак мекунем.', uz: 'Avtomobilni tanlash, tekshirish va shahringizgacha yetkazishda yordam beramiz.' },
   'home.destinationLabel': { ru: 'Куда доставить', en: 'Delivery destination', tj: 'Ба куҷо расондан', uz: 'Qayerga yetkazish' },
   'home.russiaCalculation': { ru: 'Расчёт до Владивостока', en: 'Calculation to Vladivostok', tj: 'Ҳисоб то Владивосток', uz: 'Vladivostokgacha hisob' },
   'home.tajikistanCalculation': { ru: 'Расчёт до Худжанда', en: 'Calculation to Khujand', tj: 'Ҳисоб то Хуҷанд', uz: 'Xo‘jandgacha hisob' },
@@ -204,6 +211,15 @@ const t = {
   'spec.body': { ru: 'Кузов', en: 'Body', tj: 'Кузов', uz: 'Kuzov' },
   'spec.seats': { ru: 'Кол-во мест', en: 'Seats', tj: 'Ҷойҳо', uz: 'Oʻrindiqlar' },
   'spec.hp': { ru: 'л.с.', en: 'hp', tj: 'қ.о.', uz: 'o.k.' },
+  'spec.yearSuffix': { ru: 'г.', en: '', tj: 'с.', uz: 'y.' },
+  'spec.cc': { ru: 'см³', en: 'cc', tj: 'см³', uz: 'sm³' },
+
+  // Image gallery
+  'gallery.noPhoto': { ru: 'Нет фото', en: 'No photo', tj: 'Сурат нест', uz: 'Rasm yo‘q' },
+  'gallery.previous': { ru: 'Предыдущее фото', en: 'Previous photo', tj: 'Сурати пешина', uz: 'Oldingi rasm' },
+  'gallery.next': { ru: 'Следующее фото', en: 'Next photo', tj: 'Сурати навбатӣ', uz: 'Keyingi rasm' },
+  'gallery.close': { ru: 'Закрыть галерею', en: 'Close gallery', tj: 'Пӯшидани галерея', uz: 'Galereyani yopish' },
+  'gallery.morePhotos': { ru: 'фото', en: 'photos', tj: 'сурат', uz: 'rasm' },
 
   // Price breakdown
   'price.carPriceKorea': { ru: 'Стоимость авто в Корее', en: 'Car price in Korea', tj: 'Нархи мошин дар Корея', uz: 'Koreyadagi narx' },
@@ -350,4 +366,39 @@ export function formatCurrencyPrice(price: number, currency: Currency): string {
 export function formatLocaleMileage(km: number, lang: Lang): string {
   const locale = lang === 'ru' || lang === 'tj' ? 'ru-RU' : 'en-US';
   return new Intl.NumberFormat(locale).format(km) + ' ' + getTranslation('unit.km', lang);
+}
+
+const vehicleValueKeys: Array<{ key: TranslationKey; aliases: string[] }> = [
+  { key: 'fuel.hybrid', aliases: ['hybrid', 'гибрид', '하이브리드', '가솔린+전기', '디젤+전기', 'gasoline+electric', 'diesel+electric'] },
+  { key: 'fuel.electric', aliases: ['electric', 'электро', '전기'] },
+  { key: 'fuel.gasoline', aliases: ['gasoline', 'бензин', '가솔린'] },
+  { key: 'fuel.diesel', aliases: ['diesel', 'дизель', '디젤'] },
+  { key: 'fuel.lpg', aliases: ['lpg', 'газ'] },
+  { key: 'trans.dct', aliases: ['dct', 'робот'] },
+  { key: 'trans.cvt', aliases: ['cvt', 'вариатор'] },
+  { key: 'trans.auto', aliases: ['automatic', 'автомат', '오토'] },
+  { key: 'trans.manual', aliases: ['manual', 'механика', '수동'] },
+  { key: 'body.sedan', aliases: ['sedan', 'седан'] },
+  { key: 'body.suv', aliases: ['suv', 'crossover', 'кроссовер', 'внедорожник'] },
+  { key: 'body.hatchback', aliases: ['hatchback', 'хэтчбек'] },
+  { key: 'body.wagon', aliases: ['wagon', 'универсал'] },
+  { key: 'body.coupe', aliases: ['coupe', 'купе'] },
+  { key: 'body.convertible', aliases: ['convertible', 'кабриолет'] },
+  { key: 'body.minivan', aliases: ['minivan', 'минивэн'] },
+  { key: 'body.pickup', aliases: ['pickup', 'пикап'] },
+  { key: 'color.white', aliases: ['white', 'белый', '흰색'] },
+  { key: 'color.black', aliases: ['black', 'черный', 'чёрный', '검정색'] },
+  { key: 'color.gray', aliases: ['gray', 'grey', 'серый', '회색'] },
+  { key: 'color.silver', aliases: ['silver', 'серебристый', '은색'] },
+  { key: 'color.blue', aliases: ['blue', 'синий', '파란색'] },
+  { key: 'color.red', aliases: ['red', 'красный', '빨간색'] },
+  { key: 'color.brown', aliases: ['brown', 'коричневый', '갈색'] },
+  { key: 'color.green', aliases: ['green', 'зеленый', 'зелёный', '녹색'] },
+];
+
+export function localizeVehicleValue(value: string | undefined, lang: Lang): string | undefined {
+  if (!value) return value;
+  const normalized = value.trim().toLocaleLowerCase();
+  const match = vehicleValueKeys.find(item => item.aliases.some(alias => normalized === alias || normalized.includes(alias)));
+  return match ? getTranslation(match.key, lang) : value;
 }

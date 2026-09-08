@@ -64,7 +64,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
-    { href: '/auction', label: '\u0410\u0443\u043a\u0446\u0438\u043e\u043d' },
+    { href: '/auction', label: t('nav.auction') },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -78,7 +78,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-12 lg:h-14">
           <Link href="/" className="flex flex-col leading-tight flex-shrink-0">
             <span className="text-gray-900 font-bold text-lg tracking-wide">GHAYRAT</span>
-            <span className="text-[11px] font-medium text-gray-500">Авто из Кореи 🇰🇷</span>
+            <span className="text-[11px] font-medium text-gray-500">{t('brand.subtitle')} 🇰🇷</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

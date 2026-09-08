@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
+import { localizeVehicleValue } from '@/lib/i18n';
 
 interface SimilarCarsProps {
   brand: string;
@@ -16,7 +17,7 @@ interface SimilarCarsProps {
 
 export default function SimilarCars({ brand, model, excludeId, priceRub, destination = 'russia' }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
-  const { t, formatMileage } = useApp();
+  const { t, lang, formatKrwPrice, formatMileage } = useApp();
 
   useEffect(() => {
     const params = new URLSearchParams({
@@ -63,13 +64,13 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
                 {car.brand} {car.model}
               </div>
               <div className="text-[11px] text-gray-400 mt-0.5">
-                {formatMileage(car.mileage)} · {car.fuel}
+                {formatMileage(car.mileage)} · {localizeVehicleValue(car.fuel, lang)}
               </div>
               <div className="mt-1.5 text-[10px] font-semibold text-emerald-700/75">
-                {t('card.priceInKoreaUsd')}
+                {t('card.priceInKorea')}
               </div>
               <div className="font-bold text-primary text-sm">
-                ${(car.price_usd || 0).toLocaleString('en-US')}
+                {car.price_krw > 0 ? formatKrwPrice(car.price_krw) : '—'}
               </div>
             </div>
           </Link>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+import { useApp } from '@/contexts/AppContext';
 
 interface ImageGalleryProps {
   images: string[];
@@ -9,6 +10,7 @@ interface ImageGalleryProps {
 }
 
 export default function ImageGallery({ images, alt }: ImageGalleryProps) {
+  const { t } = useApp();
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef(0);
@@ -80,7 +82,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
   if (images.length === 0) {
     return (
       <div className="aspect-[16/10] bg-gray-100 rounded-xl flex items-center justify-center">
-        <span className="text-gray-400">No photo</span>
+        <span className="text-gray-400">{t('gallery.noPhoto')}</span>
       </div>
     );
   }
@@ -173,7 +175,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
             <button
               onClick={(e) => { e.stopPropagation(); goPrev(); }}
               className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/65 active:scale-95 sm:h-10 sm:w-10"
-              aria-label="Previous"
+              aria-label={t('gallery.previous')}
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -182,7 +184,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
             <button
               onClick={(e) => { e.stopPropagation(); goNext(); }}
               className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/65 active:scale-95 sm:h-10 sm:w-10"
-              aria-label="Next"
+              aria-label={t('gallery.next')}
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -239,7 +241,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                 <Image src={img} alt="" fill className="object-cover" sizes="25vw" unoptimized={isDirectEncarImage(img)} />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">+ {extraCount} фото</span>
+                    <span className="text-white font-bold text-sm">+ {extraCount} {t('gallery.morePhotos')}</span>
                   </div>
                 )}
               </button>
@@ -261,7 +263,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
             <button
               className="w-10 h-10 flex items-center justify-center hover:text-white transition-colors"
               onClick={() => setLightboxOpen(false)}
-              aria-label="Close"
+              aria-label={t('gallery.close')}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -274,7 +276,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
             <button
               className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 hover:text-white z-10 w-12 h-12 flex items-center justify-center"
               onClick={(e) => { e.stopPropagation(); goPrev(); }}
-              aria-label="Previous"
+              aria-label={t('gallery.previous')}
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -283,7 +285,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
             <button
               className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 hover:text-white z-10 w-12 h-12 flex items-center justify-center"
               onClick={(e) => { e.stopPropagation(); goNext(); }}
-              aria-label="Next"
+              aria-label={t('gallery.next')}
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

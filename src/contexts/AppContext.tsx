@@ -92,6 +92,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = (l: Lang) => {
     setLangState(l);
     localStorage.setItem('lang', l);
@@ -108,7 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const convertKrwPrice = (krwAmount: number) => krwToTarget(krwAmount, currency, rates);
   const convertCurrentToKrw = (amount: number) => targetToKrw(amount, currency, rates);
   const convertUsdToKrw = (amount: number) => usdToKrw(amount, rates);
-  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubAmount, 'RUB');
+  const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubToTarget(rubAmount, currency, rates), currency);
   const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
 

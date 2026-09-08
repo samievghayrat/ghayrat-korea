@@ -13,7 +13,8 @@ import FavoriteButton from '@/components/shared/FavoriteButton';
 import { calculateImportCost } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useApp } from '@/contexts/AppContext';
-import { translateBadgeDetail } from '@/lib/translations';
+import { translateBadgeDetail, translateGenerationName } from '@/lib/translations';
+import type { Lang } from '@/lib/i18n';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -32,9 +33,9 @@ function formatModelName(value?: string): string | undefined {
     .trim();
 }
 
-function buildCarTitle(car: CarListing): string {
+function buildCarTitle(car: CarListing, lang: Lang): string {
   const model = formatModelName(car.model) || car.model;
-  let generation = formatModelName(car.generation);
+  let generation = formatModelName(car.generation ? translateGenerationName(car.generation, lang) : undefined);
 
   if (generation && model) {
     const normalizedGeneration = generation.toLowerCase();
@@ -46,7 +47,7 @@ function buildCarTitle(car: CarListing): string {
     }
   }
 
-  return [car.brand, model, generation, translateBadgeDetail(car.badge || car.trim || '')]
+  return [car.brand, model, generation, translateBadgeDetail(car.badge || car.trim || '', lang)]
     .filter(Boolean)
     .join(' ');
 }
@@ -56,7 +57,7 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t } = useApp();
+  const { t, lang, currency, convertUsdToKrw, formatPrice, formatKrwPrice } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -190,8 +191,11 @@ export default function CarDetailPage() {
     && calculationHp < powerLimitHp
     && !isHybridPower
     && (isElectricPower || (car.displacement || 0) <= 3000);
-  const formatUsd = (value: number) => `$${value.toLocaleString('en-US')}`;
   const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
+  const formatUsdInSelectedCurrency = (value: number) => formatKrwPrice(convertUsdToKrw(value));
+  const formattedDeliveryTotal = destination === 'russia'
+    ? (turnkeyPriceRub ? formatPrice(turnkeyPriceRub) : null)
+    : (turnkeyPriceUsd ? formatUsdInSelectedCurrency(turnkeyPriceUsd) : null);
 
   const galleryImages = remoteGalleryImages.length > 0
     ? remoteGalleryImages
@@ -199,7 +203,7 @@ export default function CarDetailPage() {
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
 
-  const fullTitle = buildCarTitle(car);
+  const fullTitle = buildCarTitle(car, lang);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -315,9 +319,9 @@ export default function CarDetailPage() {
 
             {/* Keep the catalog price visible, then show the separate delivery estimate. */}
             <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
-              <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKoreaUsd')}</div>
+              <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
               <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
-                {formatUsd(car.price_usd || Math.round(car.price_rub / usdToRub))}
+                {formatKrwPrice(car.price_krw)}
               </div>
               <div className="mt-1 text-xs font-medium text-emerald-700/70">
                 ₩{car.price_krw.toLocaleString('ko-KR')}
@@ -326,13 +330,16 @@ export default function CarDetailPage() {
 
             <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>
-              {calculationReady && turnkeyPriceUsd ? (
+              {calculationReady && formattedDeliveryTotal ? (
                 <>
                   <div className="text-3xl font-extrabold tracking-tight">
-                    {formatUsd(turnkeyPriceUsd)}
+                    {formattedDeliveryTotal}
                   </div>
-                  {destination === 'russia' && turnkeyPriceRub && (
+                  {destination === 'russia' && turnkeyPriceRub && currency !== 'RUB' && (
                     <div className="mt-1 text-sm font-semibold text-white/75">≈ {formatRub(turnkeyPriceRub)}</div>
+                  )}
+                  {destination === 'tajikistan' && turnkeyPriceUsd && currency !== 'USD' && (
+                    <div className="mt-1 text-sm font-semibold text-white/75">≈ ${turnkeyPriceUsd.toLocaleString('en-US')}</div>
                   )}
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}

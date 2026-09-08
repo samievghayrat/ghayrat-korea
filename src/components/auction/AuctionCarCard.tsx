@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useApp } from "@/contexts/AppContext";
+import { localizeVehicleValue } from "@/lib/i18n";
+import { AUCTION_COPY } from "@/lib/page-copy";
 import {
   formatKcarAuctionDate,
   formatKCarName,
@@ -16,25 +18,9 @@ interface AuctionCarCardProps {
   href?: string;
 }
 
-const RU = {
-  auction: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d",
-  startPrice: "\u0421\u0442\u0430\u0440\u0442\u043e\u0432\u0430\u044f \u0446\u0435\u043d\u0430",
-  km: "\u043a\u043c",
-};
-
-function translateFuel(value: string): string {
-  const map: Record<string, string> = {
-    Gasoline: "\u0411\u0435\u043d\u0437\u0438\u043d",
-    Diesel: "\u0414\u0438\u0437\u0435\u043b\u044c",
-    Hybrid: "\u0413\u0438\u0431\u0440\u0438\u0434",
-    Electric: "\u042d\u043b\u0435\u043a\u0442\u0440\u043e",
-    LPG: "\u0413\u0430\u0437 (LPG)",
-  };
-  return map[value] || value;
-}
-
 export default function AuctionCarCard({ car, priority = false, href }: AuctionCarCardProps) {
-  const { formatKrwPrice } = useApp();
+  const { lang, formatKrwPrice, formatMileage } = useApp();
+  const copy = AUCTION_COPY[lang];
   const title = formatKCarName(car);
   const regYear =
     car.firstRegDate && car.firstRegDate.length >= 6
@@ -56,7 +42,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
           fetchPriority={priority ? "high" : "auto"}
         />
         <div className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[11px] font-bold text-white">
-          {RU.auction} {formatKcarAuctionDate(car.auctionDate)}
+          {copy.auction} {formatKcarAuctionDate(car.auctionDate)}
         </div>
         {car.lotNumber && (
           <div className="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-[11px] font-bold text-gray-800 shadow-sm">
@@ -73,9 +59,9 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
           <span>{regYear}</span>
           <span className="text-gray-300">/</span>
-          <span>{car.mileage.toLocaleString("ru-RU")} {RU.km}</span>
+          <span>{formatMileage(car.mileage)}</span>
           <span className="text-gray-300">/</span>
-          <span>{translateFuel(car.fuelType)}</span>
+          <span>{localizeVehicleValue(car.fuelType, lang)}</span>
           {car.engineVolume && (
             <>
               <span className="text-gray-300">/</span>
@@ -85,7 +71,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
         </div>
         <div className="mt-2.5 rounded-md bg-red-50/80 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="text-[11px] font-semibold text-red-700/75">{RU.startPrice}</div>
+            <div className="text-[11px] font-semibold text-red-700/75">{copy.startPrice}</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-red-700">
               {formatKrwPrice(kcarPriceToKrw(car.price))}
             </div>

@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useApp } from '@/contexts/AppContext';
+import { CONTACT_COPY } from '@/lib/page-copy';
 
 export default function ContactsPage() {
+  const { lang } = useApp();
+  const copy = CONTACT_COPY[lang];
   const [form, setForm] = useState({ name: '', phone: '', messenger: 'telegram', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -24,47 +28,47 @@ export default function ContactsPage() {
         setSent(true);
         setForm({ name: '', phone: '', messenger: 'telegram', message: '' });
       } else {
-        setError('Ошибка отправки. Попробуйте еще раз.');
+        setError(copy.sendError);
       }
     } catch {
-      setError('Ошибка сети. Попробуйте позже.');
+      setError(copy.networkError);
     }
     setSending(false);
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Контакты</h1>
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">{copy.title}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact form */}
         <div className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Напишите нам</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{copy.write}</h2>
 
           {sent ? (
             <div className="text-center py-8">
               <svg className="w-16 h-16 mx-auto text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Сообщение отправлено!</h3>
-              <p className="text-gray-500 mb-4">Мы свяжемся с вами в ближайшее время.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{copy.sent}</h3>
+              <p className="text-gray-500 mb-4">{copy.sentText}</p>
               <button onClick={() => setSent(false)} className="text-primary hover:underline text-sm">
-                Отправить ещё
+                {copy.again}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Имя *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{copy.name} *</label>
                 <input
                   type="text" required value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Ваше имя"
+                  placeholder={copy.namePlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Телефон *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{copy.phone} *</label>
                 <input
                   type="tel" required value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -73,28 +77,28 @@ export default function ContactsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Предпочитаемый мессенджер</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{copy.messenger}</label>
                 <select value={form.messenger}
                   onChange={(e) => setForm({ ...form, messenger: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="telegram">Telegram</option>
                   <option value="whatsapp">WhatsApp</option>
-                  <option value="phone">Звонок</option>
+                  <option value="phone">{copy.call}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Сообщение *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{copy.message} *</label>
                 <textarea required value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Расскажите, какой автомобиль вас интересует"
+                  placeholder={copy.messagePlaceholder}
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <button type="submit" disabled={sending} className="w-full btn-primary disabled:opacity-50">
-                {sending ? 'Отправка...' : 'Отправить'}
+                {sending ? copy.sending : copy.send}
               </button>
             </form>
           )}
@@ -103,7 +107,7 @@ export default function ContactsPage() {
         {/* Contact info */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Быстрая связь</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{copy.quick}</h2>
             <div className="space-y-4">
               {/* Telegram */}
               <a
@@ -170,7 +174,7 @@ export default function ContactsPage() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">Телефон</div>
+                  <div className="font-semibold text-gray-900">{copy.phoneLabel}</div>
                   <div className="text-sm text-gray-500">+82-10-9922-1601</div>
                 </div>
               </a>
@@ -178,23 +182,22 @@ export default function ContactsPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Режим работы</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{copy.hours}</h2>
             <div className="space-y-3 text-gray-600">
               <div className="flex justify-between">
-                <span>Пн — Пт</span>
-                <span className="font-medium">09:00 — 21:00 (МСК)</span>
+                <span>{copy.weekdays}</span>
+                <span className="font-medium">09:00 — 21:00 (UTC+3)</span>
               </div>
               <div className="flex justify-between">
-                <span>Сб — Вс</span>
-                <span className="font-medium">10:00 — 18:00 (МСК)</span>
+                <span>{copy.weekends}</span>
+                <span className="font-medium">10:00 — 18:00 (UTC+3)</span>
               </div>
             </div>
           </div>
 
           <div className="bg-primary-50 rounded-xl p-6">
             <p className="text-primary font-medium text-sm">
-              Мы отвечаем на все сообщения в течение 1 часа в рабочее время.
-              Для срочных вопросов пишите в WhatsApp или Telegram.
+              {copy.response}
             </p>
           </div>
         </div>

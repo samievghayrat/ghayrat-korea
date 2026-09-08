@@ -1,3 +1,5 @@
+import type { Lang } from './i18n';
+
 // Korean → English brand translations
 export const brandMap: Record<string, string> = {
   '현대': 'Hyundai',
@@ -232,14 +234,21 @@ const junkPrefixes = ['더 뉴 ', '올 뉴 ', '뉴 ', '더뉴 ', '올뉴 '];
 const junkSuffixes = [' (신형)', ' (구형)', '(신형)', '(구형)'];
 
 // Korean generation prefix → Russian translation
-const generationPrefixes: [string, string][] = [
-  ['디 올 뉴 ', 'Совершенно новый '],
-  ['더 뉴 ', 'Новый '],
-  ['올 뉴 ', 'Совершенно новый '],
-  ['더뉴 ', 'Новый '],
-  ['올뉴 ', 'Совершенно новый '],
-  ['뉴 ', 'Новый '],
+const generationPrefixes: Array<[string, 'new' | 'allNew']> = [
+  ['디 올 뉴 ', 'allNew'],
+  ['더 뉴 ', 'new'],
+  ['올 뉴 ', 'allNew'],
+  ['더뉴 ', 'new'],
+  ['올뉴 ', 'allNew'],
+  ['뉴 ', 'new'],
 ];
+
+const generationCopy: Record<Lang, { new: string; allNew: string; generation: string }> = {
+  ru: { new: 'Новый ', allNew: 'Совершенно новый ', generation: '$1-го поколения' },
+  en: { new: 'New ', allNew: 'All-new ', generation: '$1 generation' },
+  tj: { new: 'Нав ', allNew: 'Комилан нав ', generation: 'насли $1' },
+  uz: { new: 'Yangi ', allNew: 'Butunlay yangi ', generation: '$1-avlod' },
+};
 
 // Korean → Russian fuel translations
 export const fuelMap: Record<string, string> = {
@@ -406,13 +415,22 @@ const badgeWordMap: Record<string, string> = {
   '전기': 'Электро',
 };
 
-export function translateBadgeDetail(korean: string): string {
+export function translateBadgeDetail(korean: string, lang: Lang = 'ru'): string {
   if (!korean) return korean;
   let result = korean;
   // Replace longest keys first
   const sortedKeys = Object.keys(badgeWordMap).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
     result = result.replaceAll(key, badgeWordMap[key]);
+  }
+  const fuelWords: Record<Lang, Record<string, string>> = {
+    ru: {},
+    en: { 'Бензин': 'Gasoline', 'Дизель': 'Diesel', 'Гибрид': 'Hybrid', 'Электро': 'Electric' },
+    tj: { 'Бензин': 'Бензин', 'Дизель': 'Дизел', 'Гибрид': 'Гибрид', 'Электро': 'Электрикӣ' },
+    uz: { 'Бензин': 'Benzin', 'Дизель': 'Dizel', 'Гибрид': 'Gibrid', 'Электро': 'Elektr' },
+  };
+  for (const [source, translated] of Object.entries(fuelWords[lang])) {
+    result = result.replaceAll(source, translated);
   }
   return result.trim();
 }
@@ -437,22 +455,27 @@ export function translateColor(korean: string): string {
 // Translate a Korean generation/variant name to Russian
 // e.g. "더 뉴 아반떼 (CN7)" → "Новый Avante (CN7)"
 // e.g. "스포티지 5세대 하이브리드" → "Sportage 5-го поколения Hybrid"
-export function translateGenerationName(koreanName: string): string {
+export function translateGenerationName(koreanName: string, lang: Lang = 'ru'): string {
   if (!koreanName) return koreanName;
   let result = koreanName;
   let prefix = '';
 
+  result = result
+    .replace(/^Совершенно новый\s+/i, generationCopy[lang].allNew)
+    .replace(/^Новый\s+/i, generationCopy[lang].new)
+    .replace(/(\d+)\s*(?:пок\.|-го поколения)/gi, generationCopy[lang].generation);
+
   // Translate generation prefixes
-  for (const [ko, ru] of generationPrefixes) {
+  for (const [ko, kind] of generationPrefixes) {
     if (result.startsWith(ko)) {
-      prefix = ru;
+      prefix = generationCopy[lang][kind];
       result = result.slice(ko.length);
       break;
     }
   }
 
   // Translate "N세대" to "N-го поколения"
-  result = result.replace(/(\d+)세대/, '$1-го поколения');
+  result = result.replace(/(\d+)세대/g, generationCopy[lang].generation);
 
   // Strip junk suffixes
   for (const suffix of junkSuffixes) {

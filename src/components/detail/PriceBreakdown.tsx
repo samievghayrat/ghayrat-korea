@@ -12,14 +12,13 @@ interface PriceBreakdownProps {
   totalOverride?: number;
 }
 
-export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, usdToRub, destination = 'russia', totalOverride }: PriceBreakdownProps) {
-  const { t } = useApp();
+export default function PriceBreakdown({ breakdown, priceKrw, destination = 'russia', totalOverride }: PriceBreakdownProps) {
+  const { t, currency, convertUsdToKrw, formatPrice, formatKrwPrice } = useApp();
   const isRussia = destination === 'russia';
 
   const fmtUsd = (v: number) => `$${v.toLocaleString('en-US')}`;
   const fmtRub = (v: number) => `${v.toLocaleString('ru-RU')} ₽`;
-  const effectiveUsdToRub = usdToRub || (priceUsd && priceUsd > 0 ? breakdown.carPrice / priceUsd : 87.5);
-  const rubToUsd = (v: number) => Math.round(v / effectiveUsdToRub);
+  const fmtSelectedFromUsd = (v: number) => formatKrwPrice(convertUsdToKrw(v));
   const rubDetails = (value: number, details?: string) =>
     [fmtRub(value), details].filter(Boolean).join(' · ');
 
@@ -27,51 +26,51 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, usdToRub
     ? [
         {
           label: t('price.carPriceKorea'),
-          value: fmtUsd(priceUsd || rubToUsd(breakdown.carPrice)),
+          value: formatPrice(breakdown.carPrice),
           sublabel: `${fmtRub(breakdown.carPrice)} · ₩${priceKrw.toLocaleString('ko-KR')}`,
         },
         {
           label: t('price.customsDuty'),
-          value: fmtUsd(rubToUsd(breakdown.customsDuty)),
+          value: formatPrice(breakdown.customsDuty),
           sublabel: rubDetails(breakdown.customsDuty, breakdown.customsDutyDetails),
         },
         {
           label: t('price.customsFee'),
-          value: fmtUsd(rubToUsd(breakdown.customsFee)),
+          value: formatPrice(breakdown.customsFee),
           sublabel: rubDetails(breakdown.customsFee, t('price.customsFeeDesc')),
         },
         {
           label: t('price.utilizationFee'),
-          value: fmtUsd(rubToUsd(breakdown.utilizationFee)),
+          value: formatPrice(breakdown.utilizationFee),
           sublabel: rubDetails(breakdown.utilizationFee, breakdown.utilizationWarning),
           warning: breakdown.utilizationFee > 10000,
         },
         {
           label: t('price.delivery'),
-          value: fmtUsd(breakdown.serviceFeeUsd),
+          value: formatPrice(breakdown.serviceFee),
           sublabel: rubDetails(breakdown.serviceFee, t('price.deliveryDesc')),
         },
         {
           label: t('price.broker'),
-          value: fmtUsd(rubToUsd(breakdown.brokerFee)),
+          value: formatPrice(breakdown.brokerFee),
           sublabel: rubDetails(breakdown.brokerFee, t('price.brokerDesc')),
         },
       ]
     : [
         {
           label: t('price.carPriceKorea'),
-          value: fmtUsd(breakdown.carPrice),
+          value: fmtSelectedFromUsd(breakdown.carPrice),
           sublabel: `${priceKrw.toLocaleString('ko-KR')} KRW`,
         },
         {
           label: t('price.deliveryTj'),
-          value: fmtUsd(breakdown.serviceFee),
+          value: fmtSelectedFromUsd(breakdown.serviceFee),
           sublabel: t('price.deliveryTjDesc'),
         },
       ];
 
   const totalValue = totalOverride ?? breakdown.total;
-  const formattedTotal = isRussia ? fmtUsd(rubToUsd(totalValue)) : fmtUsd(totalValue);
+  const formattedTotal = isRussia ? formatPrice(totalValue) : fmtSelectedFromUsd(totalValue);
 
   return (
     <div className="space-y-3 pt-4">
@@ -119,8 +118,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, priceUsd, usdToRub
             <div className="text-xl font-bold text-primary">
               {formattedTotal}
             </div>
-            {isRussia && (
+            {isRussia && currency !== 'RUB' && (
               <div className="mt-0.5 text-xs font-medium text-gray-400">≈ {fmtRub(totalValue)}</div>
+            )}
+            {!isRussia && currency !== 'USD' && (
+              <div className="mt-0.5 text-xs font-medium text-gray-400">≈ {fmtUsd(totalValue)}</div>
             )}
           </div>
         </div>

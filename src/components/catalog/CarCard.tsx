@@ -5,7 +5,8 @@ import Image from 'next/image';
 import type { CarListing } from '@/types';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { useApp } from '@/contexts/AppContext';
-import { translateBadgeDetail } from '@/lib/translations';
+import { translateBadgeDetail, translateGenerationName } from '@/lib/translations';
+import { localizeVehicleValue } from '@/lib/i18n';
 
 interface CarCardProps {
   car: CarListing;
@@ -13,7 +14,7 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
-  const { t, formatMileage } = useApp();
+  const { t, lang, formatKrwPrice, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -21,16 +22,17 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     } catch {}
   };
 
-  const displayModel = car.generation && !car.generation.toLowerCase().startsWith(car.model.toLowerCase())
-    ? `${car.model} ${car.generation}`
+  const localizedGeneration = car.generation ? translateGenerationName(car.generation, lang) : undefined;
+  const displayModel = localizedGeneration && !localizedGeneration.toLowerCase().startsWith(car.model.toLowerCase())
+    ? `${car.model} ${localizedGeneration}`
     : car.model;
-  const displayTrim = translateBadgeDetail(car.badge || car.trim || '');
+  const displayTrim = translateBadgeDetail(car.badge || car.trim || '', lang);
 
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
-  const priceUsd = car.price_usd ?? 0;
+  const hasPrice = car.price_krw > 0;
 
   return (
     <Link
@@ -83,14 +85,14 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           <span className="text-gray-300">/</span>
           <span>{formatMileage(car.mileage)}</span>
           <span className="text-gray-300">/</span>
-          <span className="truncate">{car.fuel}</span>
+          <span className="truncate">{localizeVehicleValue(car.fuel, lang)}</span>
         </div>
 
         <div className="mt-2.5 rounded-md bg-emerald-50/70 px-3 py-2">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKoreaUsd')}</div>
+            <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-emerald-700">
-              {priceUsd > 0 ? `$${priceUsd.toLocaleString('en-US')}` : '—'}
+              {hasPrice ? formatKrwPrice(car.price_krw) : '—'}
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ interface FilterChipsProps {
 }
 
 export default function FilterChips({ filters, onChange }: FilterChipsProps) {
-  const { t, currency } = useApp();
+  const { t, lang, currency } = useApp();
 
   const fuelMap: Record<string, TranslationKey> = {
     gasoline: 'fuel.gasoline', diesel: 'fuel.diesel', hybrid: 'fuel.hybrid',
@@ -47,7 +47,7 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
   if (filters.brand) chips.push({ label: filters.brand, key: 'brand' });
   if (filters.model) chips.push({ label: `${t('chip.model')} ${translateModel(filters.model)}`, key: 'model' });
   if (filters.modelVariant) {
-    const translated = translateGenerationName(filters.modelVariant);
+    const translated = translateGenerationName(filters.modelVariant, lang);
     chips.push({ label: `${t('chip.generation')} ${translated}`, key: 'modelVariant' });
   }
   if (filters.badge) {

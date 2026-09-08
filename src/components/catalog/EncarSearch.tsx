@@ -544,7 +544,7 @@ function BrandModelPicker({
 }
 
 export default function EncarSearch({ filters, onChange, brandCounts, totalCars, compact }: EncarSearchProps) {
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
   const [generationLoading, setGenerationLoading] = useState(false);
@@ -720,7 +720,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   const totalGenCount = generationTotal || sortedGenerationVariants.reduce((sum, v) => sum + v.count, 0);
 
   const selectedGenName = filters.modelVariant
-    ? translateGenerationName(filters.modelVariant)
+    ? translateGenerationName(filters.modelVariant, lang)
     : undefined;
 
   const handleBrandSelect = (brand: string) => {
@@ -888,7 +888,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               </button>
               {/* Generation variants */}
               {sortedGenerationVariants.map(v => {
-                const translated = translateGenerationName(v.name);
+                const translated = translateGenerationName(v.name, lang);
                 const yearRange = v.yearFrom && v.yearTo && v.yearFrom <= v.yearTo
                   ? `(${v.yearFrom} â€” ${v.yearTo})`
                   : '';
@@ -931,7 +931,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
             <div className="space-y-0.5">
               {badgeTree.map((group) => {
                 const groupKey = `${group.fuel}|${group.drivetrain}`;
-                const groupLabel = [translateBadgeDetail(group.fuel), group.drivetrain].filter(Boolean).join(' ');
+                const groupLabel = [translateBadgeDetail(group.fuel, lang), group.drivetrain].filter(Boolean).join(' ');
                 const isGroupExpanded = expandedGroup === groupKey;
                 const isGroupSelected = filters.badge && group.badges.some(b => b.name === filters.badge);
 
@@ -989,7 +989,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
                                   )}
-                                  <span className="truncate">{translateBadgeDetail(b.name)}</span>
+                                  <span className="truncate">{translateBadgeDetail(b.name, lang)}</span>
                                 </span>
                                 <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
                               </button>
@@ -1007,7 +1007,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                                           : 'text-gray-500 hover:bg-gray-50'
                                       }`}
                                     >
-                                      <span className="truncate">{translateBadgeDetail(d.name)}</span>
+                                      <span className="truncate">{translateBadgeDetail(d.name, lang)}</span>
                                       <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
                                     </button>
                                   ))}
@@ -1046,7 +1046,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      <span className="truncate">{translateBadgeDetail(b.name)}</span>
+                      <span className="truncate">{translateBadgeDetail(b.name, lang)}</span>
                       <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{b.count}</span>
                     </button>
                     {/* Trim tiers for flat list */}
@@ -1062,7 +1062,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                                 : 'text-gray-500 hover:bg-gray-50'
                             }`}
                           >
-                            <span className="truncate">{translateBadgeDetail(d.name)}</span>
+                            <span className="truncate">{translateBadgeDetail(d.name, lang)}</span>
                             <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{d.count}</span>
                           </button>
                         ))}

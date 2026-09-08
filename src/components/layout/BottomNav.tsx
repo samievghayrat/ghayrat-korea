@@ -30,7 +30,7 @@ export default function BottomNav() {
     };
   }, []);
 
-  if (pathname.startsWith('/admin')) return null;
+  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction)\/[^/]+/.test(pathname)) return null;
 
   const isHome = pathname === '/' || pathname === '/catalog';
   const isFav = pathname === '/favorites';

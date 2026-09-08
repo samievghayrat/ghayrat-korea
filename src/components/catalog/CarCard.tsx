@@ -14,7 +14,7 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
-  const { t, lang, formatKrwPrice, formatMileage } = useApp();
+  const { t, lang, formatListingPrice, formatMileage } = useApp();
 
   const handleClick = () => {
     try {
@@ -85,7 +85,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-semibold text-emerald-700/75">{t('card.priceInKorea')}</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-emerald-700">
-              {hasPrice ? formatKrwPrice(car.price_krw) : '—'}
+              {hasPrice ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
             </div>
           </div>
         </div>

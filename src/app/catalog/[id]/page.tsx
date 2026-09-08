@@ -12,9 +12,9 @@ import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { calculateImportCost } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
-import { translateBadgeDetail, translateGenerationName } from '@/lib/translations';
-import type { Lang } from '@/lib/i18n';
+import { getCompactModelName, translateColor } from '@/lib/translations';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -24,32 +24,22 @@ function getSessionCar(id: string): CarListing | null {
   return null;
 }
 
-function formatModelName(value?: string): string | undefined {
-  if (!value) return value;
-  return value
-    .replace(/\b(\d+)\s*Series\b/g, '$1 Series')
-    .replace(/\b([A-Z])\s*Class\b/g, '$1-Class')
-    .replace(/\s+/g, ' ')
-    .trim();
+function buildCarTitle(car: CarListing): string {
+  return [car.brand, getCompactModelName(car.model)].filter(Boolean).join(' ');
 }
 
-function buildCarTitle(car: CarListing, lang: Lang): string {
-  const model = formatModelName(translateGenerationName(car.model, lang)) || car.model;
-  let generation = formatModelName(car.generation ? translateGenerationName(car.generation, lang) : undefined);
-
-  if (generation && model) {
-    const normalizedGeneration = generation.toLowerCase();
-    const normalizedModel = model.toLowerCase();
-    if (normalizedGeneration === normalizedModel) {
-      generation = undefined;
-    } else if (normalizedGeneration.startsWith(`${normalizedModel} `)) {
-      generation = generation.slice(model.length).trim();
-    }
-  }
-
-  return [car.brand, model, generation, translateBadgeDetail(car.badge || car.trim || '', lang)]
-    .filter(Boolean)
-    .join(' ');
+interface RemoteCarDetails {
+  yearMonth?: string;
+  mileage?: number;
+  displacement?: number;
+  hp?: number;
+  fuel?: string;
+  color?: string;
+  bodyType?: string;
+  transmission?: string;
+  drivetrain?: string;
+  seatCount?: number;
+  vin?: string;
 }
 
 export default function CarDetailPage() {
@@ -57,15 +47,18 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t, lang, currency, convertUsdToKrw, formatPrice, formatKrwPrice } = useApp();
+  const { t, currency, convertUsdToKrw, formatPrice, formatKrwPrice, formatListingPrice } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
   const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [remoteGalleryImages, setRemoteGalleryImages] = useState<string[]>([]);
+  const [remoteCarDetails, setRemoteCarDetails] = useState<RemoteCarDetails | null>(null);
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [manualHp, setManualHp] = useState<number | undefined>();
+  const [manualDisplacement, setManualDisplacement] = useState<number | undefined>();
   const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
     searchParams.get('destination') === 'tajikistan' ? 'tajikistan' : 'russia',
   );
@@ -118,13 +111,14 @@ export default function CarDetailPage() {
   useEffect(() => {
     setGalleryLoaded(false);
     setRemoteGalleryImages([]);
+    setRemoteCarDetails(null);
     const controller = new AbortController();
 
-    fetch(`/api/encar-gallery/${id}`, { signal: controller.signal })
+    fetch(`/api/encar-gallery/${id}?details=1`, { signal: controller.signal })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (!data?.images?.length) return;
-        setRemoteGalleryImages(data.images);
+        if (data?.images?.length) setRemoteGalleryImages(data.images);
+        if (data?.details) setRemoteCarDetails(data.details);
       })
       .catch(error => {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
@@ -136,6 +130,40 @@ export default function CarDetailPage() {
     return () => controller.abort();
   }, [id]);
 
+  useEffect(() => {
+    if (!remoteCarDetails) return;
+    const details = remoteCarDetails;
+    const yearMonth = String(details.yearMonth || '');
+    setCar(current => current ? {
+      ...current,
+      year: Number(yearMonth.slice(0, 4)) || current.year,
+      month: Number(yearMonth.slice(4, 6)) || current.month,
+      mileage: details.mileage || current.mileage,
+      displacement: details.displacement || current.displacement,
+      hp: details.hp || current.hp,
+      color: details.color ? translateColor(details.color) : current.color,
+      bodyType: details.bodyType || current.bodyType,
+      transmission: details.transmission || current.transmission,
+      drivetrain: details.drivetrain || current.drivetrain,
+      seatCount: details.seatCount || current.seatCount,
+      vin: details.vin || current.vin,
+    } : current);
+  }, [remoteCarDetails, apiLoaded]);
+
+  useEffect(() => {
+    setManualHp(undefined);
+    setManualDisplacement(undefined);
+  }, [id]);
+
+  const effectiveHp = car?.hp || manualHp;
+  const effectiveDisplacement = car?.displacement || manualDisplacement || 0;
+  const fullTitle = car ? buildCarTitle(car) : '';
+  const titleSuffix = t('brand.subtitle');
+
+  useEffect(() => {
+    if (fullTitle) document.title = `${fullTitle} — ${titleSuffix} | GHAYRAT KOREA`;
+  }, [fullTitle, titleSuffix]);
+
   // Client-side breakdown only for the detailed breakdown view (uses API data)
   const breakdown = useMemo(() => {
     if (!car || !apiLoaded) return null;
@@ -143,11 +171,11 @@ export default function CarDetailPage() {
       priceKrw: car.price_krw,
       priceRub: car.price_rub,
       priceUsd: car.price_usd,
-      displacement: car.displacement || 0,
+      displacement: effectiveDisplacement,
       year: car.year,
       month: car.month,
       fuel: car.fuel,
-      hp: car.hp,
+      hp: effectiveHp,
       brand: car.brand,
       model: car.model,
       destination,
@@ -155,7 +183,7 @@ export default function CarDetailPage() {
       usdRate: car.usd_to_rub,
       russiaCustomsOverride: destination === 'russia' ? car.panAutoCustoms : undefined,
     });
-  }, [car, destination, apiLoaded]);
+  }, [car, destination, apiLoaded, effectiveDisplacement, effectiveHp]);
 
   if (loading) return <LoadingSpinner className="py-32" />;
 
@@ -172,25 +200,21 @@ export default function CarDetailPage() {
   const priceLabel = destination === 'russia'
     ? t('card.turnkeyVladivostok')
     : t('card.turnkeyTajikistan');
-  const turnkeyPriceRub = car.price_turnkey_russia || (destination === 'russia' ? breakdown?.total : undefined);
-  const fallbackUsdToRub = car.price_rub > 0 && car.price_usd ? car.price_rub / car.price_usd : 87.5;
-  const usdToRub = car.usd_to_rub || fallbackUsdToRub;
-  const turnkeyPriceUsd = destination === 'russia'
-    ? car.price_turnkey_russia_usd || (turnkeyPriceRub ? Math.round(turnkeyPriceRub / usdToRub) : undefined)
-    : car.price_turnkey_tajikistan || breakdown?.total;
+  const turnkeyPriceRub = destination === 'russia' ? breakdown?.total : undefined;
+  const turnkeyPriceUsd = destination === 'tajikistan' ? breakdown?.total : undefined;
   const calculationReady = destination === 'tajikistan'
     || (breakdown?.calculationComplete ?? car.russia_calculation_complete ?? Boolean(turnkeyPriceRub));
   const fuelLower = car.fuel.toLowerCase();
   const isElectricPower = fuelLower.includes('электро') || fuelLower.includes('electric');
   const isHybridPower = fuelLower.includes('гибрид') || fuelLower.includes('hybrid');
-  const calculationHp = breakdown?.calculationHp ?? car.hp ?? 0;
+  const calculationHp = breakdown?.calculationHp ?? effectiveHp ?? 0;
   const powerLimitHp = breakdown?.preferentialPowerLimitHp ?? (isElectricPower ? 80 : 160);
   const hasHighPower = calculationHp > powerLimitHp;
   const isPowerBoundary = calculationHp === powerLimitHp;
   const hasPreferentialPower = calculationHp > 0
     && calculationHp < powerLimitHp
     && !isHybridPower
-    && (isElectricPower || (car.displacement || 0) <= 3000);
+    && (isElectricPower || effectiveDisplacement <= 3000);
   const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
   const formatUsdInSelectedCurrency = (value: number) => formatKrwPrice(convertUsdToKrw(value));
   const formattedDeliveryTotal = destination === 'russia'
@@ -203,7 +227,9 @@ export default function CarDetailPage() {
     ? car.images
     : [car.imageUrl || '/images/no-image.svg'];
 
-  const fullTitle = buildCarTitle(car, lang);
+  const displayCar = effectiveHp !== car.hp || effectiveDisplacement !== (car.displacement || 0)
+    ? { ...car, hp: effectiveHp, displacement: effectiveDisplacement }
+    : car;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -301,7 +327,10 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {'\u{1F1F9}\u{1F1EF}'} {t('country.tajikistan')}
+                <span className="inline-flex items-center justify-center gap-2">
+                  <CountryFlag country="tajikistan" />
+                  {t('country.tajikistan')}
+                </span>
               </button>
               <button
                 type="button"
@@ -313,7 +342,10 @@ export default function CarDetailPage() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {'\u{1F1F7}\u{1F1FA}'} {t('country.russia')}
+                <span className="inline-flex items-center justify-center gap-2">
+                  <CountryFlag country="russia" />
+                  {t('country.russia')}
+                </span>
               </button>
             </div>
 
@@ -321,7 +353,7 @@ export default function CarDetailPage() {
             <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
               <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
               <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
-                {formatKrwPrice(car.price_krw)}
+                {formatListingPrice(car.price_krw, car.price_rub, car.price_usd)}
               </div>
               <div className="mt-1 text-xs font-medium text-emerald-700/70">
                 ₩{car.price_krw.toLocaleString('ko-KR')}
@@ -344,11 +376,44 @@ export default function CarDetailPage() {
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>
+                  <div className="mt-2 text-xs leading-5 text-white/50">{t('detail.cityDeliveryNote')}</div>
                 </>
               ) : apiLoaded ? (
                 <div>
                   <div className="text-base font-bold text-amber-300">{t('price.needsEngineData')}</div>
                   <div className="mt-1 text-sm leading-5 text-white/65">{t('price.needsEngineDataDesc')}</div>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {!car.displacement && (
+                      <label className="text-xs font-semibold text-white/80">
+                        {t('price.enterDisplacement')}
+                        <input
+                          type="number"
+                          min="500"
+                          max="10000"
+                          inputMode="numeric"
+                          value={manualDisplacement ?? ''}
+                          onChange={(event) => setManualDisplacement(Number(event.target.value) || undefined)}
+                          className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white outline-none focus:border-emerald-400"
+                          placeholder="1998"
+                        />
+                      </label>
+                    )}
+                    {!car.hp && (
+                      <label className="text-xs font-semibold text-white/80">
+                        {t('price.enterHp')}
+                        <input
+                          type="number"
+                          min="30"
+                          max="1500"
+                          inputMode="numeric"
+                          value={manualHp ?? ''}
+                          onChange={(event) => setManualHp(Number(event.target.value) || undefined)}
+                          className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white outline-none focus:border-emerald-400"
+                          placeholder="150"
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="animate-pulse space-y-2">
@@ -430,10 +495,10 @@ export default function CarDetailPage() {
                   <PriceBreakdown
                     breakdown={breakdown}
                     priceKrw={car.price_krw}
+                    priceRub={car.price_rub}
                     priceUsd={car.price_usd}
-                    usdToRub={usdToRub}
                     destination={destination}
-                    totalOverride={destination === 'russia' ? turnkeyPriceRub : car.price_turnkey_tajikistan}
+                    totalOverride={destination === 'russia' ? turnkeyPriceRub : turnkeyPriceUsd}
                   />
                 )}
               </>
@@ -456,7 +521,7 @@ export default function CarDetailPage() {
 
         {/* Detail sections - below gallery on desktop (left col), below price on mobile */}
         <div className="lg:col-span-8 order-3 lg:order-2 space-y-5">
-          <CarSpecs car={car} />
+          <CarSpecs car={displayCar} />
           <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
           <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} destination={destination} />

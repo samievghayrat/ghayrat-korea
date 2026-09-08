@@ -11,6 +11,11 @@ interface EncarPhoto {
   path?: string;
 }
 
+function positiveNumber(value: unknown): number | undefined {
+  const number = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(number) && number > 0 ? number : undefined;
+}
+
 function getDisplayImageUrl(path: string): string {
   const canonicalPath = path.startsWith('/carpicture/')
     ? path
@@ -52,6 +57,8 @@ export async function GET(
     }
 
     const data = await response.json();
+    const category = data.category || {};
+    const spec = data.spec || {};
     const typeOrder: Record<string, number> = { OUTER: 0, INNER: 1, OPTION: 2 };
     const images = ((data.photos || []) as EncarPhoto[])
       .filter((photo): photo is Required<EncarPhoto> =>
@@ -67,7 +74,22 @@ export async function GET(
       .map(photo => getDisplayImageUrl(photo.path));
 
     return NextResponse.json(
-      { images },
+      {
+        images,
+        details: {
+          yearMonth: category.yearMonth ? String(category.yearMonth) : undefined,
+          mileage: positiveNumber(spec.mileage),
+          displacement: positiveNumber(spec.displacement),
+          hp: positiveNumber(spec.maxPower || spec.horsePower || spec.horsepower),
+          fuel: spec.fuelName || undefined,
+          color: spec.colorName || undefined,
+          bodyType: spec.bodyName || undefined,
+          transmission: spec.transmissionName || undefined,
+          drivetrain: spec.drivetrainName || spec.driveTypeName || spec.driveName || undefined,
+          seatCount: positiveNumber(spec.seatCount),
+          vin: typeof data.vin === 'string' && data.vin.trim() ? data.vin.trim() : undefined,
+        },
+      },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600',

@@ -24,6 +24,8 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
     return sum + num;
   }, 0);
 
+  if (!hasInspection && !hasRecords) return null;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">{t('accident.title')}</h2>
@@ -83,15 +85,6 @@ export default function AccidentHistory({ records, inspectionData }: AccidentHis
             </div>
           )}
           <CarDamageMap panels={inspectionData.panels} />
-        </div>
-      )}
-
-      {!hasInspection && !hasRecords && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl">
-          <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-sm text-gray-500">{t('accident.noData')}</span>
         </div>
       )}
 

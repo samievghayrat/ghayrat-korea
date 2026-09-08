@@ -18,7 +18,7 @@ interface SimilarCarsProps {
 
 export default function SimilarCars({ brand, model, excludeId, priceRub, destination = 'russia' }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
-  const { t, lang, formatKrwPrice, formatMileage } = useApp();
+  const { t, lang, formatListingPrice, formatMileage } = useApp();
 
   useEffect(() => {
     const params = new URLSearchParams({
@@ -71,7 +71,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
                 {t('card.priceInKorea')}
               </div>
               <div className="font-bold text-primary text-sm">
-                {car.price_krw > 0 ? formatKrwPrice(car.price_krw) : '—'}
+                {car.price_krw > 0 ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
               </div>
             </div>
           </Link>

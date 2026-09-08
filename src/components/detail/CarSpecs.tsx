@@ -24,10 +24,12 @@ export default function CarSpecs({ car }: CarSpecsProps) {
     { label: t('spec.power'), value: car.hp ? `${car.hp} ${t('spec.hp')}` : null },
     { label: t('spec.fuel'), value: localizeVehicleValue(car.fuel, lang) || null },
     { label: t('spec.trans'), value: localizeVehicleValue(car.transmission, lang) || null },
+    { label: t('spec.drivetrain'), value: localizeVehicleValue(car.drivetrain, lang) || null },
     { label: t('spec.body'), value: localizeVehicleValue(car.bodyType, lang) || null },
     { label: t('spec.color'), value: localizeVehicleValue(car.color, lang) || null },
     { label: t('spec.seats'), value: car.seatCount ? String(car.seatCount) : null },
     { label: 'VIN', value: car.vin || null },
+    { label: t('spec.listingId'), value: car.id },
   ].filter(s => s.value);
 
   return (

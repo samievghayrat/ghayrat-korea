@@ -37,6 +37,17 @@ const transmissionMap: Record<string, string> = {
   '세미오토': 'Полуавтомат',
 };
 
+const drivetrainMap: Record<string, string> = {
+  '2WD': 'Передний привод',
+  'FF': 'Передний привод',
+  '전륜구동': 'Передний привод',
+  '후륜구동': 'Задний привод',
+  'FR': 'Задний привод',
+  '4WD': 'Полный привод (4WD)',
+  'AWD': 'Полный привод (AWD)',
+  '4륜구동': 'Полный привод (4WD)',
+};
+
 function translateTransmission(korean: string): string {
   if (!korean) return korean;
   return transmissionMap[korean] || korean;
@@ -147,6 +158,11 @@ function getDisplacementVariants(displacement: number): number[] {
   return variants;
 }
 
+function translateDrivetrain(value: string): string {
+  if (!value) return value;
+  return drivetrainMap[value] || value;
+}
+
 // Encar sometimes appends eligibility notes to the fuel value, for example
 // "LPG(일반인 구입)". Engine reference keys use the shorter canonical names.
 function getFuelLookupVariants(fuel: string): string[] {
@@ -204,6 +220,7 @@ const CURATED_ENGINE_VARIANTS: EngineVariantRule[] = [
   { brand: /^(?:벤츠|메르세데스벤츠)$/, model: /GLB-클래스/, badge: /GLB\s?200\s*d/i, fuel: '디젤', hp: 150, cc: 1950 },
 
   // Audi
+  { brand: /^아우디$/, model: /^A7\b/, badge: /3\.0 TFSI/i, fuel: '가솔린', hp: 310, cc: 2995, yearTo: 2014 },
   { brand: /^아우디$/, model: /^Q2\b/, badge: /35 TFSI/i, fuel: '가솔린', hp: 150, cc: 1395 },
   { brand: /^아우디$/, model: /^(?:뉴 )?A3\b/, badge: /35 TFSI/i, fuel: '가솔린', hp: 150, cc: 1395 },
   { brand: /^아우디$/, model: /^Q3\b/, badge: /35 TDI/i, fuel: '디젤', hp: 150, cc: 1968 },
@@ -800,6 +817,7 @@ async function transformSearchResults(
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
       const rawBadge = (item.Badge as string) || '';
       const rawBadgeDetail = (item.BadgeDetail as string) || '';
+      const drivetrainFromBadge = rawBadge.match(/(?:^|\s)(2WD|4WD|AWD)(?:\s|$)/i)?.[1]?.toUpperCase() || '';
       const translatedBadge = rawBadge
         .replace(/가솔린\+전기/g, translateFuel('가솔린+전기'))
         .replace(/디젤\+전기/g, translateFuel('디젤+전기'))
@@ -826,6 +844,7 @@ async function transformSearchResults(
         color: translateColor((item.Color as string) || ''),
         bodyType: translateBodyType((item.BodyType as string) || ''),
         transmission: translateTransmission((item.Transmission as string) || ''),
+        drivetrain: translateDrivetrain(drivetrainFromBadge),
         price_krw: priceKrw,
         price_rub: priceRub,
         price_usd: priceUsd,
@@ -1319,7 +1338,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     if (!readRes.ok) {
       console.error(`Readside API error: ${readRes.status} for car ${carId}`);
-      return getSavedCar();
+      return savedCar;
     }
 
     const readData = await readRes.json();
@@ -1349,6 +1368,11 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     const colorName = spec.colorName || (searchItem?.Color as string) || '';
     const bodyName = spec.bodyName || (searchItem?.BodyType as string) || '';
     const transmissionName = spec.transmissionName || (searchItem?.Transmission as string) || '';
+    const drivetrainName = spec.drivetrainName
+      || spec.driveTypeName
+      || spec.driveName
+      || (searchItem?.DriveType as string)
+      || '';
     const gradeName = cat.gradeEnglishName || cat.gradeName || '';
     const price = adv.price || (searchItem?.Price as number) || 0;
 
@@ -1454,7 +1478,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
       color: translateColor(colorName),
       bodyType: translateBodyType(bodyName),
       transmission: translateTransmission(transmissionName),
-      drivetrain: '',
+      drivetrain: translateDrivetrain(drivetrainName),
       seatCount: spec.seatCount || undefined,
       price_krw: priceKrw,
       price_rub: priceRub,
@@ -1477,7 +1501,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     return car;
   } catch (error) {
     console.error('Encar detail fetch error:', error);
-    return getSavedCar();
+    return savedCar;
   }
 }
 

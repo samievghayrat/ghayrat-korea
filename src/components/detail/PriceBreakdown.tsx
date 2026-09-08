@@ -6,14 +6,14 @@ import { useApp } from '@/contexts/AppContext';
 interface PriceBreakdownProps {
   breakdown: PriceBreakdownData;
   priceKrw: number;
+  priceRub: number;
   priceUsd?: number;
-  usdToRub?: number;
   destination?: 'russia' | 'tajikistan';
   totalOverride?: number;
 }
 
-export default function PriceBreakdown({ breakdown, priceKrw, destination = 'russia', totalOverride }: PriceBreakdownProps) {
-  const { t, currency, convertUsdToKrw, formatPrice, formatKrwPrice } = useApp();
+export default function PriceBreakdown({ breakdown, priceKrw, priceRub, priceUsd, destination = 'russia', totalOverride }: PriceBreakdownProps) {
+  const { t, currency, convertUsdToKrw, formatPrice, formatKrwPrice, formatListingPrice } = useApp();
   const isRussia = destination === 'russia';
 
   const fmtUsd = (v: number) => `$${v.toLocaleString('en-US')}`;
@@ -26,7 +26,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
     ? [
         {
           label: t('price.carPriceKorea'),
-          value: formatPrice(breakdown.carPrice),
+          value: formatListingPrice(priceKrw, priceRub, priceUsd),
           sublabel: `${fmtRub(breakdown.carPrice)} · ₩${priceKrw.toLocaleString('ko-KR')}`,
         },
         {
@@ -59,7 +59,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
     : [
         {
           label: t('price.carPriceKorea'),
-          value: fmtSelectedFromUsd(breakdown.carPrice),
+          value: formatListingPrice(priceKrw, priceRub, priceUsd),
           sublabel: `${priceKrw.toLocaleString('ko-KR')} KRW`,
         },
         {

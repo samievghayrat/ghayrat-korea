@@ -22,6 +22,7 @@ interface AppContextType {
   convertUsdToKrw: (amount: number) => number;
   formatPrice: (rubAmount: number) => string;
   formatKrwPrice: (krwAmount: number) => string;
+  formatListingPrice: (priceKrw: number, priceRub: number, priceUsd?: number) => string;
   formatMileage: (km: number) => string;
 }
 
@@ -114,13 +115,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const convertUsdToKrw = (amount: number) => usdToKrw(amount, rates);
   const formatPriceFn = (rubAmount: number) => formatCurrencyPrice(rubToTarget(rubAmount, currency, rates), currency);
   const formatKrwPrice = (krwAmount: number) => formatCurrencyPrice(krwToTarget(krwAmount, currency, rates), currency);
+  // Listing APIs return KRW, RUB and USD together from one exchange-rate snapshot.
+  // Prefer those paired values so a vehicle price never changes between its card,
+  // headline and calculation breakdown while the page is open.
+  const formatListingPrice = (priceKrw: number, priceRub: number, priceUsd?: number) => {
+    if (currency === 'KRW') return formatCurrencyPrice(priceKrw, 'KRW');
+    if (currency === 'USD' && priceUsd && priceUsd > 0) return formatCurrencyPrice(priceUsd, 'USD');
+    const targetPrice = priceRub > 0
+      ? rubToTarget(priceRub, currency, rates)
+      : krwToTarget(priceKrw, currency, rates);
+    return formatCurrencyPrice(targetPrice, currency);
+  };
   const formatMileage = (km: number) => formatLocaleMileage(km, lang);
 
   return (
     <AppContext.Provider value={{
       lang, setLang, t,
       currency, setCurrency,
-      convertPrice, convertKrwPrice, convertCurrentToKrw, convertUsdToKrw, formatPrice: formatPriceFn, formatKrwPrice, formatMileage,
+      convertPrice, convertKrwPrice, convertCurrentToKrw, convertUsdToKrw, formatPrice: formatPriceFn, formatKrwPrice, formatListingPrice, formatMileage,
     }}>
       {children}
     </AppContext.Provider>

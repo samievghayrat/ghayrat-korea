@@ -1,9 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function FloatingContact() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // Detail pages already have a full-width contact action beside the price.
+  // Removing the floating control there keeps it off photos and calculations.
+  if (/^\/(?:catalog|auction)\/[^/]+/.test(pathname)) return null;
 
   return (
     <div className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-40 flex flex-col items-end gap-3">

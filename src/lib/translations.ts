@@ -197,6 +197,21 @@ export const modelMap: Record<string, string> = {
   '디스커버리': 'Discovery',
   '디펜더': 'Defender',
   '레인지로버': 'Range Rover',
+  '이보크': 'Evoque',
+  '제네시스': 'Genesis',
+  '스타렉스': 'Starex',
+  '스파크': 'Spark',
+  '아베오': 'Aveo',
+  '올란도': 'Orlando',
+  '에쿠스': 'Equus',
+  '쿠퍼': 'Cooper',
+  '컨트리맨': 'Countryman',
+  '클럽맨': 'Clubman',
+  '모델': 'Model',
+  '마스터': 'Master',
+  '고스트': 'Ghost',
+  '컨티넨탈': 'Continental',
+  '콰트로포르테': 'Quattroporte',
   // Common trim/feature terms
   '프리미엄': 'Premium',
   '프리미어': 'Premier',
@@ -358,6 +373,22 @@ export function translateModel(korean: string): string {
   }
 
   return result.replace(/\s+/g, ' ').trim();
+}
+
+/** A short, customer-facing model name for catalog cards. */
+export function getCompactModelName(model: string): string {
+  if (!model) return model;
+
+  return translateModel(model)
+    .replace(/^(?:Совершенно новый|Новый|All[- ]new|New|Комилан нав|Нав|Butunlay yangi|Yangi)\s+/i, '')
+    .replace(/\s+\d+\s*(?:пок\.|-го поколения|generation)\s*$/i, '')
+    .replace(/\s+насли\s+\d+\s*$/i, '')
+    .replace(/\s+\d+-avlod\s*$/i, '')
+    .replace(/\s*\d+세대\s*$/i, '')
+    .replace(/\s+Hybrid\s*$/i, '')
+    .replace(/\s*\([A-Z0-9-]{2,}\)\s*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Korean badge/trim word translations

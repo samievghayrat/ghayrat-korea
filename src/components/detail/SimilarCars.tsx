@@ -6,7 +6,7 @@ import Link from 'next/link';
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { localizeVehicleValue } from '@/lib/i18n';
-import { translateGenerationName } from '@/lib/translations';
+import { getCompactModelName } from '@/lib/translations';
 
 interface SimilarCarsProps {
   brand: string;
@@ -39,7 +39,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">
-        {brand} {model}
+        {brand} {getCompactModelName(model)}
       </h2>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-1 px-1">
         {cars.map((car) => (
@@ -51,7 +51,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
             <div className="relative aspect-[16/10] bg-gray-100">
               <Image
                 src={car.imageUrl}
-                alt={`${car.brand} ${translateGenerationName(car.model, lang)}`}
+                alt={`${car.brand} ${getCompactModelName(car.model)}`}
                 fill
                 className="object-cover"
                 sizes="256px"
@@ -62,7 +62,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
             </div>
             <div className="p-3">
               <div className="font-semibold text-gray-900 text-sm truncate">
-                {car.brand} {translateGenerationName(car.model, lang)}
+                {car.brand} {getCompactModelName(car.model)}
               </div>
               <div className="text-[11px] text-gray-400 mt-0.5">
                 {formatMileage(car.mileage)} · {localizeVehicleValue(car.fuel, lang)}

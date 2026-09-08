@@ -5,7 +5,7 @@ import Image from 'next/image';
 import type { CarListing } from '@/types';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { useApp } from '@/contexts/AppContext';
-import { translateBadgeDetail, translateGenerationName } from '@/lib/translations';
+import { getCompactModelName } from '@/lib/translations';
 import { localizeVehicleValue } from '@/lib/i18n';
 
 interface CarCardProps {
@@ -22,12 +22,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     } catch {}
   };
 
-  const localizedModel = translateGenerationName(car.model, lang);
-  const localizedGeneration = car.generation ? translateGenerationName(car.generation, lang) : undefined;
-  const displayModel = localizedGeneration && !localizedGeneration.toLowerCase().startsWith(localizedModel.toLowerCase())
-    ? `${localizedModel} ${localizedGeneration}`
-    : localizedModel;
-  const displayTrim = translateBadgeDetail(car.badge || car.trim || '', lang);
+  const displayModel = getCompactModelName(car.model);
 
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
@@ -44,7 +39,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
         <Image
           src={car.imageUrl || '/images/no-image.svg'}
-          alt={`${car.brand} ${localizedModel} ${car.year}`}
+          alt={`${car.brand} ${displayModel} ${car.year}`}
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -74,11 +69,8 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col p-3">
-        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
+        <h3 className="truncate text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
           {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
-          {displayTrim && (
-            <span className="font-medium text-gray-500"> {displayTrim}</span>
-          )}
         </h3>
 
         <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">

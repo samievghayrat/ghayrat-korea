@@ -264,9 +264,6 @@ export default function CarDetailPage() {
               {fullTitle}
             </h1>
           </div>
-          <div className="hidden lg:block">
-            <FavoriteButton carId={car.id} />
-          </div>
         </div>
       </div>
 
@@ -274,10 +271,18 @@ export default function CarDetailPage() {
         {/* Gallery */}
         <div className="lg:col-span-8 order-1">
           <div className="bg-white rounded-2xl border border-gray-200 p-2 sm:p-3 shadow-sm">
-            <ImageGallery
-              images={galleryImages}
-              alt={fullTitle}
-            />
+            <div className="relative">
+              <ImageGallery
+                images={galleryImages}
+                alt={fullTitle}
+              />
+              <div className="absolute left-3 top-3 z-20">
+                <FavoriteButton
+                  carId={car.id}
+                  className="border border-white/70 shadow-lg backdrop-blur-sm"
+                />
+              </div>
+            </div>
             {!galleryLoaded && galleryImages.length <= 1 && (
               <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
                 <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
@@ -293,11 +298,6 @@ export default function CarDetailPage() {
         {/* Price panel - right on desktop, right after gallery on mobile */}
         <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 lg:row-span-2 space-y-4 lg:sticky lg:top-24">
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
-            {/* Title + Favorite */}
-            <div className="flex items-start justify-end gap-3 lg:hidden">
-              <FavoriteButton carId={car.id} />
-            </div>
-
             {/* Reservation status badge */}
             {car.reservationStatus && (
               <div className="mt-3 lg:hidden">

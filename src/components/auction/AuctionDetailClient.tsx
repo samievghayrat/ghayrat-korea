@@ -54,9 +54,10 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const [remainingTime, setRemainingTime] = useState(() => formatRemainingTime(car.auctionDate, copy));
   const title = formatKCarName(car);
   const startPriceKrw = kcarPriceToKrw(car.price);
+  const hasStartPrice = startPriceKrw > 0;
   const [bidKrw, setBidKrw] = useState(startPriceKrw);
   const [bidInput, setBidInput] = useState(() => String(convertKrwPrice(startPriceKrw)));
-  const price = formatKrwPrice(startPriceKrw);
+  const price = hasStartPrice ? formatKrwPrice(startPriceKrw) : copy.pricePending;
   const minBidInputValue = convertKrwPrice(startPriceKrw);
   const currencySymbol = { RUB: "\u20bd", USD: "$", EUR: "\u20ac", KRW: "\u20a9", TJS: "с." }[currency];
   const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : currency === "TJS" ? 1000 : 10000;
@@ -83,9 +84,9 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     `KCar ${copy.auction}: ${title}`,
     car.lotNumber ? `${copy.lot}: ${car.lotNumber}` : null,
     `${copy.startPrice}: ${price}`,
-    `${copy.yourBid}: ${formatAuctionAmount(bidKrw)}`,
-    `${copy.extraCosts}: ${formatAuctionAmount(extraCostsKrw)}`,
-    `${copy.total}: ${formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}`,
+    hasStartPrice ? `${copy.yourBid}: ${formatAuctionAmount(bidKrw)}` : copy.pricePendingNote,
+    hasStartPrice ? `${copy.extraCosts}: ${formatAuctionAmount(extraCostsKrw)}` : null,
+    hasStartPrice ? `${copy.total}: ${formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}` : null,
   ].filter(Boolean).join("\n");
   const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
@@ -233,48 +234,54 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               <div className="text-2xl font-extrabold text-red-700 sm:text-right">{price}</div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <div className="space-y-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">
-                    {copy.yourBid}, {currencySymbol}
-                  </span>
-                  <input
-                    type="number"
-                    min={minBidInputValue}
-                    step={bidStep}
-                    value={bidInput}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      setBidInput(value);
-                      if (value === "") return;
-                      setBidKrw(convertCurrentToKrw(Number(value) || 0));
-                    }}
-                    onBlur={() => {
-                      const nextBidKrw = convertCurrentToKrw(Number(bidInput) || 0);
-                      const clampedBidKrw = Math.max(startPriceKrw, nextBidKrw);
-                      setBidKrw(clampedBidKrw);
-                      setBidInput(String(convertKrwPrice(clampedBidKrw)));
-                    }}
-                    className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
-                  />
-                </label>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-gray-500">
-                      <strong className="font-bold text-gray-700">{copy.extraCosts}</strong>: {copy.extraCostsNote}
+            {hasStartPrice ? (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">
+                      {copy.yourBid}, {currencySymbol}
                     </span>
-                    <span className="font-bold text-gray-950">{formatAuctionAmount(extraCostsKrw)}</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-3">
-                    <div className="flex items-center justify-between gap-3 text-base">
-                      <span className="font-extrabold text-gray-950">{copy.total}</span>
-                      <span className="font-extrabold text-red-700">{formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}</span>
+                    <input
+                      type="number"
+                      min={minBidInputValue}
+                      step={bidStep}
+                      value={bidInput}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setBidInput(value);
+                        if (value === "") return;
+                        setBidKrw(convertCurrentToKrw(Number(value) || 0));
+                      }}
+                      onBlur={() => {
+                        const nextBidKrw = convertCurrentToKrw(Number(bidInput) || 0);
+                        const clampedBidKrw = Math.max(startPriceKrw, nextBidKrw);
+                        setBidKrw(clampedBidKrw);
+                        setBidInput(String(convertKrwPrice(clampedBidKrw)));
+                      }}
+                      className="h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-base font-bold text-gray-950 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                    />
+                  </label>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">
+                        <strong className="font-bold text-gray-700">{copy.extraCosts}</strong>: {copy.extraCostsNote}
+                      </span>
+                      <span className="font-bold text-gray-950">{formatAuctionAmount(extraCostsKrw)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center justify-between gap-3 text-base">
+                        <span className="font-extrabold text-gray-950">{copy.total}</span>
+                        <span className="font-extrabold text-red-700">{formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+                {copy.pricePendingNote}
+              </div>
+            )}
 
             <a
               href={whatsappUrl}
@@ -282,7 +289,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
               rel="noopener noreferrer"
               className="mt-4 inline-flex w-full justify-center rounded-lg bg-emerald-600 px-6 py-4 text-center text-base font-extrabold text-white transition hover:bg-emerald-700"
             >
-              {copy.makeBid}
+              {hasStartPrice ? copy.makeBid : copy.askPrice}
             </a>
           </section>
         </div>

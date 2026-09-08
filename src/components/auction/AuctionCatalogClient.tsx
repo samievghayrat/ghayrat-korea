@@ -100,8 +100,12 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       if (sortFilter === "year_asc") return getDisplayYear(a) - getDisplayYear(b);
       if (sortFilter === "year_desc") return getDisplayYear(b) - getDisplayYear(a);
       if (sortFilter === "order_desc") return getAuctionOrder(b) - getAuctionOrder(a);
-      if (sortFilter === "price_asc") return a.price - b.price;
-      if (sortFilter === "price_desc") return b.price - a.price;
+      if (sortFilter === "price_asc" || sortFilter === "price_desc") {
+        if (a.price <= 0 && b.price <= 0) return getAuctionOrder(a) - getAuctionOrder(b);
+        if (a.price <= 0) return 1;
+        if (b.price <= 0) return -1;
+        return sortFilter === "price_asc" ? a.price - b.price : b.price - a.price;
+      }
       return getAuctionOrder(a) - getAuctionOrder(b);
     });
   }, [filteredCars, sortFilter]);

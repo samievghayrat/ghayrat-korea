@@ -22,6 +22,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
   const { lang, formatKrwPrice, formatMileage } = useApp();
   const copy = AUCTION_COPY[lang];
   const title = formatKCarName(car);
+  const hasStartPrice = car.price > 0;
   const regYear =
     car.firstRegDate && car.firstRegDate.length >= 6
       ? `${car.firstRegDate.slice(0, 4)}/${car.firstRegDate.slice(4, 6)}`
@@ -73,7 +74,7 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-semibold text-red-700/75">{copy.startPrice}</div>
             <div className="shrink-0 text-lg font-extrabold leading-tight text-red-700">
-              {formatKrwPrice(kcarPriceToKrw(car.price))}
+              {hasStartPrice ? formatKrwPrice(kcarPriceToKrw(car.price)) : copy.pricePending}
             </div>
           </div>
         </div>

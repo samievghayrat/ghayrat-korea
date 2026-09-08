@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, gte, lte, like, gt, asc } from "drizzle-orm";
+import { eq, and, gte, lte, like, asc } from "drizzle-orm";
 import { createDb } from "../db";
 import { cars } from "../db/schema";
 import { carQuerySchema } from "../validators/car";
@@ -18,7 +18,6 @@ app.get("/", async (c) => {
   const { brand, fuelType, transmission, condition, minPrice, maxPrice, minYear, maxYear, limit, offset } = query.data;
 
   const conditions = [];
-  conditions.push(gt(cars.price, 0));
 
   // Only show cars with upcoming/today auction
   const now = new Date();

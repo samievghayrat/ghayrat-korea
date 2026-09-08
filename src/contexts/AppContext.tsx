@@ -8,6 +8,7 @@ interface ExchangeRates {
   USD: number;
   EUR: number;
   KRW: number;
+  TJS: number;
 }
 
 const SITE_TITLES: Record<Lang, string> = {
@@ -41,6 +42,7 @@ function rubToTarget(rubAmount: number, currency: Currency, rates: ExchangeRates
     case 'USD': return Math.round(rubAmount / rates.USD);
     case 'EUR': return Math.round(rubAmount / rates.EUR);
     case 'KRW': return Math.round(rubAmount / rates.KRW);
+    case 'TJS': return Math.round(rubAmount / rates.TJS);
   }
 }
 
@@ -50,6 +52,7 @@ function krwToTarget(krwAmount: number, currency: Currency, rates: ExchangeRates
     case 'RUB': return Math.round(krwAmount * rates.KRW);
     case 'USD': return Math.round(krwAmount * rates.KRW / rates.USD);
     case 'EUR': return Math.round(krwAmount * rates.KRW / rates.EUR);
+    case 'TJS': return Math.round(krwAmount * rates.KRW / rates.TJS);
   }
 }
 
@@ -59,6 +62,7 @@ function targetToKrw(amount: number, currency: Currency, rates: ExchangeRates): 
     case 'RUB': return Math.round(amount / rates.KRW);
     case 'USD': return Math.round(amount * rates.USD / rates.KRW);
     case 'EUR': return Math.round(amount * rates.EUR / rates.KRW);
+    case 'TJS': return Math.round(amount * rates.TJS / rates.KRW);
   }
 }
 
@@ -73,6 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     USD: EXCHANGE_RATES.USD,
     EUR: EXCHANGE_RATES.EUR,
     KRW: EXCHANGE_RATES.KRW,
+    TJS: EXCHANGE_RATES.TJS,
   });
   const ratesFetched = useRef(false);
 
@@ -82,18 +87,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLangState(savedLang);
     }
     const savedCurrency = localStorage.getItem('currency') as Currency | null;
-    if (savedCurrency && ['RUB', 'USD', 'EUR', 'KRW'].includes(savedCurrency)) {
+    if (savedCurrency && ['RUB', 'USD', 'EUR', 'KRW', 'TJS'].includes(savedCurrency)) {
       setCurrencyState(savedCurrency);
     }
 
     // Fetch live exchange rates
     if (!ratesFetched.current) {
       ratesFetched.current = true;
-      fetch('/api/exchange-rates')
+      fetch('/api/exchange-rates?currencies=v2')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
-          if (data && data.USD && data.EUR && data.KRW) {
-            setRates({ USD: data.USD, EUR: data.EUR, KRW: data.KRW });
+          if (data && data.USD && data.EUR && data.KRW && data.TJS) {
+            setRates({ USD: data.USD, EUR: data.EUR, KRW: data.KRW, TJS: data.TJS });
           }
         })
         .catch(() => {});

@@ -16,6 +16,7 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
 const CURRENCIES: { code: Currency; label: string; symbol: string }[] = [
   { code: 'USD', label: 'USD', symbol: '$' },
   { code: 'RUB', label: 'RUB', symbol: '₽' },
+  { code: 'TJS', label: 'TJS', symbol: 'с.' },
   { code: 'KRW', label: 'KRW', symbol: '₩' },
 ];
 

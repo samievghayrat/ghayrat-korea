@@ -14,6 +14,7 @@ async function fetchRates(): Promise<Record<string, number>> {
         USD: data.rates?.USD ? 1 / data.rates.USD : 87.5,
         EUR: data.rates?.EUR ? 1 / data.rates.EUR : 95.2,
         KRW: data.rates?.KRW ? 1 / data.rates.KRW : 0.062,
+        TJS: data.rates?.TJS ? 1 / data.rates.TJS : 9.36,
       };
     }
   } catch {}
@@ -27,15 +28,17 @@ async function fetchRates(): Promise<Record<string, number>> {
       const krwToRub = data.rates?.RUB || 0.062;
       const krwToUsd = data.rates?.USD || 0.00073;
       const krwToEur = data.rates?.EUR || 0.00065;
+      const krwToTjs = data.rates?.TJS || 0.00662;
       return {
         USD: krwToRub / krwToUsd,
         EUR: krwToRub / krwToEur,
         KRW: krwToRub,
+        TJS: krwToRub / krwToTjs,
       };
     }
   } catch {}
 
-  return { USD: 87.5, EUR: 95.2, KRW: 0.062 };
+  return { USD: 87.5, EUR: 95.2, KRW: 0.062, TJS: 9.36 };
 }
 
 export async function GET() {

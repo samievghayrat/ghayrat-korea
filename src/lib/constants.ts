@@ -142,5 +142,6 @@ export const EXCHANGE_RATES = {
   USD: 87.50,
   EUR: 95.20,
   KRW: 0.062,
+  TJS: 9.36,
   updated: '2026-03-06',
 };

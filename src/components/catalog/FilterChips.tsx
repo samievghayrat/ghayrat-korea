@@ -40,7 +40,7 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
     '095': 'opt.095', '091': 'opt.091',
   };
 
-  const currencySymbol = { RUB: '₽', USD: '$', EUR: '€', KRW: '₩' }[currency];
+  const currencySymbol = { RUB: '₽', USD: '$', EUR: '€', KRW: '₩', TJS: 'с.' }[currency];
 
   const chips: { label: string; key: keyof CarFilters }[] = [];
 

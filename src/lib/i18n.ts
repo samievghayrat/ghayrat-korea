@@ -1,5 +1,5 @@
 export type Lang = 'ru' | 'en' | 'tj' | 'uz';
-export type Currency = 'RUB' | 'USD' | 'EUR' | 'KRW';
+export type Currency = 'RUB' | 'USD' | 'EUR' | 'KRW' | 'TJS';
 
 const t = {
   // Navigation
@@ -366,8 +366,8 @@ export function getTranslation(key: TranslationKey, lang: Lang): string {
 }
 
 // Currency formatting
-const currencySymbols: Record<Currency, string> = { RUB: '₽', USD: '$', EUR: '€', KRW: '₩' };
-const currencyLocales: Record<Currency, string> = { RUB: 'ru-RU', USD: 'en-US', EUR: 'de-DE', KRW: 'ko-KR' };
+const currencySymbols: Record<Currency, string> = { RUB: '₽', USD: '$', EUR: '€', KRW: '₩', TJS: 'с.' };
+const currencyLocales: Record<Currency, string> = { RUB: 'ru-RU', USD: 'en-US', EUR: 'de-DE', KRW: 'ko-KR', TJS: 'tg-TJ' };
 
 export function formatCurrencyPrice(price: number, currency: Currency): string {
   return new Intl.NumberFormat(currencyLocales[currency], {

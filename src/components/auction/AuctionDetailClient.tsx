@@ -58,8 +58,8 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
   const [bidInput, setBidInput] = useState(() => String(convertKrwPrice(startPriceKrw)));
   const price = formatKrwPrice(startPriceKrw);
   const minBidInputValue = convertKrwPrice(startPriceKrw);
-  const currencySymbol = { RUB: "\u20bd", USD: "$", EUR: "\u20ac", KRW: "\u20a9" }[currency];
-  const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : 10000;
+  const currencySymbol = { RUB: "\u20bd", USD: "$", EUR: "\u20ac", KRW: "\u20a9", TJS: "с." }[currency];
+  const bidStep = currency === "KRW" ? 100000 : currency === "USD" || currency === "EUR" ? 100 : currency === "TJS" ? 1000 : 10000;
   const extraCostsKrw =
     bidKrw > HIGH_VALUE_THRESHOLD_KRW
       ? Math.round(HIGH_VALUE_BASE_EXTRA_COST_USD * AUCTION_USD_TO_KRW + bidKrw * HIGH_VALUE_EXTRA_COST_RATE)
@@ -71,6 +71,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
       return `${amountUsd.toLocaleString("en-US")} $`;
     }
     if (currency === "KRW") return `${amountKrw.toLocaleString("ko-KR")} \u20a9`;
+    if (currency === "TJS") return formatKrwPrice(amountKrw);
     if (options?.baseKrw) {
       const baseDisplay = convertKrwPrice(options.baseKrw);
       const extraDisplay = Math.round((amountKrw - options.baseKrw) / AUCTION_USD_TO_KRW);

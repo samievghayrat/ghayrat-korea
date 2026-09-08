@@ -379,7 +379,7 @@ function BrandModelPicker({
           />
         </label>
       </div>
-      <div className="grid grid-cols-2 gap-2 overflow-y-auto p-3">
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto p-3">
         {brands.length === 0 && [1, 2, 3, 4, 5, 6].map(item => (
           <div key={item} className="h-14 animate-pulse rounded-xl bg-gray-100" />
         ))}
@@ -401,7 +401,7 @@ function BrandModelPicker({
           </button>
         ))}
         {brands.length > 0 && visibleBrands.length === 0 && (
-          <p className="col-span-2 py-8 text-center text-sm text-gray-400">{labels.noMatches}</p>
+          <p className="py-8 text-center text-sm text-gray-400">{labels.noMatches}</p>
         )}
       </div>
     </section>
@@ -457,11 +457,11 @@ function BrandModelPicker({
             {labels.loading}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <button
               type="button"
               onClick={selectAllModels}
-              className={`col-span-2 flex min-h-12 items-center justify-between rounded-xl border px-3 text-left text-sm font-bold transition-all ${
+              className={`flex min-h-12 items-center justify-between rounded-xl border px-3 text-left text-sm font-bold transition-all ${
                 !selectedModel
                   ? 'border-primary bg-primary/5 text-primary'
                   : 'border-gray-200 text-gray-800 hover:bg-gray-50'
@@ -494,7 +494,7 @@ function BrandModelPicker({
               );
             })}
             {visibleModels.length === 0 && (
-              <p className="col-span-2 py-8 text-center text-sm text-gray-400">
+              <p className="py-8 text-center text-sm text-gray-400">
                 {modelQuery ? labels.noMatches : labels.noModels}
               </p>
             )}

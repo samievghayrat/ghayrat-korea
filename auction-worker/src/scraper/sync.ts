@@ -1,9 +1,32 @@
 import type { Env } from "../types/env";
 import { KCarClient, parseEngineVolume, parseInspectionFromListing } from "./kcar-client";
 import { mapKCarToSchema } from "./field-mapper";
-import { downloadImage, saveImageSet } from "./image-downloader";
+import { saveImageSet } from "./image-downloader";
 
-const BATCH_SIZE = 3;
+const IMAGE_MANIFEST_BATCH_SIZE = 4;
+const MAX_IMAGE_MANIFESTS_PER_SYNC = 120;
+const KCAR_IMAGE_BASE_URL = "https://www.kcarauction.com/auction/IMAGE_UPLOAD/CAR/";
+
+function sourceThumbnailUrl(path: string): string {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const normalized = path.replace(/^\/+/, "");
+  if (normalized.startsWith("auction/IMAGE_UPLOAD/CAR/")) {
+    return `https://www.kcarauction.com/${normalized}`;
+  }
+  return `${KCAR_IMAGE_BASE_URL}${normalized}`;
+}
+
+function parseSavedImages(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 function randomDelay(minMs: number, maxMs: number): Promise<void> {
   const ms = minMs + Math.floor(Math.random() * (maxMs - minMs));
@@ -102,67 +125,48 @@ export async function syncKCarAuctions(env: Env): Promise<SyncResult> {
       inspection_data = CASE WHEN excluded.inspection_data IS NOT NULL THEN excluded.inspection_data ELSE cars.inspection_data END,
       updated_at = excluded.updated_at`;
 
-    // Phase 1: Download thumbnails and save image manifests for NEW cars (in batches)
-    const mappedCars: (ReturnType<typeof mapKCarToSchema> & { inspectionData: string | null })[] = [];
-    for (let i = 0; i < uniqueCars.length; i += BATCH_SIZE) {
-      const batch = uniqueCars.slice(i, i + BATCH_SIZE);
+    // KCar can return hundreds of cars. Persist the whole catalog in one run, but
+    // create gallery manifests incrementally to stay below Cloudflare's per-request
+    // subrequest limit. Catalog thumbnails use KCar's public source URL immediately.
+    const galleryImages = new Map<string, string[]>();
+    const carsMissingGallery = uniqueCars
+      .filter((car) => parseSavedImages(existingCars.get(car.CAR_ID)?.images).length === 0)
+      .slice(0, MAX_IMAGE_MANIFESTS_PER_SYNC);
 
-      const [imageResults, multiImageResults] = await Promise.all([
-        Promise.all(
-          batch.map(async (car) => {
-            const existing = existingCars.get(car.CAR_ID);
-            // Skip all image work for existing cars (fix images via enrich endpoint)
-            if (existing) return existing.image || "";
-            try {
-              return await downloadImage(env.BUCKET, car.CAR_ID, car.THUMBNAIL_MOBILE);
-            } catch {
-              imagesFailed++;
-              return "";
-            }
-          })
-        ),
-        Promise.all(
-          batch.map(async (car) => {
-            const existing = existingCars.get(car.CAR_ID);
-            if (existing?.images) {
-              try {
-                const parsed = JSON.parse(existing.images);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-              } catch { /* fetch a fresh image set below */ }
-            }
-            try {
-              const imgs = await client.fetchCarImages(car.CAR_ID);
-              if (imgs.length > 0) {
-                imagesUpdated++;
-                return await saveImageSet(env.BUCKET, car.CAR_ID, imgs);
-              }
-              return [];
-            } catch {
-              return [];
-            }
-          })
-        ),
-      ]);
-
-      for (let j = 0; j < batch.length; j++) {
-        // If thumbnail download failed, use first multi-image as fallback
-        let thumbnail = imageResults[j];
-        if (!thumbnail && multiImageResults[j].length > 0) {
-          thumbnail = multiImageResults[j][0];
+    for (let i = 0; i < carsMissingGallery.length; i += IMAGE_MANIFEST_BATCH_SIZE) {
+      const batch = carsMissingGallery.slice(i, i + IMAGE_MANIFEST_BATCH_SIZE);
+      const results = await Promise.all(batch.map(async (car) => {
+        try {
+          const sourceImages = await client.fetchCarImages(car.CAR_ID);
+          if (sourceImages.length === 0) return [];
+          const savedImages = await saveImageSet(env.BUCKET, car.CAR_ID, sourceImages);
+          imagesUpdated++;
+          return savedImages;
+        } catch {
+          imagesFailed++;
+          return [];
         }
-        const mapped = mapKCarToSchema(batch[j], thumbnail, multiImageResults[j], null, null, null);
-        // Parse inspection data from listing fields
-        const inspection = parseInspectionFromListing(batch[j]);
-        mappedCars.push({
-          ...mapped,
-          inspectionData: inspection ? JSON.stringify(inspection) : null,
-        });
-      }
+      }));
 
-      if (i + BATCH_SIZE < uniqueCars.length) {
-        await randomDelay(800, 1500);
+      batch.forEach((car, index) => galleryImages.set(car.CAR_ID, results[index]));
+      if (i + IMAGE_MANIFEST_BATCH_SIZE < carsMissingGallery.length) {
+        await randomDelay(250, 500);
       }
     }
+
+    const mappedCars: (ReturnType<typeof mapKCarToSchema> & { inspectionData: string | null })[] =
+      uniqueCars.map((car) => {
+        const existing = existingCars.get(car.CAR_ID);
+        const existingGallery = parseSavedImages(existing?.images);
+        const images = galleryImages.get(car.CAR_ID) || existingGallery;
+        const thumbnail = existing?.image || sourceThumbnailUrl(car.THUMBNAIL_MOBILE) || images[0] || "";
+        const mapped = mapKCarToSchema(car, thumbnail, images, null, null, null);
+        const inspection = parseInspectionFromListing(car);
+        return {
+          ...mapped,
+          inspectionData: inspection ? JSON.stringify(inspection) : null,
+        };
+      });
 
     // Phase 2: Batch-insert all cars into D1 (100 per batch call)
     const DB_BATCH = 100;

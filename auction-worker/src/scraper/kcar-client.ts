@@ -1,10 +1,17 @@
 const BASE_URL = "https://www.kcarauction.com";
 const LOGIN_URL = `${BASE_URL}/kcar/user/user_logincheck_ajax.do`;
-const CONFIRM_URL = `${BASE_URL}/kcar/user/user_confirm_ajax.do`;
+const CONFIRM_URL = `${BASE_URL}/kcar/user/user_confirm.do`;
+const CONFIRM_OK_URL = `${BASE_URL}/kcar/user/user_confirm_ok.do`;
 const LIST_URL = `${BASE_URL}/kcar/auction/getAuctionCarList_ajax.do`;
 const THUMBNAIL_URL = `${BASE_URL}/auction/getThumbnail_ajax.do`;
 const IMAGE_BASE = `${BASE_URL}/auction/IMAGE_UPLOAD/CAR/`;
 const PAGE_SIZE = 50;
+
+function isClaimPolicyPage(html: string): boolean {
+  return html.includes("fnAgreeBid")
+    && html.includes("동의안함")
+    && html.includes("클레임 처리 불가내역");
+}
 
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":
@@ -132,15 +139,44 @@ export class KCarClient {
   }
 
   private extractCookies(response: Response): void {
-    response.headers.forEach((value, key) => {
-      if (key.toLowerCase() === "set-cookie") {
-        const cookiePair = value.split(";")[0];
-        // Update or add cookie
-        const cookieName = cookiePair.split("=")[0];
-        this.cookies = this.cookies.filter((c) => !c.startsWith(cookieName + "="));
-        this.cookies.push(cookiePair);
-      }
-    });
+    const headers = response.headers as Headers & { getSetCookie?: () => string[] };
+    const combinedHeader = response.headers.get("set-cookie");
+    const setCookieHeaders = headers.getSetCookie?.()
+      ?? (combinedHeader
+        ? combinedHeader.split(/,(?=\s*[!#$%&'*+.^_`|~0-9A-Za-z-]+=)/)
+        : []);
+
+    for (const value of setCookieHeaders) {
+      const cookiePair = value.split(";")[0]?.trim();
+      if (!cookiePair || !cookiePair.includes("=")) continue;
+      const cookieName = cookiePair.split("=")[0];
+      this.cookies = this.cookies.filter((cookie) => !cookie.startsWith(cookieName + "="));
+      this.cookies.push(cookiePair);
+    }
+  }
+
+  private async followRedirects(response: Response, maxRedirects = 5): Promise<Response> {
+    let current = response;
+
+    for (let redirectCount = 0; redirectCount < maxRedirects; redirectCount++) {
+      if (current.status < 300 || current.status >= 400) return current;
+      const location = current.headers.get("location");
+      if (!location) return current;
+
+      const nextUrl = new URL(location, current.url || BASE_URL).toString();
+      current = await fetch(nextUrl, {
+        method: "GET",
+        headers: {
+          ...BROWSER_HEADERS,
+          Cookie: this.buildCookieHeader(),
+          Referer: current.url || BASE_URL,
+        },
+        redirect: "manual",
+      });
+      this.extractCookies(current);
+    }
+
+    throw new Error("KCar confirmation exceeded the redirect limit");
   }
 
   async login(userId: string, userPw: string): Promise<void> {
@@ -157,27 +193,99 @@ export class KCarClient {
 
     this.extractCookies(loginRes);
 
-    const loginBody = (await loginRes.json().catch(() => ({}))) as { successYn?: string };
+    const loginText = await loginRes.text();
+    const loginBody = (() => {
+      try {
+        return JSON.parse(loginText) as { successYn?: string; message?: string };
+      } catch {
+        return {} as { successYn?: string; message?: string };
+      }
+    })();
     if (loginBody.successYn !== "Y") {
-      throw new Error(`KCar login failed: successYn=${loginBody.successYn}`);
+      const contentType = loginRes.headers.get("content-type") || "unknown";
+      const location = loginRes.headers.get("location") || "none";
+      const message = loginBody.message?.replace(/\s+/g, " ").trim().slice(0, 160) || "none";
+      throw new Error(
+        `KCar login failed: status=${loginRes.status}, contentType=${contentType}, `
+        + `successYn=${loginBody.successYn}, location=${location}, message=${message}`,
+      );
     }
 
     if (!this.cookies.some((c) => c.startsWith("JSESSIONID="))) {
       throw new Error("KCar login failed: no JSESSIONID cookie");
     }
 
-    // Step 2: Agree to bid terms
+    // Step 2: Complete KCar's current post-login confirmation form.
     await randomDelay(2000, 3500);
-    const confirmRes = await fetch(CONFIRM_URL, {
+    let confirmRes = await fetch(CONFIRM_URL, {
       method: "POST",
       headers: {
         ...BROWSER_HEADERS,
         "Content-Type": "application/x-www-form-urlencoded",
         Cookie: this.buildCookieHeader(),
       },
-      body: new URLSearchParams({ bid_agree_modal: "Y" }).toString(),
+      body: new URLSearchParams({
+        user_id: userId,
+        user_pw: userPw,
+        i_sReturnUrl: "/kcar/main.do",
+      }).toString(),
+      redirect: "manual",
     });
     this.extractCookies(confirmRes);
+    confirmRes = await this.followRedirects(confirmRes);
+
+    if (!confirmRes.ok) {
+      throw new Error(`KCar confirmation failed: ${confirmRes.status}`);
+    }
+
+    let confirmationHtml = await confirmRes.text();
+    if (isClaimPolicyPage(confirmationHtml)) {
+      // The business owner explicitly approved this exact recurring KCar claim
+      // policy. Refuse to accept automatically if its identifying text changes.
+      const policyText = confirmationHtml
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&#39;|&apos;/gi, "'")
+        .replace(/&quot;/gi, '"')
+        .replace(/\s+/g, " ")
+        .trim();
+      const approvedPolicyMarkers = [
+        "사전 검수(실차 확인)절차를 행하지 않는 클레임",
+        "차령 만6년 경과",
+        "주행거리 15만km이상",
+        "옵션 / 외관 / 전자장치 / 소모품",
+        "엔진,미션",
+        "낙찰차량 출고 후",
+        "동의하지 않는 경우 로그아웃됩니다",
+      ];
+      if (!approvedPolicyMarkers.every((marker) => policyText.includes(marker))) {
+        throw new Error("KCar claim policy changed; renewed approval is required");
+      }
+
+      let agreementRes = await fetch(CONFIRM_OK_URL, {
+        method: "POST",
+        headers: {
+          ...BROWSER_HEADERS,
+          "Content-Type": "application/x-www-form-urlencoded",
+          Cookie: this.buildCookieHeader(),
+          Referer: CONFIRM_URL,
+        },
+        body: new URLSearchParams({ i_sReturnUrl: "/kcar/main.do" }).toString(),
+        redirect: "manual",
+      });
+      this.extractCookies(agreementRes);
+      agreementRes = await this.followRedirects(agreementRes);
+
+      if (!agreementRes.ok) {
+        throw new Error(`KCar agreement confirmation failed: ${agreementRes.status}`);
+      }
+
+      confirmationHtml = await agreementRes.text();
+      if (isClaimPolicyPage(confirmationHtml)) {
+        throw new Error("KCar claim-policy agreement was not accepted");
+      }
+    }
   }
 
   async fetchAllCars(pageType: "dCfm" | "wCfm"): Promise<KCarRawCar[]> {
@@ -247,9 +355,12 @@ export class KCarClient {
       this.extractCookies(response);
 
       if (!response.ok) {
-        // Lane might not exist — skip it instead of crashing
-        hasMore = false;
-        break;
+        throw new Error(`KCar auction list failed: ${response.status} (${pageType}/${lane})`);
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.toLowerCase().includes("json")) {
+        throw new Error(`KCar auction session rejected (${pageType}/${lane})`);
       }
 
       const data = (await response.json()) as { CAR_LIST?: KCarRawCar[] };

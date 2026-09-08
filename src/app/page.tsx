@@ -7,6 +7,7 @@ import CarGrid from '@/components/catalog/CarGrid';
 import Pagination from '@/components/catalog/Pagination';
 import SortSelect from '@/components/catalog/SortSelect';
 import EncarSearch from '@/components/catalog/EncarSearch';
+import CatalogWelcome from '@/components/catalog/CatalogWelcome';
 import { useApp } from '@/contexts/AppContext';
 
 type SourceTab = 'encar' | 'auction' | 'forSale';
@@ -128,18 +129,7 @@ function CatalogContent() {
       {activeTab === 'encar' && (
         <>
 
-      <section className="mb-4 hidden overflow-hidden rounded-2xl bg-gray-950 px-5 py-4 text-white shadow-sm lg:flex lg:items-center lg:justify-between lg:gap-8" aria-labelledby="catalog-title">
-        <div className="max-w-xl">
-          <h1 id="catalog-title" className="text-xl font-extrabold tracking-tight sm:text-2xl">{t('home.catalogTitle')}</h1>
-          <p className="mt-1 text-sm leading-6 text-gray-300">{t('home.catalogHint')}</p>
-        </div>
-        <div className="mt-3 inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm font-semibold text-white lg:mt-0">
-          <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m5 13 4 4L19 7" />
-          </svg>
-          {t('home.catalogPriceNote')}
-        </div>
-      </section>
+      <CatalogWelcome />
 
       {/* Mobile: compact inline filters */}
       <div className="lg:hidden">

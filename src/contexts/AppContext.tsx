@@ -10,6 +10,13 @@ interface ExchangeRates {
   KRW: number;
 }
 
+const SITE_TITLES: Record<Lang, string> = {
+  ru: 'GHAYRAT — Авто из Кореи',
+  en: 'GHAYRAT — Cars from Korea',
+  tj: 'GHAYRAT — Мошинҳо аз Корея',
+  uz: 'GHAYRAT — Koreyadan avtomobillar',
+};
+
 interface AppContextType {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -95,6 +102,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
+    const isVehicleDetail = /^\/(?:catalog|auction)\/[^/]+/.test(window.location.pathname);
+    if (!isVehicleDetail) document.title = SITE_TITLES[lang];
   }, [lang]);
 
   const setLang = (l: Lang) => {

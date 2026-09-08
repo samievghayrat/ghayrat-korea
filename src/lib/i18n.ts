@@ -362,7 +362,7 @@ const t = {
 export type TranslationKey = keyof typeof t;
 
 export function getTranslation(key: TranslationKey, lang: Lang): string {
-  return t[key]?.[lang] || t[key]?.['en'] || key;
+  return t[key]?.[lang] ?? t[key]?.['en'] ?? key;
 }
 
 // Currency formatting

@@ -52,8 +52,6 @@ const t = {
   'search.modelAfterBrand': { ru: 'Сначала выберите марку', en: 'Choose a brand first', tj: 'Аввал брендро интихоб кунед', uz: 'Avval brendni tanlang' },
   'search.allModels': { ru: 'Все модели', en: 'All models', tj: 'Ҳамаи моделҳо', uz: 'Barcha modellar' },
   'search.brandModelTitle': { ru: 'Марка и модель', en: 'Brand and model', tj: 'Бренд ва модел', uz: 'Brend va model' },
-  'search.koreanBrands': { ru: 'Корейские', en: 'Korean', tj: 'Кореягӣ', uz: 'Koreys' },
-  'search.importedBrands': { ru: 'Импортные', en: 'Imported', tj: 'Воридотӣ', uz: 'Import' },
   'search.searchBrand': { ru: 'Найти марку', en: 'Find a brand', tj: 'Ҷустуҷӯи бренд', uz: 'Brendni qidiring' },
   'search.searchModel': { ru: 'Найти модель', en: 'Find a model', tj: 'Ҷустуҷӯи модел', uz: 'Modelni qidiring' },
   'search.noMatches': { ru: 'Ничего не найдено', en: 'Nothing found', tj: 'Чизе ёфт нашуд', uz: 'Hech narsa topilmadi' },

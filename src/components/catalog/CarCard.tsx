@@ -44,7 +44,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
         <Image
           src={car.imageUrl || '/images/no-image.svg'}
-          alt={`${car.brand} ${car.model} ${car.year}`}
+          alt={`${car.brand} ${localizedModel} ${car.year}`}
           fill
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

@@ -51,7 +51,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
             <div className="relative aspect-[16/10] bg-gray-100">
               <Image
                 src={car.imageUrl}
-                alt={`${car.brand} ${car.model}`}
+                alt={`${car.brand} ${translateGenerationName(car.model, lang)}`}
                 fill
                 className="object-cover"
                 sizes="256px"

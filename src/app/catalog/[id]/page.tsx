@@ -250,7 +250,7 @@ export default function CarDetailPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-2 sm:p-3 shadow-sm">
             <ImageGallery
               images={galleryImages}
-              alt={`${car.brand} ${car.model}`}
+              alt={fullTitle}
             />
             {!galleryLoaded && galleryImages.length <= 1 && (
               <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">

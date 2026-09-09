@@ -262,36 +262,40 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
             <option value="price_asc">{copy.sortPriceAsc}</option>
             <option value="price_desc">{copy.sortPriceDesc}</option>
           </select>
-          <div className="text-sm font-semibold text-gray-500">
-            {copy.found} <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <div className="text-sm font-semibold text-gray-500">
+              {copy.found} <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
+            </div>
+            <button
+              type="button"
+              onClick={refreshCars}
+              disabled={refreshState === "loading"}
+              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-extrabold transition disabled:cursor-wait disabled:opacity-60 ${
+                refreshState === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+              }`}
+            >
+              <svg
+                className={`h-3.5 w-3.5 ${refreshState === "loading" ? "animate-spin" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M20 11a8 8 0 10-2.34 5.66M20 4v7h-7" />
+              </svg>
+              {refreshState === "loading"
+                ? copy.refreshingCars
+                : refreshState === "success"
+                  ? copy.carsRefreshed
+                  : copy.refreshCars}
+            </button>
           </div>
         </div>
-
-        <div className="mt-4 flex flex-col items-center justify-center gap-2 border-t border-gray-100 pt-4">
-          <button
-            type="button"
-            onClick={refreshCars}
-            disabled={refreshState === "loading"}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-5 text-sm font-extrabold text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
-          >
-            <svg
-              className={`h-4 w-4 ${refreshState === "loading" ? "animate-spin" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M20 11a8 8 0 10-2.34 5.66M20 4v7h-7" />
-            </svg>
-            {refreshState === "loading" ? copy.refreshingCars : copy.refreshCars}
-          </button>
-          {refreshState === "success" && (
-            <div className="text-xs font-semibold text-emerald-700" role="status">{copy.carsRefreshed}</div>
-          )}
-          {refreshState === "error" && (
-            <div className="text-xs font-semibold text-red-700" role="alert">{copy.refreshFailed}</div>
-          )}
-        </div>
+        {refreshState === "error" && (
+          <div className="mt-2 text-center text-xs font-semibold text-red-700" role="alert">{copy.refreshFailed}</div>
+        )}
       </div>
 
       {filteredCars.length === 0 ? (

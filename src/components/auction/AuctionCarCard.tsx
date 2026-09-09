@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { localizeVehicleValue } from "@/lib/i18n";
 import { AUCTION_COPY } from "@/lib/page-copy";
@@ -23,10 +24,37 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
   const copy = AUCTION_COPY[lang];
   const title = formatKCarName(car);
   const hasStartPrice = car.price > 0;
+  const initialImage = resolveKCarImageUrl(car.image);
+  const [imageSrc, setImageSrc] = useState(initialImage);
+  const fallbackAttempted = useRef(false);
   const regYear =
     car.firstRegDate && car.firstRegDate.length >= 6
       ? `${car.firstRegDate.slice(0, 4)}/${car.firstRegDate.slice(4, 6)}`
       : String(car.year);
+
+  useEffect(() => {
+    fallbackAttempted.current = false;
+    setImageSrc(initialImage);
+  }, [initialImage]);
+
+  const useGalleryFallback = async () => {
+    if (fallbackAttempted.current) {
+      setImageSrc("/images/no-image.svg");
+      return;
+    }
+
+    fallbackAttempted.current = true;
+    setImageSrc("/images/no-image.svg");
+    try {
+      const response = await fetch(`/api/auction/cars/${encodeURIComponent(car.id)}/images`);
+      if (!response.ok) return;
+      const payload = (await response.json()) as { data?: string[] };
+      const fallback = payload.data?.find((image) => Boolean(image));
+      if (fallback) setImageSrc(resolveKCarImageUrl(fallback));
+    } catch {
+      // Keep the local placeholder when KCar has no usable gallery image.
+    }
+  };
 
   return (
     <Link
@@ -35,12 +63,13 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
         <img
-          src={resolveKCarImageUrl(car.image)}
+          src={imageSrc}
           alt={title}
           className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={priority ? "high" : "auto"}
+          onError={useGalleryFallback}
         />
         <div className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[11px] font-bold text-white">
           {copy.auction} {formatKcarAuctionDate(car.auctionDate)}

@@ -159,7 +159,7 @@ export async function syncKCarAuctions(env: Env): Promise<SyncResult> {
         const existing = existingCars.get(car.CAR_ID);
         const existingGallery = parseSavedImages(existing?.images);
         const images = galleryImages.get(car.CAR_ID) || existingGallery;
-        const thumbnail = existing?.image || sourceThumbnailUrl(car.THUMBNAIL_MOBILE) || images[0] || "";
+        const thumbnail = sourceThumbnailUrl(car.THUMBNAIL_MOBILE) || existing?.image || images[0] || "";
         const mapped = mapKCarToSchema(car, thumbnail, images, null, null, null);
         const inspection = parseInspectionFromListing(car);
         return {

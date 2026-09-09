@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AuctionCarCard from "@/components/auction/AuctionCarCard";
 import { getKCarBaseModel, getKCarBrand, type KCarAuctionCar } from "@/lib/kcar-auction";
@@ -13,6 +13,7 @@ interface AuctionCatalogClientProps {
 
 type YearFilter = "all" | "2014" | "2021";
 type SortFilter = "order_asc" | "order_desc" | "year_desc" | "year_asc" | "price_asc" | "price_desc";
+type RefreshState = "idle" | "loading" | "success" | "error";
 const PAGE_SIZE = 9;
 function getDisplayYear(car: KCarAuctionCar): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
@@ -30,6 +31,8 @@ function getAuctionOrder(car: KCarAuctionCar): number {
 export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps) {
   const { lang } = useApp();
   const copy = AUCTION_COPY[lang];
+  const [catalogCars, setCatalogCars] = useState(cars);
+  const [refreshState, setRefreshState] = useState<RefreshState>("idle");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,7 +53,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const carOptions = useMemo(() => {
-    const rows = cars.map((car) => ({
+    const rows = catalogCars.map((car) => ({
       brand: getKCarBrand(car),
       model: getKCarBaseModel(car),
     }));
@@ -76,10 +79,10 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return { brands, models };
-  }, [cars, selectedBrand]);
+  }, [catalogCars, selectedBrand]);
 
   const filteredCars = useMemo(() => {
-    return cars.filter((car) => {
+    return catalogCars.filter((car) => {
       const brand = getKCarBrand(car);
       const model = getKCarBaseModel(car);
       const matchesBrand = !selectedBrand || brand === selectedBrand;
@@ -93,7 +96,7 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
 
       return matchesBrand && matchesModel && matchesYear;
     });
-  }, [cars, selectedBrand, selectedModel, yearFilter]);
+  }, [catalogCars, selectedBrand, selectedModel, yearFilter]);
 
   const sortedCars = useMemo(() => {
     return [...filteredCars].sort((a, b) => {
@@ -170,6 +173,25 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     updateFilters({ page: value });
   };
 
+  const refreshCars = async () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+
+    try {
+      const response = await fetch("/api/auction/cars?limit=1000&refresh=1", {
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error(`Refresh failed: ${response.status}`);
+
+      const payload = (await response.json()) as { data?: KCarAuctionCar[] };
+      if (!Array.isArray(payload.data)) throw new Error("Invalid auction response");
+      setCatalogCars(payload.data);
+      setRefreshState("success");
+    } catch {
+      setRefreshState("error");
+    }
+  };
+
   return (
     <>
       <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
@@ -243,6 +265,32 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
           <div className="text-sm font-semibold text-gray-500">
             {copy.found} <span className="ml-1 font-extrabold text-gray-950">{filteredCars.length}</span>
           </div>
+        </div>
+
+        <div className="mt-4 flex flex-col items-center justify-center gap-2 border-t border-gray-100 pt-4">
+          <button
+            type="button"
+            onClick={refreshCars}
+            disabled={refreshState === "loading"}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-5 text-sm font-extrabold text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
+          >
+            <svg
+              className={`h-4 w-4 ${refreshState === "loading" ? "animate-spin" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M20 11a8 8 0 10-2.34 5.66M20 4v7h-7" />
+            </svg>
+            {refreshState === "loading" ? copy.refreshingCars : copy.refreshCars}
+          </button>
+          {refreshState === "success" && (
+            <div className="text-xs font-semibold text-emerald-700" role="status">{copy.carsRefreshed}</div>
+          )}
+          {refreshState === "error" && (
+            <div className="text-xs font-semibold text-red-700" role="alert">{copy.refreshFailed}</div>
+          )}
         </div>
       </div>
 

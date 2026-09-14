@@ -18,6 +18,9 @@ const SITE_TITLES: Record<Lang, string> = {
   uz: 'GHAYRAT — Koreyadan avtomobillar',
 };
 
+const DEFAULT_CURRENCY: Currency = 'USD';
+const CURRENCY_DEFAULT_VERSION = 'usd-v1';
+
 interface AppContextType {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -72,7 +75,7 @@ function usdToKrw(amount: number, rates: ExchangeRates): number {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('ru');
-  const [currency, setCurrencyState] = useState<Currency>('RUB');
+  const [currency, setCurrencyState] = useState<Currency>(DEFAULT_CURRENCY);
   const [rates, setRates] = useState<ExchangeRates>({
     USD: EXCHANGE_RATES.USD,
     EUR: EXCHANGE_RATES.EUR,
@@ -87,7 +90,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLangState(savedLang);
     }
     const savedCurrency = localStorage.getItem('currency') as Currency | null;
-    if (savedCurrency && ['RUB', 'USD', 'EUR', 'KRW', 'TJS'].includes(savedCurrency)) {
+    const currencyDefaultVersion = localStorage.getItem('currencyDefaultVersion');
+    if (currencyDefaultVersion !== CURRENCY_DEFAULT_VERSION) {
+      // Move existing visitors to the new USD-first experience once. Their later
+      // manual currency choice will continue to be remembered across visits.
+      setCurrencyState(DEFAULT_CURRENCY);
+      localStorage.setItem('currency', DEFAULT_CURRENCY);
+      localStorage.setItem('currencyDefaultVersion', CURRENCY_DEFAULT_VERSION);
+    } else if (savedCurrency && ['RUB', 'USD', 'EUR', 'KRW', 'TJS'].includes(savedCurrency)) {
       setCurrencyState(savedCurrency);
     }
 

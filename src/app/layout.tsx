@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Header from '@/components/layout/Header';
@@ -8,7 +8,10 @@ import BottomNav from '@/components/layout/BottomNav';
 import FloatingContact from '@/components/shared/FloatingContact';
 import { AppProvider } from '@/contexts/AppContext';
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+const roboto = Roboto({
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ghayrat.vercel.app'),
@@ -41,7 +44,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${roboto.className} antialiased`}>
         <AppProvider>
           <Header />
           <main className="min-h-screen pb-16 lg:pb-0">{children}</main>

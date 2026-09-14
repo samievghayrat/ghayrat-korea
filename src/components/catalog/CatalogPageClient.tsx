@@ -45,7 +45,7 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
   }, [total]);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,rgba(236,253,245,0.62)_0px,rgba(248,250,252,0.82)_380px,#f8fafc_100%)]">
+    <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
         <CatalogWelcome />
 
@@ -62,9 +62,8 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
             />
           </div>
 
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-emerald-100 bg-white/85 p-2.5 shadow-sm backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900" aria-live="polite">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="text-sm font-semibold text-gray-700" aria-live="polite">
               {total.toLocaleString('ru-RU')} {t('search.cars')}
             </div>
             <SortSelect
@@ -89,9 +88,8 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-4 hidden items-center justify-between gap-4 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/80 via-white to-sky-50/60 px-4 py-3 shadow-sm lg:flex">
-              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900" aria-live="polite">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+            <div className="mb-4 hidden items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm lg:flex">
+              <div className="text-sm font-semibold text-gray-700" aria-live="polite">
                 {t('search.found')}: {total.toLocaleString('ru-RU')} {t('search.cars')}
               </div>
               <SortSelect

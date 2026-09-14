@@ -3,17 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #f5f8f6;
+  --background: #f0f2f5;
   --foreground: #1a1a1a;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  background-image:
-    radial-gradient(circle at 8% 0%, rgba(16, 185, 129, 0.08), transparent 28rem),
-    radial-gradient(circle at 92% 12%, rgba(14, 165, 233, 0.06), transparent 24rem);
-  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
 

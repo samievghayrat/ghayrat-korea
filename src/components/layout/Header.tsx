@@ -74,15 +74,12 @@ export default function Header() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-emerald-100 bg-white/95 shadow-[0_6px_24px_-20px_rgba(5,150,105,0.8)] backdrop-blur-xl">
+    <header className="bg-white sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12 lg:h-14">
-          <Link href="/" className="group flex flex-col leading-tight flex-shrink-0">
-            <span className="bg-gradient-to-r from-emerald-800 to-teal-600 bg-clip-text text-lg font-extrabold tracking-wide text-transparent">GHAYRAT</span>
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 transition-transform group-hover:scale-125" />
-              {t('brand.subtitle')} 🇰🇷
-            </span>
+          <Link href="/" className="flex flex-col leading-tight flex-shrink-0">
+            <span className="text-gray-900 font-bold text-lg tracking-wide">GHAYRAT</span>
+            <span className="text-[11px] font-medium text-gray-500">{t('brand.subtitle')} 🇰🇷</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -108,7 +105,7 @@ export default function Header() {
             <div className="relative" ref={currRef}>
               <button
                 onClick={() => { setCurrOpen(!currOpen); setLangOpen(false); }}
-                className="flex items-center gap-1 rounded-lg p-2 text-sm text-gray-600 transition-colors hover:bg-emerald-50 hover:text-emerald-800"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-xs font-bold">{currentCurr.symbol}</span>
                 <span className="hidden lg:inline text-xs font-medium">{currentCurr.label}</span>
@@ -138,7 +135,7 @@ export default function Header() {
             <div className="relative" ref={langRef}>
               <button
                 onClick={() => { setLangOpen(!langOpen); setCurrOpen(false); }}
-                className="flex items-center gap-1 rounded-lg p-2 text-sm text-gray-600 transition-colors hover:bg-sky-50 hover:text-sky-800"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-base leading-none">{currentLang.flag}</span>
                 <svg className={`w-3 h-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +163,7 @@ export default function Header() {
             {/* Favorites */}
             <Link
               href="/favorites"
-              className="relative rounded-lg p-2 text-gray-600 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              className="relative text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

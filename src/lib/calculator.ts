@@ -6,6 +6,7 @@ interface CalcInput {
   priceKrw: number;
   priceRub: number;
   priceUsd?: number;
+  encarFeeKrw?: number;
   displacement: number; // in cc
   year: number;
   month?: number;
@@ -310,11 +311,18 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
 
   // 1. Car price in RUB
   const carPrice = input.priceRub;
+  const encarFeeKrw = Math.max(0, input.encarFeeKrw || 0);
+  const encarFeeRub = input.priceKrw > 0
+    ? Math.round(input.priceRub * (encarFeeKrw / input.priceKrw))
+    : 0;
 
   if (destination === 'tajikistan') {
     // Tajikistan customs calculation (all in USD)
     // Based on rastamojka.tj formulas (Tax Code of Tajikistan)
     const actualPriceUsd = input.priceUsd || Math.round(carPrice / usdToRub);
+    const encarFeeUsd = input.priceKrw > 0
+      ? Math.round(actualPriceUsd * (encarFeeKrw / input.priceKrw))
+      : 0;
 
     // Use minimum customs value from rastamojka.tj database
     const minPrice = lookupTjMinPrice(input.brand || '', input.model || '', input.year);
@@ -358,10 +366,12 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     const serviceFeeUsd = deliveryKhujand;
 
     // The customer-facing Tajikistan total excludes customs clearance.
-    const totalUsd = actualPriceUsd + serviceFeeUsd;
+    const totalUsd = actualPriceUsd + encarFeeUsd + serviceFeeUsd;
 
     return {
       carPrice: actualPriceUsd,
+      encarFee: encarFeeUsd,
+      encarFeeKrw,
       customsValue: customsValueUsd,
       customsDuty: customsDutyUsd,
       customsDutyDetails: `10% × $${customsValueUsd.toLocaleString('en-US')}`,
@@ -446,11 +456,13 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const brokerFee = 100000;
 
   const total = calculationComplete
-    ? carPrice + customsDuty + customsFee + utilizationFee + serviceFee + brokerFee
+    ? carPrice + encarFeeRub + customsDuty + customsFee + utilizationFee + serviceFee + brokerFee
     : 0;
 
   return {
     carPrice,
+    encarFee: encarFeeRub,
+    encarFeeKrw,
     customsDuty,
     customsDutyDetails,
     customsFee,

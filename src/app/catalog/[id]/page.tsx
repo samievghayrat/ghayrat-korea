@@ -16,6 +16,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName, translateColor } from '@/lib/translations';
+import { getEncarFeeKrw, getPriceIncludingEncarFee } from '@/lib/encar-fee';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -182,6 +183,7 @@ export default function CarDetailPage() {
       priceKrw: car.price_krw,
       priceRub: car.price_rub,
       priceUsd: car.price_usd,
+      encarFeeKrw: getEncarFeeKrw(car.source),
       displacement: effectiveDisplacement,
       year: car.year,
       month: car.month,
@@ -245,6 +247,7 @@ export default function CarDetailPage() {
   const displayCar = effectiveHp !== car.hp || effectiveDisplacement !== (car.displacement || 0)
     ? { ...car, hp: effectiveHp, displacement: effectiveDisplacement }
     : car;
+  const displayPrice = getPriceIncludingEncarFee(car);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -380,11 +383,16 @@ export default function CarDetailPage() {
             <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
               <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
               <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
-                {formatListingPrice(car.price_krw, car.price_rub, car.price_usd)}
+                {formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd)}
               </div>
               <div className="mt-1 text-xs font-medium text-emerald-700/70">
-                ₩{car.price_krw.toLocaleString('ko-KR')}
+                ₩{displayPrice.priceKrw.toLocaleString('ko-KR')}
               </div>
+              {car.source === 'encar' && (
+                <div className="mt-1 text-xs font-medium text-emerald-700/70">
+                  {t('price.includesEncarFee')}
+                </div>
+              )}
             </div>
 
             <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">

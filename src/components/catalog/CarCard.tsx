@@ -7,6 +7,7 @@ import FavoriteButton from '@/components/shared/FavoriteButton';
 import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName } from '@/lib/translations';
 import { localizeVehicleValue } from '@/lib/i18n';
+import { getPriceIncludingEncarFee } from '@/lib/encar-fee';
 
 interface CarCardProps {
   car: CarListing;
@@ -29,6 +30,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     : `${car.year}`;
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
   const hasPrice = car.price_krw > 0;
+  const displayPrice = getPriceIncludingEncarFee(car);
 
   return (
     <Link
@@ -84,7 +86,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             </div>
           </div>
           <div className="shrink-0 text-right text-base font-extrabold leading-tight text-emerald-700 sm:text-lg">
-            {hasPrice ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
+            {hasPrice ? formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd) : '—'}
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-700 transition-colors group-hover:text-primary">

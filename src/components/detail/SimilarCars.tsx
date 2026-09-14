@@ -7,6 +7,7 @@ import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { localizeVehicleValue } from '@/lib/i18n';
 import { getCompactModelName } from '@/lib/translations';
+import { getPriceIncludingEncarFee } from '@/lib/encar-fee';
 
 interface SimilarCarsProps {
   brand: string;
@@ -42,7 +43,9 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
         {brand} {getCompactModelName(model)}
       </h2>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-1 px-1">
-        {cars.map((car) => (
+        {cars.map((car) => {
+          const displayPrice = getPriceIncludingEncarFee(car);
+          return (
           <Link
             key={car.id}
             href={`/catalog/${car.id}?destination=${destination}`}
@@ -71,11 +74,12 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
                 {t('card.priceInKorea')}
               </div>
               <div className="font-bold text-primary text-sm">
-                {car.price_krw > 0 ? formatListingPrice(car.price_krw, car.price_rub, car.price_usd) : '—'}
+                {car.price_krw > 0 ? formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd) : '—'}
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -233,6 +233,8 @@ const t = {
 
   // Price breakdown
   'price.carPriceKorea': { ru: 'Стоимость авто в Корее', en: 'Car price in Korea', tj: 'Нархи мошин дар Корея', uz: 'Koreyadagi narx' },
+  'price.encarFee': { ru: 'Комиссия Encar', en: 'Encar fee', tj: 'Комиссияи Encar', uz: 'Encar komissiyasi' },
+  'price.includesEncarFee': { ru: 'Включая комиссию Encar ₩440 000', en: 'Includes the ₩440,000 Encar fee', tj: 'Бо назардошти комиссияи Encar ₩440 000', uz: '₩440 000 Encar komissiyasi bilan' },
   'price.customsValue': { ru: 'Таможенная стоимость', en: 'Customs value', tj: 'Арзиши гумрукӣ', uz: 'Bojxona qiymati' },
   'price.customsDuty': { ru: 'Таможенная пошлина', en: 'Customs duty', tj: 'Божи гумрукӣ', uz: 'Bojxona boji' },
   'price.utilizationFee': { ru: 'Утилизационный сбор', en: 'Utilization fee', tj: 'Ҳаққи утилизатсия', uz: 'Utilizatsiya to\'lovi' },

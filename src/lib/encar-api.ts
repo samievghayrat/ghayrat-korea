@@ -1,6 +1,7 @@
 import { translateBrand, translateModel, translateFuel, translateColor, translateBadgeDetail, reverseTranslateBrand, reverseTranslateModel } from './translations';
 import { convertKrwToRub, convertKrwToUsd, getEurToRub, getUsdToRub } from './currency';
 import { calculateImportCost } from './calculator';
+import { ENCAR_FEE_KRW, getEncarFeeKrw } from './encar-fee';
 import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
 import { getSnapshotCarById, getSnapshotSearch } from './encar-snapshot';
@@ -808,10 +809,10 @@ async function transformSearchResults(
 
       // Pre-calculate turnkey prices on server with accurate HP and live rates
       const russiaBreakdown = calculateImportCost({
-        priceKrw, priceRub, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
+        priceKrw, priceRub, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, priceUsd, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
+        priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
       });
 
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
@@ -1274,6 +1275,7 @@ export async function enrichDetailWithPanAuto(car: CarListing): Promise<CarListi
     priceKrw: car.price_krw,
     priceRub: car.price_rub,
     priceUsd: car.price_usd,
+    encarFeeKrw: getEncarFeeKrw(car.source),
     displacement: car.displacement || 0,
     year: car.year,
     month: car.month,
@@ -1454,11 +1456,11 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     // Pre-calculate turnkey prices on server with accurate data and live rates
     const [detailEurRate, detailUsdRate] = await Promise.all([getLiveEurRate(), getLiveUsdRate()]);
     const russiaBreakdown = calculateImportCost({
-      priceKrw, priceRub, displacement: finalDisplacement,
+      priceKrw, priceRub, encarFeeKrw: ENCAR_FEE_KRW, displacement: finalDisplacement,
       year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, destination: 'russia', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
     const tjBreakdown = calculateImportCost({
-      priceKrw, priceRub, priceUsd, displacement: finalDisplacement,
+      priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement: finalDisplacement,
       year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
 

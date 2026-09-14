@@ -28,6 +28,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           value: fmtRub(breakdown.carPrice),
           sublabel: `₩${priceKrw.toLocaleString('ko-KR')}`,
         },
+        ...(breakdown.encarFee ? [{
+          label: t('price.encarFee'),
+          value: fmtRub(breakdown.encarFee),
+          sublabel: `₩${(breakdown.encarFeeKrw || 0).toLocaleString('ko-KR')}`,
+        }] : []),
         {
           label: t('price.customsDuty'),
           value: fmtRub(breakdown.customsDuty),
@@ -61,6 +66,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           value: fmtUsd(breakdown.carPrice),
           sublabel: `${priceKrw.toLocaleString('ko-KR')} KRW`,
         },
+        ...(breakdown.encarFee ? [{
+          label: t('price.encarFee'),
+          value: fmtUsd(breakdown.encarFee),
+          sublabel: `${(breakdown.encarFeeKrw || 0).toLocaleString('ko-KR')} KRW`,
+        }] : []),
         {
           label: t('price.deliveryTj'),
           value: fmtUsd(breakdown.serviceFee),

@@ -110,6 +110,8 @@ export interface CarFilters {
 
 export interface PriceBreakdownData {
   carPrice: number;
+  encarFee?: number;
+  encarFeeKrw?: number;
   customsDuty: number;
   customsDutyDetails?: string; // e.g., "2.7 EUR × 1999 cc"
   customsFee: number; // таможенный сбор за оформление

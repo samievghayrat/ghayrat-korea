@@ -48,7 +48,7 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t, currency, convertUsdToKrw, formatPrice, formatKrwPrice, formatListingPrice } = useApp();
+  const { t, formatListingPrice } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -227,10 +227,10 @@ export default function CarDetailPage() {
     && !isHybridPower
     && (isElectricPower || effectiveDisplacement <= 3000);
   const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
-  const formatUsdInSelectedCurrency = (value: number) => formatKrwPrice(convertUsdToKrw(value));
+  const formatUsd = (value: number) => `$${value.toLocaleString('en-US')}`;
   const formattedDeliveryTotal = destination === 'russia'
-    ? (turnkeyPriceRub ? formatPrice(turnkeyPriceRub) : null)
-    : (turnkeyPriceUsd ? formatUsdInSelectedCurrency(turnkeyPriceUsd) : null);
+    ? (turnkeyPriceRub ? formatRub(turnkeyPriceRub) : null)
+    : (turnkeyPriceUsd ? formatUsd(turnkeyPriceUsd) : null);
   const cityDeliveryCopy = deliveryCity.trim()
     ? t(destination === 'russia' ? 'detail.routeToCityRussia' : 'detail.routeToCityTajikistan')
         .replace('{city}', deliveryCity.trim())
@@ -394,12 +394,6 @@ export default function CarDetailPage() {
                   <div className="text-3xl font-extrabold tracking-tight">
                     {formattedDeliveryTotal}
                   </div>
-                  {destination === 'russia' && turnkeyPriceRub && currency !== 'RUB' && (
-                    <div className="mt-1 text-sm font-semibold text-white/75">≈ {formatRub(turnkeyPriceRub)}</div>
-                  )}
-                  {destination === 'tajikistan' && turnkeyPriceUsd && currency !== 'USD' && (
-                    <div className="mt-1 text-sm font-semibold text-white/75">≈ ${turnkeyPriceUsd.toLocaleString('en-US')}</div>
-                  )}
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>

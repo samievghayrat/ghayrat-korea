@@ -250,7 +250,7 @@ export default function CarDetailPage() {
   const displayPrice = getPriceIncludingEncarFee(car);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[linear-gradient(180deg,rgba(236,253,245,0.62)_0px,rgba(248,250,252,0.9)_420px,#f8fafc_100%)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-400 mb-4">
@@ -288,7 +288,7 @@ export default function CarDetailPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-x-6 lg:gap-y-4 items-start">
         {/* Gallery */}
         <div className="lg:col-span-8 order-1">
-          <div className="bg-white rounded-2xl border border-gray-200 p-2 sm:p-3 shadow-sm">
+          <div className="rounded-2xl border border-emerald-100 bg-white p-2 shadow-[0_16px_35px_-28px_rgba(5,150,105,0.55)] sm:p-3">
             <div className="relative">
               <ImageGallery
                 images={galleryImages}
@@ -315,7 +315,7 @@ export default function CarDetailPage() {
 
         {/* Price panel - right on desktop, right after gallery on mobile */}
         <div className="lg:col-span-4 order-2 lg:row-start-1 lg:col-start-9 lg:row-span-2 space-y-4 lg:sticky lg:top-24">
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-[0_16px_35px_-28px_rgba(5,150,105,0.55)] sm:p-6">
             {/* Reservation status badge */}
             {car.reservationStatus && (
               <div className="mt-3 lg:hidden">
@@ -341,7 +341,7 @@ export default function CarDetailPage() {
                 onClick={() => chooseDestination('tajikistan')}
                 className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                   destination === 'tajikistan'
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-200'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -356,7 +356,7 @@ export default function CarDetailPage() {
                 onClick={() => chooseDestination('russia')}
                 className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
                   destination === 'russia'
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'bg-sky-600 text-white shadow-sm shadow-sky-200'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -395,7 +395,7 @@ export default function CarDetailPage() {
               )}
             </div>
 
-            <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
+            <div className="mt-3 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 text-white shadow-lg shadow-slate-200">
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>
               {calculationReady && formattedDeliveryTotal ? (
                 <>

@@ -31,12 +31,23 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
   const hasPrice = car.price_krw > 0;
   const displayPrice = getPriceIncludingEncarFee(car);
+  const fuelValue = localizeVehicleValue(car.fuel, lang);
+  const fuelLower = car.fuel.toLowerCase();
+  const fuelClass = fuelLower.includes('электро') || fuelLower.includes('electric')
+    ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+    : fuelLower.includes('гибрид') || fuelLower.includes('hybrid')
+      ? 'bg-teal-50 text-teal-700 ring-teal-100'
+      : fuelLower.includes('дизел') || fuelLower.includes('diesel')
+        ? 'bg-amber-50 text-amber-700 ring-amber-100'
+        : fuelLower.includes('lpg') || fuelLower.includes('газ')
+          ? 'bg-violet-50 text-violet-700 ring-violet-100'
+          : 'bg-orange-50 text-orange-700 ring-orange-100';
 
   return (
     <Link
       href={`/catalog/${car.id}`}
       onClick={handleClick}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-emerald-100/80 bg-white shadow-[0_8px_24px_-20px_rgba(15,23,42,0.65)] transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_18px_34px_-22px_rgba(5,150,105,0.5)]"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
         <Image
@@ -48,6 +59,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           priority={priority}
           unoptimized={usesDirectEncarImage}
         />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-emerald-950/20 to-transparent opacity-70" />
         <div className="absolute top-2 right-2">
           <FavoriteButton carId={car.id} size="sm" />
         </div>
@@ -77,19 +89,17 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
               {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
             </h3>
 
-            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
-              <span>{yearLabel}</span>
-              <span className="text-gray-300">/</span>
-              <span>{formatMileage(car.mileage)}</span>
-              <span className="text-gray-300">/</span>
-              <span className="truncate">{localizeVehicleValue(car.fuel, lang)}</span>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+              <span className="rounded-md bg-sky-50 px-1.5 py-0.5 text-sky-700 ring-1 ring-inset ring-sky-100">{yearLabel}</span>
+              <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-600 ring-1 ring-inset ring-slate-200/70">{formatMileage(car.mileage)}</span>
+              <span className={`max-w-full truncate rounded-md px-1.5 py-0.5 ring-1 ring-inset ${fuelClass}`}>{fuelValue}</span>
             </div>
           </div>
-          <div className="shrink-0 text-right text-base font-extrabold leading-tight text-emerald-700 sm:text-lg">
+          <div className="shrink-0 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 px-2.5 py-1.5 text-right text-base font-extrabold leading-tight text-emerald-700 ring-1 ring-inset ring-emerald-100 sm:text-lg">
             {hasPrice ? formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd) : '—'}
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-700 transition-colors group-hover:text-primary">
+        <div className="mt-3 flex items-center justify-between border-t border-emerald-100/70 pt-2.5 text-sm font-semibold text-emerald-800 transition-colors group-hover:text-emerald-600">
           <span>{t('card.viewAndCalculate')}</span>
           <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 18 6-6-6-6" />

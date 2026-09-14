@@ -141,8 +141,8 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
           onClick={onToggle}
           className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
             value
-              ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
-              : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
+              ? 'border-emerald-300 bg-emerald-50 hover:border-emerald-400'
+              : 'border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50/70 hover:border-emerald-200'
           }`}
         >
           {value ? (
@@ -500,19 +500,19 @@ function BrandModelPicker({
             !selectedBrand
               ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
               : selectedModel
-                ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                ? 'border-sky-300 bg-sky-50 hover:border-sky-400'
+                : 'border-sky-100 bg-gradient-to-r from-sky-50 to-cyan-50/70 hover:border-sky-200'
           }`}
         >
           <span className="flex min-w-0 items-center gap-2">
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-              selectedBrand ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+              selectedBrand ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-400'
             }`}>
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 16h14M6.5 16l1 3m9-3 1 3M5 16v-4l2-5h10l2 5v4M8 12h8M7.5 16a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
               </svg>
             </span>
-            <span className={`truncate text-sm font-semibold ${selectedModel ? 'text-primary' : selectedBrand ? 'text-gray-700' : 'text-gray-400'}`}>
+            <span className={`truncate text-sm font-semibold ${selectedModel ? 'text-sky-700' : selectedBrand ? 'text-sky-900' : 'text-gray-400'}`}>
               {selectedModelLabel || labels.model}
             </span>
           </span>
@@ -797,7 +797,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="relative z-30 rounded-[24px] border border-gray-200/80 bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
+    <div className="relative z-30 rounded-[24px] border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/45 p-3 shadow-[0_18px_45px_-30px_rgba(5,150,105,0.55)]">
       <BrandModelPicker
         brands={brandCounts || []}
         models={modelList}
@@ -838,7 +838,9 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
                 filters[key]
                   ? 'border-primary/30 bg-primary/5 text-primary'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  : key === 'yearFrom'
+                    ? 'border-sky-100 bg-sky-50/70 text-sky-900 hover:border-sky-200'
+                    : 'border-amber-100 bg-amber-50/70 text-amber-900 hover:border-amber-200'
               }`}
             >
               <option value="">{placeholder}</option>
@@ -1087,15 +1089,15 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       {/* Advanced filters */}
       <button
         onClick={() => setShowMoreFilters(!showMoreFilters)}
-        className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-between rounded-xl border border-violet-100 bg-violet-50/70 px-3 py-2.5 text-sm font-semibold text-violet-900 transition-colors hover:border-violet-200 hover:bg-violet-50"
       >
         <span className="flex items-center gap-2.5">
-          <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="h-4 w-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
           {showMoreFilters ? t('search.hideFilters') : t('search.moreFilters')}
           {!showMoreFilters && activeFilterCount > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
           )}
         </span>
         <ChevronIcon open={showMoreFilters} />

@@ -24,7 +24,7 @@ export default function SortSelect({ value, onChange }: SortSelectProps) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+      className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-sm font-medium text-emerald-950 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
     >
       {sortKeys.map((opt) => (
         <option key={opt.value} value={opt.value}>{t(opt.key)}</option>

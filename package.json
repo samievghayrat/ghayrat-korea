@@ -12,8 +12,9 @@
     "deploy:auction-worker": "npm run deploy --prefix auction-worker"
   },
   "dependencies": {
-    "mongoose": "^9.2.4",
-    "next": "14.2.35",
+    "@vercel/analytics": "^2.0.1",
+    "mongoose": "^9.10.0",
+    "next": "^15.5.25",
     "react": "^18",
     "react-dom": "^18"
   },
@@ -22,9 +23,13 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.35",
-    "postcss": "^8",
+    "eslint-config-next": "15.5.25",
+    "postcss": "8.5.28",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "nanoid": "3.3.19",
+    "postcss": "8.5.28"
   }
 }

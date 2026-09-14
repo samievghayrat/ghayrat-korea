@@ -5,13 +5,14 @@ export const maxDuration = 30;
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!/^\d{6,12}$/.test(params.id)) {
+  const { id } = await params;
+  if (!/^\d{6,12}$/.test(id)) {
     return NextResponse.json({ error: 'Invalid car ID' }, { status: 400 });
   }
 
-  const car = await getCarDetail(params.id);
+  const car = await getCarDetail(id);
   if (!car) {
     return NextResponse.json({ error: 'Car not found' }, { status: 404 });
   }

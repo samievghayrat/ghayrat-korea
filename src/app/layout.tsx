@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -10,12 +11,27 @@ import { AppProvider } from '@/contexts/AppContext';
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ghayrat.vercel.app'),
   title: {
     default: 'GHAYRAT — Авто из Кореи',
     template: '%s | GHAYRAT',
   },
-  description: 'Cars from South Korea with delivery. Catalog of cars from Korean auctions, turnkey cost calculation.',
-  keywords: ['cars from korea', 'buy car from korea', 'encar', 'korean cars'],
+  description: 'Автомобили из Кореи с проверкой, расчётом и доставкой в Россию и Таджикистан.',
+  keywords: ['авто из Кореи', 'купить авто из Кореи', 'Encar', 'KCar', 'доставка авто'],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'ru_RU',
+    url: '/',
+    siteName: 'GHAYRAT KOREA',
+    title: 'GHAYRAT — Авто из Кореи',
+    description: 'Выберите автомобиль, получите расчёт и закажите доставку в свой город.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'GHAYRAT — Авто из Кореи',
+    description: 'Каталог Encar и KCar с расчётом доставки.',
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +48,7 @@ export default function RootLayout({
           <Footer />
           <BottomNav />
           <FloatingContact />
+          <Analytics />
         </AppProvider>
       </body>
     </html>

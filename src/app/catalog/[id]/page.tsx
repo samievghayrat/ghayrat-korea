@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
@@ -62,6 +63,11 @@ export default function CarDetailPage() {
   const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
     searchParams.get('destination') === 'tajikistan' ? 'tajikistan' : 'russia',
   );
+  const [deliveryCity, setDeliveryCity] = useState('');
+
+  useEffect(() => {
+    setDeliveryCity(localStorage.getItem(`deliveryCity:${destination}`) || '');
+  }, [destination]);
 
   const chooseDestination = (nextDestination: 'russia' | 'tajikistan') => {
     setDestination(nextDestination);
@@ -70,6 +76,11 @@ export default function CarDetailPage() {
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set('destination', nextDestination);
     window.history.replaceState(null, '', nextUrl);
+  };
+
+  const updateDeliveryCity = (value: string) => {
+    setDeliveryCity(value);
+    localStorage.setItem(`deliveryCity:${destination}`, value);
   };
 
   useEffect(() => {
@@ -192,7 +203,7 @@ export default function CarDetailPage() {
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('detail.notFound')}</h1>
         <p className="text-gray-500 mb-8">{t('detail.notFoundDesc')}</p>
-        <a href="/" className="btn-primary inline-block">{t('detail.backToCatalog')}</a>
+        <Link href="/" className="btn-primary inline-block">{t('detail.backToCatalog')}</Link>
       </div>
     );
   }
@@ -220,6 +231,10 @@ export default function CarDetailPage() {
   const formattedDeliveryTotal = destination === 'russia'
     ? (turnkeyPriceRub ? formatPrice(turnkeyPriceRub) : null)
     : (turnkeyPriceUsd ? formatUsdInSelectedCurrency(turnkeyPriceUsd) : null);
+  const cityDeliveryCopy = deliveryCity.trim()
+    ? t(destination === 'russia' ? 'detail.routeToCityRussia' : 'detail.routeToCityTajikistan')
+        .replace('{city}', deliveryCity.trim())
+    : t('detail.cityDeliveryNote');
 
   const galleryImages = remoteGalleryImages.length > 0
     ? remoteGalleryImages
@@ -236,7 +251,7 @@ export default function CarDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-400 mb-4">
-        <a href="/" className="shrink-0 hover:text-primary transition-colors">{t('nav.catalog')}</a>
+        <Link href="/" className="shrink-0 hover:text-primary transition-colors">{t('nav.catalog')}</Link>
         <span className="shrink-0">/</span>
         <span className="shrink-0 text-gray-700 font-medium">{car.id}</span>
       </nav>
@@ -349,6 +364,18 @@ export default function CarDetailPage() {
               </button>
             </div>
 
+            <label className="mt-3 block text-sm font-semibold text-gray-800">
+              {t('detail.deliveryCityLabel')}
+              <input
+                type="text"
+                value={deliveryCity}
+                onChange={(event) => updateDeliveryCity(event.target.value)}
+                placeholder={t(destination === 'russia' ? 'detail.cityPlaceholderRussia' : 'detail.cityPlaceholderTajikistan')}
+                className="mt-1.5 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base font-medium text-gray-900 outline-none transition placeholder:font-normal placeholder:text-gray-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              />
+              <span className="mt-1.5 block text-xs font-normal leading-4 text-gray-500">{t('detail.deliveryCityHint')}</span>
+            </label>
+
             {/* Keep the catalog price visible, then show the separate delivery estimate. */}
             <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
               <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
@@ -376,7 +403,7 @@ export default function CarDetailPage() {
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>
-                  <div className="mt-2 text-xs leading-5 text-white/50">{t('detail.cityDeliveryNote')}</div>
+                  <div className="mt-2 text-xs leading-5 text-white/55">{cityDeliveryCopy}</div>
                 </>
               ) : apiLoaded ? (
                 <div>

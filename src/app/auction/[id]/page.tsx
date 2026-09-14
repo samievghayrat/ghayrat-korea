@@ -10,11 +10,12 @@ import {
 } from "@/lib/kcar-auction";
 
 interface AuctionDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: AuctionDetailPageProps): Promise<Metadata> {
-  const car = await getKCarAuctionCar(params.id);
+  const { id } = await params;
+  const car = await getKCarAuctionCar(id);
   if (!car) return { title: "\u0410\u0432\u0442\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e" };
   const title = formatKCarName(car);
 
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: AuctionDetailPageProps): Prom
 }
 
 export default async function AuctionDetailPage({ params }: AuctionDetailPageProps) {
-  const car = await getKCarAuctionCar(params.id);
+  const { id } = await params;
+  const car = await getKCarAuctionCar(id);
   if (!car) notFound();
 
   const imagePaths = await getKCarAuctionImages(car.id);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import type { CarListing } from '@/types';
 import CarGrid from '@/components/catalog/CarGrid';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -62,7 +63,7 @@ export default function FavoritesPage() {
           </svg>
           <h3 className="text-lg font-medium text-gray-600 mb-2">{t('fav.empty')}</h3>
           <p className="text-gray-500 mb-6">{t('fav.emptyDesc')}</p>
-          <a href="/catalog" className="btn-primary inline-block">{t('fav.goToCatalog')}</a>
+          <Link href="/catalog" className="btn-primary inline-block">{t('fav.goToCatalog')}</Link>
         </div>
       ) : (
         <CarGrid cars={cars} loading={loading} />

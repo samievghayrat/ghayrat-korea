@@ -1,13 +1,14 @@
 import { KCAR_API_URL } from "@/lib/kcar-auction";
 
 interface RouteContext {
-  params: { key: string[] };
+  params: Promise<{ key: string[] }>;
 }
 
 export const revalidate = 2678400;
 
 export async function GET(_request: Request, { params }: RouteContext) {
-  const key = params.key.map(encodeURIComponent).join("/");
+  const { key: keyParts } = await params;
+  const key = keyParts.map(encodeURIComponent).join("/");
   const response = await fetch(`${KCAR_API_URL}/api/images/${key}`, {
     next: { revalidate },
   });

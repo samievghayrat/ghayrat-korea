@@ -1,13 +1,14 @@
 import { getKCarAuctionImages } from "@/lib/kcar-auction";
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export const revalidate = 3600;
 
 export async function GET(_request: Request, { params }: RouteContext) {
-  const images = await getKCarAuctionImages(params.id);
+  const { id } = await params;
+  const images = await getKCarAuctionImages(id);
 
   return Response.json({ data: images }, {
     headers: {

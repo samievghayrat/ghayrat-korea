@@ -1,13 +1,14 @@
 import { KCAR_API_URL } from "@/lib/kcar-auction";
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export const revalidate = 300;
 
 export async function GET(_request: Request, { params }: RouteContext) {
-  const sourceUrl = new URL(`/api/cars/${encodeURIComponent(params.id)}`, KCAR_API_URL);
+  const { id } = await params;
+  const sourceUrl = new URL(`/api/cars/${encodeURIComponent(id)}`, KCAR_API_URL);
   const response = await fetch(sourceUrl.toString(), {
     next: { revalidate },
   });

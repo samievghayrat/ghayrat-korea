@@ -34,9 +34,9 @@ function getDisplayImageUrl(path: string): string {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const id = params.id;
+  const { id } = await params;
   if (!/^\d+$/.test(id)) {
     return NextResponse.json({ error: 'Invalid car id' }, { status: 400 });
   }

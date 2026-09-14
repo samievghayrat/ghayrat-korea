@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function CarDetailError({
   reset,
 }: {
@@ -18,9 +20,9 @@ export default function CarDetailError({
         <button onClick={reset} className="btn-primary">
           Try again
         </button>
-        <a href="/" className="btn-outline inline-block">
+        <Link href="/" className="btn-outline inline-block">
           Back to catalog
-        </a>
+        </Link>
       </div>
     </div>
   );

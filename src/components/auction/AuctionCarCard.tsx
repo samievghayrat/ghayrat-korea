@@ -10,11 +10,11 @@ import {
   formatKCarName,
   kcarPriceToKrw,
   resolveKCarImageUrl,
-  type KCarAuctionCar,
+  type KCarAuctionSummary,
 } from "@/lib/kcar-auction";
 
 interface AuctionCarCardProps {
-  car: KCarAuctionCar;
+  car: KCarAuctionSummary;
   priority?: boolean;
   href?: string;
 }

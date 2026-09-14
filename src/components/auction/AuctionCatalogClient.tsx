@@ -3,19 +3,19 @@
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AuctionCarCard from "@/components/auction/AuctionCarCard";
-import { getKCarBaseModel, getKCarBrand, type KCarAuctionCar } from "@/lib/kcar-auction";
+import { getKCarBaseModel, getKCarBrand, type KCarAuctionSummary } from "@/lib/kcar-auction";
 import { useApp } from "@/contexts/AppContext";
 import { AUCTION_COPY } from "@/lib/page-copy";
 
 interface AuctionCatalogClientProps {
-  cars: KCarAuctionCar[];
+  cars: KCarAuctionSummary[];
 }
 
 type YearFilter = "all" | "2014" | "2021";
 type SortFilter = "order_asc" | "order_desc" | "year_desc" | "year_asc" | "price_asc" | "price_desc";
 type RefreshState = "idle" | "loading" | "success" | "error";
 const PAGE_SIZE = 9;
-function getDisplayYear(car: KCarAuctionCar): number {
+function getDisplayYear(car: KCarAuctionSummary): number {
   if (car.firstRegDate && car.firstRegDate.length >= 4) {
     const parsed = Number(car.firstRegDate.slice(0, 4));
     if (Number.isFinite(parsed)) return parsed;
@@ -23,7 +23,7 @@ function getDisplayYear(car: KCarAuctionCar): number {
   return car.year;
 }
 
-function getAuctionOrder(car: KCarAuctionCar): number {
+function getAuctionOrder(car: KCarAuctionSummary): number {
   const parsed = Number(car.lotNumber || car.exbitSeq || 0);
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -178,12 +178,12 @@ export default function AuctionCatalogClient({ cars }: AuctionCatalogClientProps
     setRefreshState("loading");
 
     try {
-      const response = await fetch("/api/auction/cars?limit=1000&refresh=1", {
+      const response = await fetch("/api/auction/cars?limit=1000&view=summary&refresh=1", {
         cache: "no-store",
       });
       if (!response.ok) throw new Error(`Refresh failed: ${response.status}`);
 
-      const payload = (await response.json()) as { data?: KCarAuctionCar[] };
+      const payload = (await response.json()) as { data?: KCarAuctionSummary[] };
       if (!Array.isArray(payload.data)) throw new Error("Invalid auction response");
       setCatalogCars(payload.data);
       setRefreshState("success");

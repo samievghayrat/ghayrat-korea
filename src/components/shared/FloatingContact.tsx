@@ -12,7 +12,7 @@ export default function FloatingContact() {
   if (/^\/(?:catalog|auction)\/[^/]+/.test(pathname)) return null;
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-40 flex flex-col items-end gap-3">
+    <div className="fixed bottom-6 right-6 z-40 hidden flex-col items-end gap-3 lg:flex">
       {/* Expanded buttons */}
       {open && (
         <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200">

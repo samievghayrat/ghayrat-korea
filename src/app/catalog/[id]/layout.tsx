@@ -4,11 +4,12 @@ import { getCompactModelName, translateBrand, translateModel } from '@/lib/trans
 
 interface DetailLayoutProps {
   children: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export function generateMetadata({ params }: DetailLayoutProps): Metadata {
-  const raw = getSnapshotCarById(params.id);
+export async function generateMetadata({ params }: DetailLayoutProps): Promise<Metadata> {
+  const { id } = await params;
+  const raw = getSnapshotCarById(id);
   if (!raw) return { title: 'Автомобиль из Кореи' };
 
   const brand = translateBrand(String(raw.Manufacturer || ''));

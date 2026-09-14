@@ -5,9 +5,10 @@ import Reservation from '@/models/Reservation';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const car = await getCarDetail(params.id);
+  const { id } = await params;
+  const car = await getCarDetail(id);
   if (!car) {
     return NextResponse.json({ error: 'Car not found' }, { status: 404 });
   }
@@ -15,7 +16,7 @@ export async function GET(
   // Check reservation status
   try {
     await dbConnect();
-    const reservation = await Reservation.findOne({ carId: params.id }).lean();
+    const reservation = await Reservation.findOne({ carId: id }).lean();
     if (reservation) {
       car.reservationStatus = reservation.status;
     }

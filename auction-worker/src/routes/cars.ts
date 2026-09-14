@@ -9,7 +9,9 @@ const app = new Hono<{ Bindings: Env }>();
 
 // GET /api/cars - List cars with optional filters
 app.get("/", async (c) => {
-  const query = carQuerySchema.safeParse(Object.fromEntries(new URL(c.req.url).searchParams));
+  const requestUrl = new URL(c.req.url);
+  const summaryView = requestUrl.searchParams.get("view") === "summary";
+  const query = carQuerySchema.safeParse(Object.fromEntries(requestUrl.searchParams));
   if (!query.success) {
     return c.json({ error: query.error.flatten() }, 400);
   }
@@ -45,7 +47,25 @@ app.get("/", async (c) => {
     .limit(limit)
     .offset(offset);
 
-  return c.json({ data: results, count: results.length });
+  const data = summaryView
+    ? results.map((car) => ({
+        id: car.id,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        price: car.price,
+        mileage: car.mileage,
+        fuelType: car.fuelType,
+        engineVolume: car.engineVolume,
+        image: car.image,
+        auctionDate: car.auctionDate,
+        lotNumber: car.lotNumber,
+        exbitSeq: car.exbitSeq,
+        firstRegDate: car.firstRegDate,
+      }))
+    : results;
+
+  return c.json({ data, count: results.length });
 });
 
 // GET /api/cars/:id/images - Return car images

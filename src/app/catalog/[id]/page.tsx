@@ -6,7 +6,6 @@ import { useParams, useSearchParams } from 'next/navigation';
 import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
-import PriceBreakdown from '@/components/detail/PriceBreakdown';
 import RussiaCustomsSummary, { getRussiaCustomsTotal } from '@/components/detail/RussiaCustomsSummary';
 import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
@@ -59,7 +58,6 @@ export default function CarDetailPage() {
   const [remoteCarDetails, setRemoteCarDetails] = useState<RemoteCarDetails | null>(null);
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
-  const [showBreakdown, setShowBreakdown] = useState(false);
   const [manualHp, setManualHp] = useState<number | undefined>();
   const [manualDisplacement, setManualDisplacement] = useState<number | undefined>();
   const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
@@ -67,7 +65,6 @@ export default function CarDetailPage() {
   );
   const chooseDestination = (nextDestination: 'russia' | 'tajikistan') => {
     setDestination(nextDestination);
-    setShowBreakdown(false);
     localStorage.setItem('deliveryDestination', nextDestination);
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set('destination', nextDestination);
@@ -169,7 +166,7 @@ export default function CarDetailPage() {
     if (fullTitle) document.title = `${fullTitle} — ${titleSuffix} | GHAYRAT KOREA`;
   }, [fullTitle, titleSuffix]);
 
-  // Client-side breakdown only for the detailed breakdown view (uses API data)
+  // Keep the visible itemized quote and total on the same API data and rates.
   const breakdown = useMemo(() => {
     if (!car || !apiLoaded) return null;
     return calculateImportCost({
@@ -538,32 +535,6 @@ export default function CarDetailPage() {
               </svg>
               {t('nav.writeManager')}
             </a>
-
-            {/* Detailed calculation */}
-            {destination === 'tajikistan' && breakdown?.calculationComplete && (
-              <>
-                <button
-                  onClick={() => setShowBreakdown(!showBreakdown)}
-                  className="w-full mt-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  {showBreakdown ? t('price.hideBreakdown') : t('price.showBreakdown')}
-                  <svg className={`w-4 h-4 transition-transform ${showBreakdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {showBreakdown && (
-                  <PriceBreakdown
-                    breakdown={breakdown}
-                    priceKrw={car.price_krw}
-                    priceRub={car.price_rub}
-                    priceUsd={car.price_usd}
-                    destination={destination}
-                    totalOverride={turnkeyPriceUsd}
-                  />
-                )}
-              </>
-            )}
 
             {/* How to buy link */}
             <div className="mt-4 pt-4 border-t border-gray-100">

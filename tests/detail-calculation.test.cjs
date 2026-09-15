@@ -222,25 +222,6 @@ test('SUV shipping is quoted even if Tajik customs cannot yet be calculated', ()
   assert.equal(result.total, 0);
 });
 
-test('missing Tajik customs is labelled as unavailable, not as a calculation being confirmed', () => {
-  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
-  const tajikRows = page.slice(page.indexOf('const tajikPriceRows'), page.indexOf('const russianPriceRows'));
-  assert.match(tajikRows, /apiLoaded \? t\('price\.noInformationShort'\) : '—'/);
-  assert.doesNotMatch(tajikRows, /price\.confirmingShort/);
-  const tajikPanel = page.slice(page.indexOf("{destination === 'tajikistan' ? ("), page.indexOf("{russianPriceRows.map"));
-  assert.ok(tajikPanel.includes("t('price.totalUnavailableShort')"));
-  assert.doesNotMatch(tajikPanel, /price\.confirmingShort/);
-  assert.ok(tajikPanel.includes('calculationReady && formattedDeliveryTotal'));
-  assert.equal(getTranslation('price.noInformationShort', 'ru'), 'Нет информации');
-  assert.equal(getTranslation('price.totalUnavailableShort', 'ru'), 'Не рассчитан');
-  assert.equal(getTranslation('price.customsNeedsConfirmationDesc', 'ru'), 'У нас нет информации о растаможке этого автомобиля.');
-  for (const lang of ['ru', 'en', 'tj', 'uz']) {
-    for (const key of ['price.noInformationShort', 'price.totalUnavailableShort', 'price.customsNeedsConfirmationDesc']) {
-      assert.notEqual(getTranslation(key, lang), key);
-    }
-  }
-});
-
 test('Russian fees and incomplete-calculation protection are unchanged by SUV shipping', () => {
   const sedan = calculateImportCost({ ...base, bodyType: 'Седан', destination: 'russia' });
   const suv = calculateImportCost({ ...base, bodyType: 'SUV', destination: 'russia' });

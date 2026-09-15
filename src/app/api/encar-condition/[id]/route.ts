@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchEncarInspection } from '@/lib/fetch-encar-inspection';
 
-export const runtime = 'edge';
+// Encar's report service is reliable from the server region used by our image fetcher,
+// but can reject requests from regional Edge locations.
+export const runtime = 'nodejs';
+export const preferredRegion = 'iad1';
 export const dynamic = 'force-dynamic';
 
 export async function GET(

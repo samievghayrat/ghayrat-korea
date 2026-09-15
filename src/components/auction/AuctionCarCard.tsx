@@ -59,6 +59,8 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
   return (
     <Link
       href={href || `/auction/${car.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-red-200 hover:shadow-md"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">

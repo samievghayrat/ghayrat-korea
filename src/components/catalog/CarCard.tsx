@@ -35,6 +35,8 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
   return (
     <Link
       href={`/catalog/${car.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={handleClick}
       className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
     >

@@ -2,6 +2,11 @@ export type Lang = 'ru' | 'en' | 'tj' | 'uz';
 export type Currency = 'RUB' | 'USD' | 'EUR' | 'KRW' | 'TJS';
 
 const t = {
+  'share.button': { ru: 'Поделиться', en: 'Share', tj: 'Мубодила', uz: 'Ulashish' },
+  'share.otherApps': { ru: 'Другие приложения', en: 'Other apps', tj: 'Барномаҳои дигар', uz: 'Boshqa ilovalar' },
+  'share.copyLink': { ru: 'Скопировать ссылку', en: 'Copy link', tj: 'Нусхабардории пайванд', uz: 'Havolani nusxalash' },
+  'share.copied': { ru: 'Ссылка скопирована', en: 'Link copied', tj: 'Пайванд нусхабардорӣ шуд', uz: 'Havola nusxalandi' },
+  'share.manualCopy': { ru: 'Выделите и скопируйте ссылку', en: 'Select and copy the link', tj: 'Пайвандро интихоб ва нусхабардорӣ кунед', uz: 'Havolani tanlang va nusxalang' },
   // Navigation
   'nav.catalog': { ru: 'Каталог', en: 'Catalog', tj: 'Каталог', uz: 'Katalog' },
   'nav.howToBuy': { ru: 'Как купить', en: 'How to buy', tj: 'Чӣ тавр харид кунам', uz: 'Qanday sotib olish' },

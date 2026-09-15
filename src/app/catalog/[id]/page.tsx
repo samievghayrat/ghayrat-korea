@@ -11,6 +11,8 @@ import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
+import CarShareButton from '@/components/shared/CarShareButton';
+import { getCarShareUrl } from '@/lib/car-sharing';
 import { calculateImportCost, getTjContainerShippingUsd } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
@@ -280,7 +282,7 @@ export default function CarDetailPage() {
       </nav>
 
       <div className="mb-5 lg:mb-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex items-start justify-between gap-3 lg:items-end">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {car.source === 'own' && (
@@ -302,6 +304,7 @@ export default function CarDetailPage() {
               {fullTitle}
             </h1>
           </div>
+          <CarShareButton title={`${fullTitle} ${car.year}`} url={getCarShareUrl('catalog', car.id, destination)} />
         </div>
       </div>
 

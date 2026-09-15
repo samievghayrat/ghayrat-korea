@@ -48,6 +48,8 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
           <Link
             key={car.id}
             href={`/catalog/${car.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-64 flex-shrink-0 snap-start rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
           >
             <div className="relative aspect-[16/10] bg-gray-100">

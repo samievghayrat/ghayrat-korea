@@ -337,7 +337,7 @@ function BrandModelPicker({
           />
         </label>
       </div>
-      <div data-testid="brand-options" tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+      <div data-testid="brand-options" tabIndex={0} className="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
         {brands.length > 0 && (
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{labels.chooseBrand}</p>
@@ -394,7 +394,7 @@ function BrandModelPicker({
           </label>
         )}
       </div>
-      <div data-testid="model-options" tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+      <div data-testid="model-options" tabIndex={0} className="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
         {!selectedBrand ? (
           <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center text-gray-400">
             <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">

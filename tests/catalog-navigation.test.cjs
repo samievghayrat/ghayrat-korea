@@ -81,7 +81,7 @@ test('desktop brand and model panels constrain a keyboard-accessible scrolling a
     const html = renderOpenPicker(picker);
     assert.match(html, /<section class="flex min-h-0 flex-col lg:h-full"/);
     assert.match(html, /<div class="shrink-0 border-b border-gray-100 p-3"/);
-    assert.ok(html.includes(`data-testid="${listId}" tabindex="0" class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"`));
+    assert.ok(html.includes(`data-testid="${listId}" tabindex="0" class="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"`));
     assert.ok(html.includes('h-[min(480px,calc(100vh-180px))] overflow-hidden'));
   }
   assert.ok(renderOpenPicker('models').includes('K3'));
@@ -92,6 +92,7 @@ test('mobile model lists retain natural height for the bottom-sheet scroll conta
   assert.match(html, /min-h-\[62vh\]/);
   assert.match(html, /<section class="flex min-h-0 flex-col lg:h-full"/);
   assert.ok(html.includes('data-testid="model-options"'));
+  assert.match(html, /class="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"/);
   assert.ok(!html.includes('h-[min(480px,calc(100vh-180px))]'));
 });
 

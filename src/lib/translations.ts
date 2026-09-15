@@ -400,6 +400,85 @@ export function getCompactModelName(model: string): string {
 
 // Korean badge/trim word translations
 const badgeWordMap: Record<string, string> = {
+  '(세부등급 없음)': '',
+  '아방가르드': 'Avantgarde',
+  '아방가르트': 'Avantgarde',
+  '콰트로': 'quattro',
+  '다이나믹': 'Dynamic',
+  '엑스드라이브': 'xDrive',
+  '4모션': '4Motion',
+  '리미티드': 'Limited',
+  '밸류 플러스': 'Value Plus',
+  '기본형': 'Standard',
+  '최고급형': 'Top Premium',
+  '고급형': 'Premium',
+  '롱 레인지': 'Long Range',
+  '싱글모터': 'Single Motor',
+  '듀얼모터': 'Dual Motor',
+  '하이리무진': 'Hi Limousine',
+  '리무진': 'Limousine',
+  '렌터카용': 'Rental',
+  '렌터카': 'Rental',
+  '특장업체': 'Special Conversion',
+  '어린이보호차': 'School Bus',
+  '카고': 'Cargo',
+  '도어': 'door',
+  '르블랑': 'Le Blanc',
+  '그랜드': 'Grand',
+  '카니발': 'Carnival',
+  '세단': 'Sedan',
+  '해치백': 'Hatchback',
+  '웨건': 'Wagon',
+  '레드라인': 'Redline',
+  '베스트 셀렉션': 'Best Selection',
+  '투어러': 'Tourer',
+  '라운지': 'Lounge',
+  '캠핑카': 'Camper',
+  '컬렉션': 'Collection',
+  '플럭스': 'Flux',
+  '프레지던트': 'President',
+  '스타일': 'Style',
+  '어스': 'Earth',
+  '플래티넘': 'Platinum',
+  '마스터': 'Master',
+  '엘리트': 'Elite',
+  '클럽': 'Club',
+  '패션': 'Fashion',
+  '슈프림': 'Supreme',
+  '어드벤처': 'Adventure',
+  '패키지': 'Package',
+  '패밀리': 'Family',
+  '코어': 'Core',
+  '더 블랙': 'The Black',
+  '블랙': 'Black',
+  '유라시아': 'Eurasia',
+  '스타': 'Star',
+  '쿨멘': 'Culmen',
+  '링크': 'link',
+  '팝': 'Pop',
+  '익스페디션': 'Expedition',
+  '헤리티지': 'Heritage',
+  '인텔리전트': 'Intelligent',
+  '와일드': 'Wild',
+  '파이니스트': 'Finest',
+  '트랜디': 'Trendy',
+  '프로페셔널': 'Professional',
+  '마제스티': 'Majesty',
+  '테크': 'Tech',
+  '아트': 'Art',
+  '모빌리티': 'Mobility',
+  '인스크립션': 'Inscription',
+  '모멘텀': 'Momentum',
+  '얼티메이트': 'Ultimate',
+  '울트라': 'Ultra',
+  '브라이트': 'Bright',
+  '디자인': 'Design',
+  '어드밴티지': 'Advantage',
+  '스포츠라인': 'Sportline',
+  '스포트라인': 'Sportline',
+  '라인': 'Line',
+  '에어': 'Air',
+  '팩': 'Pack',
   '시그니처': 'Signature',
   '프리미엄': 'Premium',
   '프리미어': 'Premier',
@@ -527,4 +606,50 @@ export function translateGenerationName(koreanName: string, lang: Lang = 'ru'): 
   }
 
   return normalizeModelSpacing(prefix + result);
+}
+
+/** Preserve unfamiliar trim names phonetically rather than discard their text. */
+function romanizeUntranslatedName(value: string): string {
+  const initials = ['g', 'kk', 'n', 'd', 'tt', 'r', 'm', 'b', 'pp', 's', 'ss', '', 'j', 'jj', 'ch', 'k', 't', 'p', 'h'];
+  const vowels = ['a', 'ae', 'ya', 'yae', 'eo', 'e', 'yeo', 'ye', 'o', 'wa', 'wae', 'oe', 'yo', 'u', 'wo', 'we', 'wi', 'yu', 'eu', 'ui', 'i'];
+  const finals = ['', 'k', 'k', 'ks', 'n', 'nj', 'nh', 't', 'l', 'lk', 'lm', 'lb', 'ls', 'lt', 'lp', 'lh', 'm', 'p', 'ps', 't', 't', 'ng', 't', 't', 'k', 't', 'p', 't'];
+  return value.replace(/[가-힣]+/g, word => {
+    const latin = [...word].map(character => {
+      const code = character.charCodeAt(0) - 0xac00;
+      return initials[Math.floor(code / 588)] + vowels[Math.floor(code / 28) % 21] + finals[code % 28];
+    }).join('');
+    return latin[0].toUpperCase() + latin.slice(1);
+  });
+}
+
+/** Detail pages retain the generation, engine variant and trim; cards stay compact. */
+export function getFullCarName(car: {
+  brand: string;
+  model: string;
+  generation?: string;
+  badge?: string;
+  trim?: string;
+}, lang: Lang = 'ru'): string {
+  const translateName = (value: string) => romanizeUntranslatedName(
+    translateBadgeDetail(translateGenerationName(translateModel(value), lang), lang),
+  ).replace(/\s+/g, ' ').trim();
+  const model = translateName(car.model || '');
+  const generation = translateName(car.generation || '');
+  const tokenKey = (word: string) => word.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}.]/gu, '');
+  const phraseKey = (value: string) => value.split(/\s+/).map(tokenKey).filter(Boolean).join(' ');
+  const containsPhrase = (value: string, phrase: string) =>
+    (` ${phraseKey(value)} `).includes(` ${phraseKey(phrase)} `);
+  const names = [translateName(translateBrand(car.brand || '')),
+    generation && containsPhrase(generation, model) ? generation : model,
+    generation && !containsPhrase(generation, model) ? generation : '',
+    translateName(car.badge || ''), translateName(car.trim || '')];
+  let words: string[] = [];
+  for (const name of names.filter(Boolean)) {
+    if (containsPhrase(words.join(' '), name)) continue;
+    const next = name.split(/\s+/);
+    let overlap = Math.min(words.length, next.length);
+    while (overlap > 0 && !words.slice(-overlap).every((word, i) => tokenKey(word) === tokenKey(next[i]))) overlap--;
+    words = [...words, ...next.slice(overlap)];
+  }
+  return words.join(' ');
 }

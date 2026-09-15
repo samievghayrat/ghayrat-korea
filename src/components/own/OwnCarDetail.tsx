@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
-import { getCompactModelName } from '@/lib/translations';
+import { getFullCarName } from '@/lib/translations';
 import { getCarShareUrl, getManagerContactLinks } from '@/lib/car-sharing';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
@@ -13,8 +13,8 @@ import FavoriteButton from '@/components/shared/FavoriteButton';
 import CarShareButton from '@/components/shared/CarShareButton';
 
 export default function OwnCarDetail({ car }: { car: CarListing }) {
-  const { t, formatListingPrice } = useApp();
-  const title = `${car.brand} ${getCompactModelName(car.model)}`;
+  const { t, lang, formatListingPrice } = useApp();
+  const title = getFullCarName(car, lang);
   const contactLinks = getManagerContactLinks(
     `${t('contact.carInterest')} ${title} ${car.year}\n${getCarShareUrl('our-cars', car.id)}`,
   );
@@ -28,7 +28,7 @@ export default function OwnCarDetail({ car }: { car: CarListing }) {
           <span className="break-words" aria-current="page">{title}</span>
         </nav>
         <div className="mb-5 flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-gray-950 sm:text-3xl">{title}</h1>
+          <h1 className="min-w-0 break-words text-2xl font-bold text-gray-950 sm:text-3xl">{title}</h1>
           <CarShareButton title={`${title} ${car.year}`} url={getCarShareUrl('our-cars', car.id)} />
         </div>
         <div className="grid items-start gap-5 lg:grid-cols-12">

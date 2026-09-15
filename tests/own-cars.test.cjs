@@ -23,6 +23,7 @@ const auth = loadTs('src/lib/admin-auth.ts');
 const input = loadTs('src/lib/own-car-input.ts');
 const sharing = loadTs('src/lib/car-sharing.ts');
 const { getTranslation } = loadTs('src/lib/i18n.ts');
+const carNames = loadTs('src/lib/translations.ts');
 const carId = 'abcdef123456789012345678';
 const photoId = '123456789012345678abcdef';
 const cars = new Map();
@@ -192,7 +193,7 @@ test('photos reject disguised SVG, unsupported formats, empty and oversized file
 test('own car detail uses the sale price and share link without Encar or import charges', () => {
   const { default: Detail } = loadTs('src/components/own/OwnCarDetail.tsx', {
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru'), formatListingPrice: (krw, rub, usd) => `$${usd}` }) },
-    '@/lib/translations': { getCompactModelName: name => name }, '@/lib/car-sharing': sharing,
+    '@/lib/translations': carNames, '@/lib/car-sharing': sharing,
     'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
     '@/components/detail/ImageGallery': { __esModule: true, default: () => React.createElement('div', null, 'gallery') },
     '@/components/detail/CarSpecs': { __esModule: true, default: () => React.createElement('div', null, 'specifications') },
@@ -200,7 +201,9 @@ test('own car detail uses the sale price and share link without Encar or import 
     '@/components/shared/FavoriteButton': { __esModule: true, default: () => null },
     '@/components/shared/CarShareButton': { __esModule: true, default: ({ url }) => React.createElement('span', null, url) },
   });
-  const html = renderToStaticMarkup(React.createElement(Detail, { car: { ...fixture, id: carId, source: 'own' } }));
+  const html = renderToStaticMarkup(React.createElement(Detail, { car: { ...fixture, id: carId, source: 'own',
+    model: 'K3', generation: 'K3 (BD)', trim: 'Signature' } }));
+  assert.match(html, /<h1[^>]+>Kia K3 \(BD\) Signature<\/h1>/);
   assert.ok(html.includes('$15000')); assert.ok(html.includes('Душанбе'));
   assert.ok(html.includes(`https://ghayrat.vercel.app/our-cars/${carId}`));
   assert.ok(html.indexOf('gallery') < html.indexOf('$15000')); assert.ok(html.indexOf('$15000') < html.indexOf('specifications'));

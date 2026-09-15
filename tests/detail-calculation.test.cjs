@@ -31,6 +31,7 @@ const base = { priceKrw: 10000000, priceRub: 600000, priceUsd: 8000, encarFeeKrw
   displacement: 1998, year: 2022, month: 1, fuel: 'Бензин', hp: 150,
   brand: 'Kia', model: 'Sportage', usdRate: 75, eurRate: 90 };
 const { getTranslation } = loadTs(path.resolve(__dirname, '../src/lib/i18n.ts'));
+const { getFullCarName, getCompactModelName } = loadTs(path.resolve(__dirname, '../src/lib/translations.ts'));
 const { parseEncarInsuranceHistory } = loadTs(path.resolve(__dirname, '../src/lib/encar-inspection.ts'));
 const sharing = loadTs(path.resolve(__dirname, '../src/lib/car-sharing.ts'));
 const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
@@ -87,9 +88,64 @@ test('car breadcrumb shows the compact brand and model after the listing ID and 
   assert.match(breadcrumb, /flex-wrap/);
   assert.doesNotMatch(breadcrumb, /whitespace-nowrap|overflow-x-auto/);
   assert.ok(breadcrumb.indexOf("t('nav.catalog')") < breadcrumb.indexOf('{car.id}'));
-  assert.ok(breadcrumb.indexOf('{car.id}') < breadcrumb.indexOf('{fullTitle}'));
-  assert.match(breadcrumb, /aria-current="page">\{fullTitle\}/);
-  assert.match(page, /return \[car\.brand, getCompactModelName\(car\.model\)\]/);
+  assert.ok(breadcrumb.indexOf('{car.id}') < breadcrumb.indexOf('{compactTitle}'));
+  assert.match(breadcrumb, /aria-current="page">\{compactTitle\}/);
+  assert.match(page, /\[car\.brand, getCompactModelName\(car\.model\)\]/);
+});
+
+test('opened cars show the actual generation, variant and trim without repeating labels', () => {
+  for (const [car, title] of [
+    [{ brand: 'Mercedes-Benz', model: 'C-Class W205', badge: 'C220 d 아방가르드' },
+      'Mercedes-Benz C-Class W205 C220 d Avantgarde'],
+    [{ brand: 'Mercedes-Benz', model: 'C-Class', generation: 'C-Class (W205)', badge: 'C200 아방가르드', trim: 'C200' },
+      'Mercedes-Benz C-Class (W205) C200 Avantgarde'],
+    [{ brand: 'Kia', model: 'K3', badge: '시그니처' }, 'Kia K3 Signature'],
+    [{ brand: '기아', model: '더 뉴 K3 2세대', badge: '1.6 시그니처', trim: 'Signature' },
+      'Kia K3 2-го поколения 1.6 Signature'],
+    [{ brand: 'BMW', model: '5시리즈', generation: '5시리즈 (G30)', badge: '520d', trim: '520d M 스포츠' },
+      'BMW 5 Series (G30) 520d M Sport'],
+    [{ brand: 'Audi', model: 'A7 (4G)', badge: '3.0 TFSI 콰트로 다이나믹' },
+      'Audi A7 (4G) 3.0 TFSI quattro Dynamic'],
+    [{ brand: 'Mercedes-Benz', model: 'C-Class', generation: 'W205', trim: 'C200' },
+      'Mercedes-Benz C-Class W205 C200'],
+    [{ brand: 'Kia', model: 'Kia K3', badge: '(세부등급 없음)' }, 'Kia K3'],
+    [{ brand: 'Kia', model: 'K3' }, 'Kia K3'],
+  ]) assert.equal(getFullCarName(car), title);
+});
+
+test('generation and fuel text follow the selected language on full detail titles', () => {
+  const car = { brand: 'Kia', model: 'K3 2세대', badge: '1.6 디젤 시그니처' };
+  for (const [lang, generation, fuel] of [
+    ['ru', '2-го поколения', 'Дизель'], ['en', '2 generation', 'Diesel'],
+    ['tj', 'насли 2', 'Дизел'], ['uz', '2-avlod', 'Dizel'],
+  ]) assert.equal(getFullCarName(car, lang), `Kia K3 ${generation} 1.6 ${fuel} Signature`);
+});
+
+test('unfamiliar Korean trim text is preserved phonetically instead of disappearing', () => {
+  assert.equal(getFullCarName({ brand: 'Kia', model: 'K3', trim: '가나다' }), 'Kia K3 Ganada');
+  assert.equal(getCompactModelName('5시리즈 (G30)'), '5 Series');
+  assert.equal(getCompactModelName('더 뉴 K3 2세대'), 'K3');
+});
+
+test('detail heading, photo label and sharing use full names while catalog cards remain short', () => {
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  assert.match(page, /const fullTitle = car \? getFullCarName\(car, lang\)/);
+  assert.match(page, /<h1 className="break-words[^>]+>\s*\{fullTitle\}/);
+  assert.match(page, /alt=\{fullTitle\}/);
+  assert.match(page, /<CarShareButton title=\{`\$\{fullTitle\}/);
+  const card = fs.readFileSync(path.resolve(__dirname, '../src/components/catalog/CarCard.tsx'), 'utf8');
+  assert.match(card, /const displayModel = getCompactModelName\(car\.model\)/);
+  assert.doesNotMatch(card, /getFullCarName/);
+});
+
+test('catalog social previews include the full name from available snapshot data', async () => {
+  const { generateMetadata } = loadTs(path.resolve(__dirname, '../src/app/catalog/[id]/layout.tsx'), {
+    '@/lib/encar-snapshot': { getSnapshotCarById: () => ({ Manufacturer: '벤츠', Model: 'C-클래스 W205',
+      Badge: 'C220 d 아방가르드', Year: 201705 }) },
+    '@/lib/translations': { getFullCarName }, '@/lib/car-sharing': sharing,
+  });
+  const metadata = await generateMetadata({ params: Promise.resolve({ id: '42736308' }) });
+  assert.equal(metadata.openGraph.title, 'Mercedes-Benz C-Class W205 C220 d Avantgarde 2017 | GHAYRAT');
 });
 
 test('cars from 2021 onward default to Russia', () => {

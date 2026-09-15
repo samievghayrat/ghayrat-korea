@@ -17,7 +17,7 @@ import { calculateImportCost, getTjContainerShippingUsd } from '@/lib/calculator
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
-import { getCompactModelName, translateColor } from '@/lib/translations';
+import { getCompactModelName, getFullCarName, translateColor } from '@/lib/translations';
 import { getEncarFeeKrw, getPriceIncludingEncarFee } from '@/lib/encar-fee';
 import { getCarDeliveryDestination, type CarDestination } from '@/lib/car-destination';
 import { parseManualEngineInput } from '@/lib/manual-engine-input';
@@ -28,10 +28,6 @@ function getSessionCar(id: string): CarListing | null {
     if (raw) return JSON.parse(raw);
   } catch {}
   return null;
-}
-
-function buildCarTitle(car: CarListing): string {
-  return [car.brand, getCompactModelName(car.model)].filter(Boolean).join(' ');
 }
 
 interface RemoteCarDetails {
@@ -53,7 +49,7 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -170,7 +166,8 @@ export default function CarDetailPage() {
 
   const effectiveHp = car?.hp || parseManualEngineInput(manualHp, 'hp');
   const effectiveDisplacement = car?.displacement || parseManualEngineInput(manualDisplacement, 'displacement') || 0;
-  const fullTitle = car ? buildCarTitle(car) : '';
+  const fullTitle = car ? getFullCarName(car, lang) : '';
+  const compactTitle = car ? [car.brand, getCompactModelName(car.model)].filter(Boolean).join(' ') : '';
   const titleSuffix = t('brand.subtitle');
 
   useEffect(() => {
@@ -284,7 +281,7 @@ export default function CarDetailPage() {
         <span className="shrink-0">/</span>
         <span className="shrink-0 text-gray-700 font-medium">{car.id}</span>
         <span className="shrink-0" aria-hidden="true">/</span>
-        <span className="min-w-0 break-words text-gray-700 font-medium" aria-current="page">{fullTitle}</span>
+        <span className="min-w-0 break-words text-gray-700 font-medium" aria-current="page">{compactTitle}</span>
       </nav>
 
       <div className="mb-5 lg:mb-6">
@@ -306,7 +303,7 @@ export default function CarDetailPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 leading-tight">
+            <h1 className="break-words text-2xl sm:text-3xl font-extrabold text-gray-950 leading-tight">
               {fullTitle}
             </h1>
           </div>

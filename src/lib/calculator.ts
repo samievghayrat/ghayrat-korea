@@ -2,6 +2,8 @@ import type { PriceBreakdownData } from '@/types';
 import { EXCHANGE_RATES } from './constants';
 import { lookupTjCustomsMinimum } from './tj-customs';
 
+export const TJ_CONTAINER_SHIPPING_USD = 3000;
+
 interface CalcInput {
   priceKrw: number;
   priceRub: number;
@@ -293,7 +295,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     // Delivery to Tajikistan is quoted separately from customs clearance.
     // $3,000 is the baseline container estimate and may vary by vehicle.
     const deliveryVladivostok = 0;
-    const deliveryKhujand = 3000;
+    const deliveryKhujand = TJ_CONTAINER_SHIPPING_USD;
     const serviceFeeUsd = deliveryKhujand;
 
     // Do not show a partial "total" when the vehicle is absent from the table.

@@ -11,7 +11,7 @@ import Equipment from '@/components/detail/Equipment';
 import AccidentHistory from '@/components/detail/AccidentHistory';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
-import { calculateImportCost } from '@/lib/calculator';
+import { calculateImportCost, TJ_CONTAINER_SHIPPING_USD } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
@@ -238,21 +238,20 @@ export default function CarDetailPage() {
   const tajikCarPriceUsd = breakdown
     ? breakdown.carPrice + (breakdown.encarFee || 0)
     : (displayPrice.priceUsd || 0);
-  const tajikPriceColumns = [
+  const tajikPriceRows = [
     {
       label: t('card.priceInKorea'),
       value: tajikCarPriceUsd > 0 ? formatUsd(tajikCarPriceUsd) : '—',
     },
     {
       label: t('price.shippingShort'),
-      value: breakdown?.serviceFee ? formatUsd(breakdown.serviceFee) : '—',
+      value: formatUsd(breakdown?.serviceFee ?? TJ_CONTAINER_SHIPPING_USD),
     },
     {
       label: t('price.customsShort'),
       value: calculationReady && breakdown?.customsTotal
         ? formatUsd(breakdown.customsTotal)
         : t('price.confirmingShort'),
-      note: t('price.approximateShort'),
     },
   ];
 
@@ -375,22 +374,18 @@ export default function CarDetailPage() {
             </div>
 
             {destination === 'tajikistan' ? (
-              <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-                <div className="grid grid-cols-3 divide-x divide-gray-200">
-                  {tajikPriceColumns.map((column) => (
-                    <div key={column.label} className="min-w-0 px-2.5 py-3.5 text-center sm:px-3">
-                      <div className="min-h-8 text-[11px] font-semibold leading-4 text-gray-500 sm:text-xs">
-                        {column.label}
-                      </div>
-                      <div className="mt-1 truncate text-base font-extrabold tracking-tight text-gray-950 sm:text-lg">
-                        {column.value}
-                      </div>
-                      {'note' in column && column.note && (
-                        <div className="mt-0.5 text-[10px] leading-3 text-gray-400">{column.note}</div>
-                      )}
+              <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4">
+                <dl className="divide-y divide-gray-100">
+                  {tajikPriceRows.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
+                      <dt className="text-sm font-medium text-gray-600">{row.label}</dt>
+                      <dd className="shrink-0 text-lg font-bold tracking-tight text-gray-950">{row.value}</dd>
                     </div>
                   ))}
-                </div>
+                </dl>
+                <p className="border-t border-gray-100 py-3 text-xs leading-5 text-gray-500" role="note">
+                  {t('price.disclaimerTj')}
+                </p>
               </div>
             ) : (
               <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">

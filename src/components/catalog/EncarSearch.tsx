@@ -325,8 +325,8 @@ function BrandModelPicker({
   );
 
   const brandPanel = (
-    <section className="flex min-h-0 flex-col" aria-label={labels.chooseBrand}>
-      <div className="border-b border-gray-100 p-3">
+    <section className="flex min-h-0 flex-col lg:h-full" aria-label={labels.chooseBrand}>
+      <div className="shrink-0 border-b border-gray-100 p-3">
         <label className="flex h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-gray-400 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
           {searchIcon}
           <input
@@ -337,7 +337,7 @@ function BrandModelPicker({
           />
         </label>
       </div>
-      <div className="min-h-0 overflow-y-auto p-3">
+      <div data-testid="brand-options" tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
         {brands.length > 0 && (
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{labels.chooseBrand}</p>
@@ -374,8 +374,8 @@ function BrandModelPicker({
   );
 
   const modelPanel = (
-    <section className="flex min-h-0 flex-col" aria-label={labels.chooseModel}>
-      <div className="border-b border-gray-100 p-3">
+    <section className="flex min-h-0 flex-col lg:h-full" aria-label={labels.chooseModel}>
+      <div className="shrink-0 border-b border-gray-100 p-3">
         <div className="mb-3 flex items-center gap-2">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{labels.chooseModel}</p>
@@ -394,7 +394,7 @@ function BrandModelPicker({
           </label>
         )}
       </div>
-      <div className="min-h-0 overflow-y-auto p-3">
+      <div data-testid="model-options" tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
         {!selectedBrand ? (
           <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center text-gray-400">
             <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-500">

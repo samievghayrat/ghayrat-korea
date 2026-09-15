@@ -429,7 +429,6 @@ export default function CarDetailPage() {
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>
-                  <div className="mt-2 text-xs leading-5 text-white/55">{t('detail.cityDeliveryNote')}</div>
                 </>
               ) : apiLoaded ? (
                 <div>

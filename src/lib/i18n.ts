@@ -294,7 +294,6 @@ const t = {
   // Detail purchase flow
   'detail.destinationTitle': { ru: 'Куда доставить автомобиль?', en: 'Where should we deliver the car?', tj: 'Мошинро ба куҷо расонем?', uz: 'Avtomobilni qayerga yetkazamiz?' },
   'detail.destinationHint': { ru: 'Выберите страну — стоимость и расходы пересчитаются автоматически.', en: 'Choose a country and all costs will update automatically.', tj: 'Кишварро интихоб кунед — нарх ва хароҷот худкор аз нав ҳисоб мешаванд.', uz: 'Davlatni tanlang — narx va xarajatlar avtomatik qayta hisoblanadi.' },
-  'detail.cityDeliveryNote': { ru: 'Конечный город и маршрут доставки согласуем перед заказом.', en: 'We will confirm the final city and delivery route before ordering.', tj: 'Шаҳри ниҳоӣ ва масири таҳвилро пеш аз фармоиш мувофиқа мекунем.', uz: 'Yakuniy shahar va yetkazish yo‘nalishini buyurtmadan oldin kelishamiz.' },
   'detail.deliveryCityLabel': { ru: 'Ваш город', en: 'Your city', tj: 'Шаҳри шумо', uz: 'Shahringiz' },
   'detail.deliveryCityHint': { ru: 'Укажите город — менеджер рассчитает последний участок маршрута.', en: 'Enter your city and the manager will calculate the final part of the route.', tj: 'Шаҳрро нависед — мудир қисми охирини масирро ҳисоб мекунад.', uz: 'Shaharni kiriting — menejer yo‘nalishning oxirgi qismini hisoblaydi.' },
   'detail.cityPlaceholderRussia': { ru: 'Например, Москва', en: 'For example, Moscow', tj: 'Масалан, Москва', uz: 'Masalan, Moskva' },

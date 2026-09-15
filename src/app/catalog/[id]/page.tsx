@@ -92,6 +92,9 @@ export default function CarDetailPage() {
             if (enhanced) {
               setCar(current => ({
                 ...enhanced,
+                // Keep Encar's gallery/specification body classification when
+                // a later pricing enhancement only contains catalogue data.
+                bodyType: current?.bodyType || enhanced.bodyType,
                 imageUrl: current?.images?.[0] || enhanced.imageUrl,
                 images: current?.images?.length ? current.images : enhanced.images,
               }));

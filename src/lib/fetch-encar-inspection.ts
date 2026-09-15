@@ -9,20 +9,40 @@ const headers = {
 };
 
 export async function fetchEncarInspection(carId: string, resolvedVehicleId?: string): Promise<EncarConditionResult> {
+  const validId = (id: string) => /^\d{1,12}$/.test(id);
+  if (!validId(carId) || (resolvedVehicleId && !validId(resolvedVehicleId))) {
+    return { status: 'unavailable', inspectionData: null };
+  }
+
   try {
-    let vehicleId = resolvedVehicleId;
-    if (!vehicleId) {
-      const listing = await fetch(`${ENCAR_READSIDE_BASE}/vehicle/${carId}`, {
-        headers, cache: 'no-store', signal: AbortSignal.timeout(8000),
-      });
-      if (!listing.ok) {
-        console.warn('Encar condition metadata unavailable', { status: listing.status });
-        return { status: 'unavailable', inspectionData: null };
+    let vehicleId = resolvedVehicleId || carId;
+    let identityResolved = Boolean(resolvedVehicleId);
+    if (!resolvedVehicleId) {
+      // Listing metadata resolves proxy listings, but is not required to read a
+      // report published under the original car ID. Its failure must not abort it.
+      try {
+        const listing = await fetch(`${ENCAR_READSIDE_BASE}/vehicle/${carId}`, {
+          headers, cache: 'no-store', signal: AbortSignal.timeout(8000),
+        });
+        if (listing.ok) {
+          const metadata = await listing.json();
+          const candidate = metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+            ? String(metadata.vehicleId || carId) : '';
+          if (validId(candidate)) {
+            vehicleId = candidate;
+            identityResolved = true;
+          } else {
+            console.warn('Encar condition metadata invalid; trying original car ID');
+          }
+        } else {
+          console.warn('Encar condition metadata unavailable; trying original car ID', { status: listing.status });
+        }
+      } catch (error) {
+        console.warn('Encar condition metadata failed; trying original car ID', {
+          error: error instanceof Error ? error.name : 'UnknownError',
+        });
       }
-      const metadata = await listing.json();
-      vehicleId = String(metadata.vehicleId || carId);
     }
-    if (!/^\d{1,12}$/.test(vehicleId)) return { status: 'unavailable', inspectionData: null };
 
     const report = await fetch(`${ENCAR_INSPECTION_BASE}/${vehicleId}`, {
       headers, cache: 'no-store', signal: AbortSignal.timeout(8000),
@@ -45,7 +65,9 @@ export async function fetchEncarInspection(carId: string, resolvedVehicleId?: st
         diagnosisStatus: diagnosis?.status ?? 'network_error',
       });
     }
-    return { status: reportMissing && diagnosisMissing ? 'not_published' : 'unavailable', inspectionData: null };
+    // If metadata failed, a proxy listing's real report ID may still be unknown.
+    // Missing fallback responses do not prove that its report was never published.
+    return { status: identityResolved && reportMissing && diagnosisMissing ? 'not_published' : 'unavailable', inspectionData: null };
   } catch (error) {
     console.warn('Encar condition request failed', { error: error instanceof Error ? error.name : 'UnknownError' });
     return { status: 'unavailable', inspectionData: null };

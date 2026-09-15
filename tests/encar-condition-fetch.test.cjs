@@ -29,6 +29,79 @@ async function mockFetch(callback, action) {
 }
 const json = value => Response.json(value);
 const diagnosis = { items: [{ name: 'HOOD', resultCode: 'NORMAL' }], diagnosisDate: '2026-09-15T00:00:00' };
+const audiInspection = {
+  master: { issuedt: '20260909', mileage: 45353, accyn: 'N', simpleRepair: 'N', waterlogyn: 'N' },
+  inner: { motorOperationStatus: 'GOOD', transAutoStatus: 'GOOD' },
+};
+
+test('the Audi inspection loads directly when its separate listing request returns 404', async () => {
+  const calls = [];
+  const result = await mockFetch(async url => {
+    calls.push(url);
+    if (url.endsWith('/vehicle/42733716')) return new Response(null, { status: 404 });
+    assert.ok(url.endsWith('/inspect/42733716'));
+    return json(audiInspection);
+  }, () => fetchEncarInspection('42733716'));
+  assert.equal(result.status, 'available');
+  assert.equal(result.inspectionData.reportKind, 'inspection');
+  assert.equal(result.inspectionData.reportDate, '2026-09-09');
+  assert.equal(result.inspectionData.reportedMileage, 45353);
+  assert.equal(calls.length, 2);
+});
+
+test('HTTP errors, timeouts, unreadable metadata and invalid resolved IDs still allow a valid original-ID report', async () => {
+  for (const metadataResponse of [
+    () => new Response(null, { status: 503 }),
+    () => { throw new Error('timeout'); },
+    () => new Response('not json'),
+    () => json(null),
+    () => json([]),
+    () => json({ vehicleId: 'invalid/vehicle' }),
+  ]) {
+    const result = await mockFetch(async url => {
+      if (url.includes('/readside/vehicle/')) return metadataResponse();
+      assert.ok(url.endsWith('/inspect/42733716'));
+      return json(audiInspection);
+    }, () => fetchEncarInspection('42733716'));
+    assert.equal(result.status, 'available');
+    assert.equal(result.inspectionData.reportDate, '2026-09-09');
+  }
+});
+
+test('a body diagnosis can also load under the original ID after metadata fails', async () => {
+  const calls = [];
+  const result = await mockFetch(async url => {
+    calls.push(url);
+    if (url.includes('/readside/vehicle/')) throw new Error('network failure');
+    if (url.includes('/inspect/')) return new Response(null, { status: 404 });
+    assert.ok(url.endsWith('/diagnosis/vehicle/42733716'));
+    return json(diagnosis);
+  }, () => fetchEncarInspection('42733716'));
+  assert.equal(result.status, 'available');
+  assert.equal(result.inspectionData.reportKind, 'body_diagnosis');
+  assert.equal(calls.length, 3);
+});
+
+test('failed metadata and missing fallback reports remain unavailable rather than claiming no report exists', async () => {
+  const calls = [];
+  const result = await mockFetch(async url => {
+    calls.push(url);
+    return new Response(null, { status: 404 });
+  }, () => fetchEncarInspection('42733716'));
+  assert.equal(result.status, 'unavailable');
+  assert.equal(result.inspectionData, null);
+  assert.equal(calls.length, 3);
+});
+
+test('invalid input IDs never reach the upstream services', async () => {
+  let calls = 0;
+  await mockFetch(async () => { calls++; return json(audiInspection); }, async () => {
+    for (const [carId, vehicleId] of [['invalid', undefined], ['123', 'invalid'], ['1234567890123', undefined]]) {
+      assert.equal((await fetchEncarInspection(carId, vehicleId)).status, 'unavailable');
+    }
+  });
+  assert.equal(calls, 0);
+});
 
 test('resolves dummy listings and fetches a body diagnosis when the full report is missing', async () => {
   const calls = [];

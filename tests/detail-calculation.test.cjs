@@ -95,7 +95,7 @@ test('Russian fees and incomplete-calculation protection are unchanged by SUV sh
   assert.equal(incomplete.total, 0);
 });
 
-test('body repair details appear before date, history flags and mechanical checks', () => {
+test('body repair details are open by default and appear before the other condition details', () => {
   const { default: CarCondition } = loadTs(path.resolve(__dirname, '../src/components/detail/CarCondition.tsx'), {
     './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
     './AccidentHistory': { __esModule: true, default: () => null },
@@ -108,6 +108,7 @@ test('body repair details appear before date, history flags and mechanical check
     records: [], carId: '123', source: 'encar', inspectionData: report,
   }));
   const repairs = html.indexOf('condition.bodyRepairs');
+  assert.match(html, /<details[^>]*\sopen=""/);
   assert.ok(repairs >= 0);
   for (const label of ['condition.reportDate', 'accident.history', 'condition.engine']) {
     assert.ok(html.indexOf(label) > repairs, label);

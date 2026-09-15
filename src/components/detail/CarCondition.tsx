@@ -97,7 +97,7 @@ export default function CarCondition({ records, carId, inspectionData, source }:
         {report && (
           <>
             {!!report.panels.length && (
-              <details className="mb-4 rounded-xl border border-gray-200 p-3">
+              <details open className="mb-4 rounded-xl border border-gray-200 p-3">
                 <summary className="cursor-pointer text-sm font-semibold text-gray-900">{t('condition.bodyRepairs')} ({report.panels.length})</summary>
                 <div className="mt-4"><CarDamageMap panels={report.panels} /></div>
               </details>

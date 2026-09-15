@@ -2,6 +2,7 @@ import type { PriceBreakdownData } from '@/types';
 import { EXCHANGE_RATES } from './constants';
 import { lookupTjCustomsMinimum } from './tj-customs';
 import { getTjContainerShippingUsd } from './tj-shipping';
+import { getDestinationConvertedPrice } from './exchange-markup';
 
 export { TJ_CONTAINER_SHIPPING_USD, TJ_SUV_CONTAINER_SHIPPING_USD, getTjContainerShippingUsd } from './tj-shipping';
 
@@ -269,11 +270,12 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     fuelLower.includes('гибрид') ||
     fuelLower.includes('hybrid');
 
-  // 1. Car price in RUB
-  const carPrice = input.priceRub;
+  // 1. Rebase the paired listing price's existing 2% spread to the country's
+  // spread (TJ 2%, RU 4%), rather than adding another percentage to the total.
+  const carPrice = getDestinationConvertedPrice(input.priceRub, destination);
   const encarFeeKrw = Math.max(0, input.encarFeeKrw || 0);
   const encarFeeRub = input.priceKrw > 0
-    ? Math.round(input.priceRub * (encarFeeKrw / input.priceKrw))
+    ? Math.round(carPrice * (encarFeeKrw / input.priceKrw))
     : 0;
 
   if (destination === 'tajikistan') {

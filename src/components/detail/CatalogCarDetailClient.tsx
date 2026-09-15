@@ -250,7 +250,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
   const displayCar = effectiveHp !== car.hp || effectiveDisplacement !== (car.displacement || 0)
     ? { ...car, hp: effectiveHp, displacement: effectiveDisplacement }
     : car;
-  const displayPrice = getPriceIncludingEncarFee(car);
+  const displayPrice = getPriceIncludingEncarFee(car, destination);
   const tajikCarPriceUsd = breakdown
     ? breakdown.carPrice + (breakdown.encarFee || 0)
     : (displayPrice.priceUsd || 0);
@@ -573,7 +573,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
           <CarSpecs car={displayCar} />
           <CarCondition records={car.accidentHistory || []} carId={car.id} source={car.source} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
-          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
+          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} destination={destination} />
         </div>
 
       </div>

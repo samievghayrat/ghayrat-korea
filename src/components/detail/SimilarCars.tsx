@@ -8,15 +8,17 @@ import { useApp } from '@/contexts/AppContext';
 import { localizeVehicleValue } from '@/lib/i18n';
 import { getCompactModelName } from '@/lib/translations';
 import { getPriceIncludingEncarFee } from '@/lib/encar-fee';
+import { getCarDeliveryDestination, type CarDestination } from '@/lib/car-destination';
 
 interface SimilarCarsProps {
   brand: string;
   model: string;
   excludeId: string;
   priceRub: number;
+  destination?: CarDestination;
 }
 
-export default function SimilarCars({ brand, model, excludeId, priceRub }: SimilarCarsProps) {
+export default function SimilarCars({ brand, model, excludeId, priceRub, destination }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
   const { t, lang, formatListingPrice, formatMileage } = useApp();
 
@@ -43,11 +45,12 @@ export default function SimilarCars({ brand, model, excludeId, priceRub }: Simil
       </h2>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-1 px-1">
         {cars.map((car) => {
-          const displayPrice = getPriceIncludingEncarFee(car);
+          const carDestination = getCarDeliveryDestination(car.year, destination);
+          const displayPrice = getPriceIncludingEncarFee(car, carDestination);
           return (
           <Link
             key={car.id}
-            href={`/catalog/${car.id}`}
+            href={`/catalog/${car.id}?destination=${carDestination}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-64 flex-shrink-0 snap-start rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"

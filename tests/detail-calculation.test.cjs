@@ -30,6 +30,88 @@ const { calculateImportCost } = loadTs(path.resolve(__dirname, '../src/lib/calcu
 const base = { priceKrw: 10000000, priceRub: 600000, priceUsd: 8000, encarFeeKrw: 440000,
   displacement: 1998, year: 2022, month: 1, fuel: 'Бензин', hp: 150,
   brand: 'Kia', model: 'Sportage', usdRate: 75, eurRate: 90 };
+const { getPriceIncludingEncarFee } = loadTs(path.resolve(__dirname, '../src/lib/encar-fee.ts'));
+const { getDestinationConvertedPrice } = loadTs(path.resolve(__dirname, '../src/lib/exchange-markup.ts'));
+const markedBase = { ...base, priceRub: 612000, priceUsd: 8160 };
+
+test('destination spreads are 2% for Tajikistan and 4% for Russia, not stacked', () => {
+  assert.equal(getDestinationConvertedPrice(612000, 'tajikistan'), 612000);
+  assert.equal(getDestinationConvertedPrice(612000, 'russia'), 624000);
+  assert.notEqual(getDestinationConvertedPrice(612000, 'russia'), Math.round(612000 * 1.04));
+  assert.equal(getDestinationConvertedPrice(612000), 612000, 'Unselected catalogue prices keep 2%');
+  assert.equal(getDestinationConvertedPrice(0, 'russia'), 0);
+});
+
+test('country calculations use destination spreads without multiplying shipping and fixed customs charges', () => {
+  const tj = calculateImportCost({ ...markedBase, destination: 'tajikistan', bodyType: 'Седан' });
+  assert.equal(tj.carPrice, 8160);
+  assert.equal(tj.encarFee, 359);
+  assert.equal(tj.serviceFee, 3000);
+  assert.equal(tj.customsTotal, 5400);
+  assert.equal(tj.total, 8160 + 359 + 3000 + 5400);
+
+  const ru = calculateImportCost({ ...markedBase, destination: 'russia', russiaCustomsOverride: {
+    customsDuty: 2000, customsFee: 3000, utilizationFee: 4000,
+  } });
+  assert.equal(ru.carPrice, 624000);
+  assert.equal(ru.encarFee, 27456);
+  assert.equal(ru.serviceFee, 120000);
+  assert.equal(ru.brokerFee, 100000);
+  assert.deepEqual([ru.customsDuty, ru.customsFee, ru.utilizationFee], [2000, 3000, 4000]);
+  assert.equal(ru.total, 624000 + 27456 + 120000 + 100000 + 2000 + 3000 + 4000);
+});
+
+test('Tajikistan USD fallback retains 2% when the paired USD price is missing', () => {
+  const tj = calculateImportCost({ ...markedBase, priceUsd: undefined, destination: 'tajikistan' });
+  assert.equal(tj.carPrice, 8160);
+});
+
+test('country switching recalculates from the original listing without accumulating an uplift', () => {
+  const input = Object.freeze({ ...markedBase });
+  const original = { ...input };
+  for (const destination of ['russia', 'tajikistan', 'russia', 'tajikistan']) {
+    const result = calculateImportCost({ ...input, destination });
+    assert.equal(result.carPrice, destination === 'russia' ? 624000 : 8160);
+  }
+  assert.deepEqual(input, original);
+});
+
+test('displayed country prices agree exactly with the itemized calculation including the KRW fee', () => {
+  const car = { source: 'encar', price_krw: markedBase.priceKrw,
+    price_rub: markedBase.priceRub, price_usd: markedBase.priceUsd };
+  for (const destination of ['russia', 'tajikistan']) {
+    const display = getPriceIncludingEncarFee(car, destination);
+    const quote = calculateImportCost({ ...markedBase, destination });
+    assert.equal(destination === 'russia' ? display.priceRub : display.priceUsd,
+      quote.carPrice + quote.encarFee);
+    assert.equal(display.priceKrw, 10440000, 'The source won amount is not marked up');
+  }
+  assert.equal(getPriceIncludingEncarFee(car).priceRub, 638928);
+});
+
+test('incomplete Russian quotes still show the 4% car price without a misleading total', () => {
+  const quote = calculateImportCost({ ...markedBase, hp: undefined, destination: 'russia' });
+  assert.equal(quote.carPrice, 624000);
+  assert.equal(quote.calculationComplete, false);
+  assert.equal(quote.total, 0);
+});
+
+test('detail fallback uses the selected country and generation years use a real dash', () => {
+  const detail = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
+  assert.match(detail, /getPriceIncludingEncarFee\(car, destination\)/);
+  const search = fs.readFileSync(path.resolve(__dirname, '../src/components/catalog/EncarSearch.tsx'), 'utf8');
+  assert.ok(search.includes('`(${v.yearFrom} — ${v.yearTo})`'));
+  assert.ok(!search.includes('`(${v.yearFrom} â€” ${v.yearTo})`'));
+});
+
+test('similar-car prices and links preserve the selected delivery country', () => {
+  const file = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/SimilarCars.tsx'), 'utf8');
+  assert.match(file, /getCarDeliveryDestination\(car\.year, destination\)/);
+  assert.match(file, /getPriceIncludingEncarFee\(car, carDestination\)/);
+  assert.ok(file.includes('href={`/catalog/${car.id}?destination=${carDestination}`}'));
+  const detail = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
+  assert.match(detail, /<SimilarCars[^>]+destination=\{destination\}/);
+});
 const { getTranslation } = loadTs(path.resolve(__dirname, '../src/lib/i18n.ts'));
 const { getFullCarName, getCompactModelName } = loadTs(path.resolve(__dirname, '../src/lib/translations.ts'));
 const { parseEncarInsuranceHistory } = loadTs(path.resolve(__dirname, '../src/lib/encar-inspection.ts'));

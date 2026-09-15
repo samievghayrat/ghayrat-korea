@@ -67,6 +67,25 @@ test('only the first row of three catalogue photos receives high priority', () =
   assert.equal((html.match(/data-priority="false"/g) || []).length, 21);
 });
 
+test('catalogue cards match their year-based destination quote without changing own-car prices', () => {
+  const noComponent = { __esModule: true, default: () => null };
+  const { default: Card } = loadTs('src/components/catalog/CarCard.tsx', {
+    'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
+    'next/image': noComponent,
+    '@/components/shared/FavoriteButton': noComponent,
+    '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru', formatMileage: String,
+      formatListingPrice: (krw, rub, usd) => `${rub} RUB / ${usd} USD` }) },
+  });
+  const listing = { ...car, price_rub: 612000, price_usd: 8160 };
+  for (const [year, expected] of [[2022, '651456 RUB / 8686 USD'], [2018, '638928 RUB / 8519 USD']]) {
+    const html = renderToStaticMarkup(React.createElement(Card, { car: { ...listing, year } }));
+    assert.ok(html.includes(expected), html);
+    assert.ok(html.includes(`href="/catalog/${car.id}"`));
+  }
+  const own = renderToStaticMarkup(React.createElement(Card, { car: { ...listing, source: 'own' } }));
+  assert.ok(own.includes('612000 RUB / 8160 USD'));
+});
+
 const { getGalleryThumbnailUrl, getNextGalleryImage } = loadTs('src/lib/gallery-images.ts');
 const photo = 'https://ci.encar.com/carpicture04/pic4274/car_001.jpg?impolicy=heightRate&rh=768&cw=1280&ch=768&wtmk=https%3A%2F%2Fci.encar.com%2Fwt_mark%2Fw_mark_04.png';
 

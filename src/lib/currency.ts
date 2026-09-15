@@ -1,3 +1,5 @@
+import { CATALOG_EXCHANGE_MARKUP } from './exchange-markup';
+
 interface RateCache {
   rate: number;
   usdRate: number;
@@ -13,11 +15,11 @@ const FALLBACK_KRW_TO_RUB = 0.068;
 const FALLBACK_KRW_TO_USD = 0.00073;
 const FALLBACK_KRW_TO_EUR = 0.00065;
 
-// +2% markup on exchange rate (buy/sell spread)
-const MARKUP = 1.02;
+// Catalogue conversions retain 2%; the country quote rebases Russia to 4%.
+const MARKUP = CATALOG_EXCHANGE_MARKUP;
 
 async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate: number }> {
-  // Primary: Google Finance compatible rate via exchangerate-api
+  // Primary: ExchangeRate-API (not Google Finance).
   try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/KRW', {
       next: { revalidate: 3600 },

@@ -852,7 +852,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               {sortedGenerationVariants.map(v => {
                 const translated = translateGenerationName(v.name, lang);
                 const yearRange = v.yearFrom && v.yearTo && v.yearFrom <= v.yearTo
-                  ? `(${v.yearFrom} â€” ${v.yearTo})`
+                  ? `(${v.yearFrom} — ${v.yearTo})`
                   : '';
                 return (
                   <button

@@ -8,6 +8,7 @@ import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName } from '@/lib/translations';
 import { localizeVehicleValue } from '@/lib/i18n';
 import { getPriceIncludingEncarFee } from '@/lib/encar-fee';
+import { getCarDeliveryDestination } from '@/lib/car-destination';
 
 interface CarCardProps {
   car: CarListing;
@@ -30,7 +31,8 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     : `${car.year}`;
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
   const hasPrice = car.price_krw > 0 || (car.source === 'own' && (car.price_rub > 0 || (car.price_usd || 0) > 0));
-  const displayPrice = getPriceIncludingEncarFee(car);
+  const displayPrice = getPriceIncludingEncarFee(car,
+    car.source === 'encar' ? getCarDeliveryDestination(car.year) : undefined);
 
   return (
     <Link

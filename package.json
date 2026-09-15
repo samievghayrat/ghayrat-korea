@@ -13,6 +13,7 @@
     "test:detail-calculation": "node --test tests/detail-calculation.test.cjs",
     "test:catalog-navigation": "node --test tests/catalog-navigation.test.cjs",
     "test:car-sharing": "node --test tests/car-sharing.test.cjs",
+    "test:mobile-contact": "node --test tests/mobile-contact.test.cjs",
     "deploy:auction-worker": "npm run deploy --prefix auction-worker"
   },
   "dependencies": {

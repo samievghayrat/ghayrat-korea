@@ -11,7 +11,12 @@ export async function GET(request: NextRequest) {
   if (includeHidden) { const denied = requireAdmin(request); if (denied) return denied; }
   try {
     return NextResponse.json({ cars: await getOwnCars(includeHidden) }, { headers: { 'Cache-Control': 'no-store' } });
-  } catch {
+  } catch (error) {
+    const failure = error as { name?: string; code?: string | number };
+    console.error('Own-car storage unavailable', {
+      type: failure?.name || 'Unknown',
+      code: typeof failure?.code === 'number' || (typeof failure?.code === 'string' && /^[A-Z0-9_]+$/.test(failure.code)) ? failure.code : undefined,
+    });
     return NextResponse.json({ error: 'Не удалось загрузить автомобили. Попробуйте ещё раз.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }
 }

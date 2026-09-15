@@ -375,7 +375,7 @@ test('both body diagrams remain open for a report with no damaged or repaired pa
   assert.ok(html.includes('/images/inspect_structural.png'));
   assert.ok(html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
   assert.ok(!html.includes('absolute flex items-center justify-center'));
-  assert.ok(!html.includes('Повреждения и ремонт кузова (0)'));
+  assert.ok(!html.includes('Состояние кузова (0)'));
 });
 
 test('missing panel data shows an unmarked diagram with an explicit unknown-data explanation', () => {
@@ -407,10 +407,36 @@ test('repair markers and the panel count still appear only for actual reported p
   const html = renderInsuranceHistory({ hasDamage: true, bodyInspectionAvailable: true,
     panels: [{ name: 'hood', nameRu: 'Капот', rank: '1', damages: ['CHANGE'] },
       { name: 'rearPanel', nameRu: 'Задняя панель', rank: 'A', damages: ['METAL'] }] });
-  assert.ok(html.includes('Повреждения и ремонт кузова (2)'));
+  assert.ok(html.includes('Состояние кузова (2)'));
   assert.ok(html.includes('title="Капот: Замена"'));
-  assert.ok(html.includes('title="Задняя панель: Рихтовка/сварка"'));
+  assert.ok(html.includes('title="Задняя панель: Ремонт"'));
   assert.equal((html.match(/absolute flex items-center justify-center/g) || []).length, 2);
+});
+
+test('body condition uses the clear reference labels and readable legend in every language', () => {
+  const labels = ['damage.change', 'damage.metal', 'damage.corrosion', 'damage.scratch', 'damage.dent', 'damage.damage'];
+  assert.deepEqual(labels.map(key => getTranslation(key, 'ru')),
+    ['Замена', 'Ремонт', 'Коррозия', 'Царапина', 'Вмятина', 'Повреждение']);
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    const html = renderInsuranceHistory({ bodyInspectionAvailable: true }, lang);
+    assert.ok(html.includes(getTranslation('condition.bodyRepairs', lang)), lang);
+    const legend = html.match(/<div[^>]+data-testid="damage-legend"[\s\S]*?<\/div>/)[0];
+    for (const key of labels) assert.ok(legend.includes(getTranslation(key, lang)), `${lang}: ${key}`);
+    assert.match(legend, /text-sm/);
+    assert.match(legend, /w-6 h-6/);
+    assert.doesNotMatch(html, /Рихтовка\/сварка/);
+    assert.ok(html.includes(getTranslation('condition.noBodyRepairs', lang)), lang);
+  }
+});
+
+test('affected panels spell out each finding instead of relying on letters alone', () => {
+  const html = renderInsuranceHistory({ hasDamage: true, bodyInspectionAvailable: true,
+    panels: [{ name: 'rearPanel', nameRu: 'Задняя панель', rank: 'A', damages: ['METAL', 'CORROSION'] }] });
+  assert.match(html, /<dt[^>]*>Задняя панель<\/dt>[\s\S]*?<dd[^>]*>[\s\S]*?Ремонт[\s\S]*?Коррозия[\s\S]*?<\/dd>/);
+  assert.match(html, /title="Задняя панель: Ремонт"/);
+  assert.ok(html.includes('background-color:#3498db'));
+  assert.ok(html.includes('background-color:#f97316'));
+  assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
 });
 
 test('unavailable inspection data does not show an empty diagram as though a report had loaded', () => {

@@ -383,10 +383,10 @@ const t = {
   'condition.previousRental': { ru: 'Ранее использовался в аренде', en: 'Previously used as a rental', tj: 'Пештар дар иҷора истифода шудааст', uz: 'Avval ijarada ishlatilgan' },
   'condition.previousTaxi': { ru: 'Ранее использовался в такси', en: 'Previously used as a taxi', tj: 'Пештар ҳамчун таксӣ истифода шудааст', uz: 'Avval taksida ishlatilgan' },
   'condition.tuning': { ru: 'В отчёте отмечен тюнинг', en: 'Modifications noted in the report', tj: 'Дар ҳисобот тюнинг зикр шудааст', uz: 'Hisobotda o‘zgartirishlar qayd etilgan' },
-  'condition.noBodyRepairs': { ru: 'В отчёте не отмечены повреждения и ремонт кузова.', en: 'No body damage or repairs are noted in the report.', tj: 'Дар ҳисобот зарар ва таъмири кузов зикр нашудааст.', uz: 'Hisobotda kuzov shikasti yoki ta’miri qayd etilmagan.' },
-  'condition.bodyDetailsMissing': { ru: 'В отчёте отмечен ремонт, но подробная схема не опубликована.', en: 'Repairs are noted, but a detailed diagram is not available.', tj: 'Дар ҳисобот таъмир зикр шудааст, аммо нақшаи муфассал дастрас нест.', uz: 'Ta’mir qayd etilgan, ammo batafsil chizma mavjud emas.' },
-  'condition.bodyRepairs': { ru: 'Повреждения и ремонт кузова', en: 'Body damage and repairs', tj: 'Зарар ва таъмири кузов', uz: 'Kuzov shikasti va ta’miri' },
-  'condition.bodyMarksNotListed': { ru: 'Отметки о повреждениях панелей не указаны в отчёте.', en: 'Panel damage markings are not provided in the report.', tj: 'Дар ҳисобот нишонаҳои зарари панелҳо зикр нашудаанд.', uz: 'Hisobotda panellar shikasti belgilari ko‘rsatilmagan.' },
+  'condition.noBodyRepairs': { ru: 'Повреждений не зафиксировано.', en: 'No damage recorded.', tj: 'Зарар сабт нашудааст.', uz: 'Shikast qayd etilmagan.' },
+  'condition.bodyDetailsMissing': { ru: 'Ремонт отмечен. Подробности по панелям отсутствуют.', en: 'Repairs recorded. Panel details are unavailable.', tj: 'Таъмир сабт шудааст. Ҷузъиёти панелҳо дастрас нест.', uz: 'Ta’mir qayd etilgan. Panellar bo‘yicha tafsilotlar yo‘q.' },
+  'condition.bodyRepairs': { ru: 'Состояние кузова', en: 'Body condition', tj: 'Ҳолати кузов', uz: 'Kuzov holati' },
+  'condition.bodyMarksNotListed': { ru: 'Данные о повреждениях кузова не указаны.', en: 'Body damage information is not provided.', tj: 'Маълумот дар бораи зарари кузов зикр нашудааст.', uz: 'Kuzov shikasti haqida ma’lumot ko‘rsatilmagan.' },
   'condition.bodyOnly': { ru: 'Доступен отчёт по кузову. Он показывает замену проверенных панелей, но не оценивает двигатель, КПП и историю затопления.', en: 'A body report is available. It covers replacement of the checked panels, not the engine, transmission or flood history.', tj: 'Ҳисоботи кузов дастрас аст. Он ивазшавии панелҳои санҷидашударо нишон медиҳад, на ҳолати муҳаррик, қуттии суръат ё таърихи обхезиро.', uz: 'Kuzov hisoboti mavjud. U tekshirilgan panellar almashganini ko‘rsatadi, dvigatel, uzatma yoki suv bosishi tarixini baholamaydi.' },
   'condition.noReplacement': { ru: 'Без замены', en: 'No replacement', tj: 'Иваз нашудааст', uz: 'Almashmagan' },
   'condition.originalNotes': { ru: 'Примечание инспектора (оригинал)', en: 'Inspector’s notes (original)', tj: 'Қайди мутахассис (асл)', uz: 'Tekshiruvchi izohi (asl nusxa)' },
@@ -396,7 +396,7 @@ const t = {
 
   // Damage map
   'damage.change': { ru: 'Замена', en: 'Replaced', tj: 'Иваз', uz: 'Almashtirilgan' },
-  'damage.metal': { ru: 'Рихтовка/сварка', en: 'Metal work', tj: 'Рихтовка', uz: 'Rixovka' },
+  'damage.metal': { ru: 'Ремонт', en: 'Repair', tj: 'Таъмир', uz: 'Ta’mir' },
   'damage.corrosion': { ru: 'Коррозия', en: 'Corrosion', tj: 'Коррозия', uz: 'Korroziya' },
   'damage.scratch': { ru: 'Царапина', en: 'Scratch', tj: 'Хурошидагӣ', uz: 'Tirnalish' },
   'damage.dent': { ru: 'Вмятина', en: 'Dent', tj: 'Ғижим', uz: 'Botiqlik' },

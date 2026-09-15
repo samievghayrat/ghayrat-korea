@@ -11,11 +11,11 @@ interface CarDamageMapProps {
 
 const damageMarker: Record<DamageType, { letter: string; bg: string; text: string }> = {
   CHANGE:    { letter: 'X', bg: '#e74c3c', text: '#fff' },
-  METAL:     { letter: 'W', bg: '#f39c12', text: '#fff' },
-  CORROSION: { letter: 'C', bg: '#95a5a6', text: '#fff' },
-  SCRATCH:   { letter: 'A', bg: '#7f8c8d', text: '#fff' },
-  HILLS:     { letter: 'U', bg: '#3498db', text: '#fff' },
-  DAMAGE:    { letter: 'T', bg: '#8e44ad', text: '#fff' },
+  METAL:     { letter: 'W', bg: '#3498db', text: '#fff' },
+  CORROSION: { letter: 'C', bg: '#f97316', text: '#fff' },
+  SCRATCH:   { letter: 'A', bg: '#ca8a04', text: '#fff' },
+  HILLS:     { letter: 'U', bg: '#a855f7', text: '#fff' },
+  DAMAGE:    { letter: 'T', bg: '#6b7280', text: '#fff' },
 };
 
 const damageLabelKey: Record<DamageType, TranslationKey> = {
@@ -181,30 +181,36 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
       </div>
 
       {panels.length > 0 && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+        <dl className="divide-y divide-gray-100 text-sm">
           {panels.map((p) => (
-            <span key={p.name} className="inline-flex items-center gap-1">
-              <span className="text-xs font-medium text-gray-700">{getPanelLabel(p, lang)}</span>
-              {p.damages.map((d) => (
-                <span
-                  key={d}
-                  className="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[8px] font-bold leading-none"
-                  style={{ backgroundColor: damageMarker[d].bg }}
-                >
-                  {damageMarker[d].letter}
-                </span>
-              ))}
-            </span>
+            <div key={p.name} className="flex items-start justify-between gap-3 py-2.5">
+              <dt className="min-w-0 font-medium leading-6 text-gray-700">{getPanelLabel(p, lang)}</dt>
+              <dd className="flex max-w-[60%] flex-wrap justify-end gap-x-3 gap-y-2">
+                {p.damages.map((d) => (
+                  <span key={d} className="inline-flex items-center gap-1.5 leading-6 text-gray-600">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold leading-none"
+                      style={{ backgroundColor: damageMarker[d].bg }}
+                    >
+                      {damageMarker[d].letter}
+                    </span>
+                    {getDamageLabel(d)}
+                  </span>
+                ))}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       )}
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-gray-100">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 pt-3 border-t border-gray-100 sm:grid-cols-3" data-testid="damage-legend">
         {(Object.entries(damageMarker) as [DamageType, { letter: string; bg: string }][]).map(
           ([key, m]) => (
-            <span key={key} className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+            <span key={key} className="inline-flex items-center gap-2 text-sm leading-6 text-gray-600">
               <span
-                className="inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-[8px] font-bold leading-none"
+                aria-hidden="true"
+                className="inline-flex shrink-0 items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold leading-none"
                 style={{ backgroundColor: m.bg }}
               >
                 {m.letter}

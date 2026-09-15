@@ -41,6 +41,32 @@ test('other cars and unknown body classifications keep $3,000 shipping', () => {
   }
 });
 
+test('saved SUV listings without body type use their established model family', () => {
+  for (const vehicle of [
+    { brand: 'Kia', model: 'Mohave 더 Master' },
+    { brand: 'Kia', model: '스포티지 5세대 하이브리드' },
+    { brand: 'Hyundai', model: '더 뉴 싼타페' },
+    { brand: 'BMW', model: 'X5 (G05)' },
+  ]) assert.equal(getTjContainerShippingUsd(vehicle), 3200, vehicle.model);
+  const result = calculateImportCost({ ...base, model: 'Mohave 더 Master', destination: 'tajikistan' });
+  assert.equal(result.serviceFee, 3200);
+});
+
+test('explicit non-SUV classification overrides a model-family fallback', () => {
+  assert.equal(getTjContainerShippingUsd({ brand: 'Kia', model: 'Mohave', bodyType: 'RV' }), 3000);
+  assert.equal(getTjContainerShippingUsd({ brand: 'Unknown', model: 'X5' }), 3000);
+  assert.equal(getTjContainerShippingUsd({ brand: 'Hyundai', model: 'Ioniq 6' }), 3000);
+});
+
+test('model fallback covers all SUV families in the existing local vehicle data', () => {
+  const { SEED_CARS } = loadTs(path.resolve(__dirname, '../src/lib/seed-data.ts'));
+  for (const car of SEED_CARS) {
+    if (/Кроссовер|Внедорожник/.test(car.bodyType || '')) {
+      assert.equal(getTjContainerShippingUsd({ brand: car.brand, model: car.model }), 3200, `${car.brand} ${car.model}`);
+    }
+  }
+});
+
 test('SUV delivery changes every Tajikistan delivery field and the total by $200', () => {
   const sedan = calculateImportCost({ ...base, bodyType: 'Седан', destination: 'tajikistan' });
   const suv = calculateImportCost({ ...base, bodyType: 'SUV', destination: 'tajikistan' });

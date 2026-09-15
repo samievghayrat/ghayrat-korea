@@ -78,7 +78,33 @@ export interface InspectionData {
   hasDamage: boolean;
   accidentHistory?: boolean; // 사고이력 있음/없음
   simpleRepair?: boolean;    // 단순수리 있음/없음
+  floodHistory?: boolean;
+  tuning?: boolean;
+  reportDate?: string;
+  reportedMileage?: number;
+  bodyInspectionAvailable?: boolean;
+  checks?: InspectionCheck[];
+  previousUsage?: Array<'rental' | 'taxi'>;
+  inspectorNotes?: string;
+  reportKind?: 'inspection' | 'body_diagnosis';
+  bodyChecks?: Array<{ name: string; nameRu: string; status: 'normal' | 'replacement' | 'unknown' }>;
 }
+
+export type InspectionCheckKey = 'engine' | 'transmission' | 'engineOilLeak'
+  | 'coolantLeak' | 'transmissionOilLeak' | 'oilLevel' | 'coolantLevel'
+  | 'steering' | 'brakes' | 'electrical' | 'fuelLeak' | 'evSystem';
+
+export type InspectionCheckStatus = 'good' | 'none' | 'adequate' | 'minor'
+  | 'fault' | 'low' | 'excess' | 'unknown';
+
+export interface InspectionCheck {
+  key: InspectionCheckKey;
+  status: InspectionCheckStatus;
+}
+
+export type EncarConditionResult =
+  | { status: 'available'; inspectionData: InspectionData }
+  | { status: 'not_published' | 'unavailable'; inspectionData: null };
 
 export interface CarFilters {
   brand?: string;

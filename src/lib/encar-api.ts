@@ -2,10 +2,11 @@ import { translateBrand, translateModel, translateFuel, translateColor, translat
 import { convertKrwToRub, convertKrwToUsd, getEurToRub, getUsdToRub } from './currency';
 import { calculateImportCost } from './calculator';
 import { ENCAR_FEE_KRW, getEncarFeeKrw } from './encar-fee';
-import type { CarListing, CarFilters, CatalogResponse, InspectionData, PanelDamage, DamageType } from '@/types';
+import type { CarListing, CarFilters, CatalogResponse } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
 import { getSnapshotCarById, getSnapshotSearch } from './encar-snapshot';
-import { ENCAR_API_BASE, ENCAR_INSPECTION_BASE, ENCAR_READSIDE_BASE } from './encar-endpoints';
+import { ENCAR_API_BASE, ENCAR_READSIDE_BASE } from './encar-endpoints';
+import { fetchEncarInspection } from './fetch-encar-inspection';
 import { getPanAutoVehicleReference } from './pan-auto';
 
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
@@ -1113,137 +1114,6 @@ export async function searchCars(filters: CarFilters): Promise<CatalogResponse> 
   }
 }
 
-// Panel name → Russian translation
-const panelNameRu: Record<string, string> = {
-  hood: 'Капот',
-  frontFenderLeft: 'Переднее крыло (лев.)',
-  frontFenderRight: 'Переднее крыло (прав.)',
-  frontDoorLeft: 'Передняя дверь (лев.)',
-  frontDoorRight: 'Передняя дверь (прав.)',
-  rearDoorLeft: 'Задняя дверь (лев.)',
-  rearDoorRight: 'Задняя дверь (прав.)',
-  trunkLead: 'Крышка багажника',
-  frontPanel: 'Передняя панель',
-  insidePanelLeft: 'Внутренняя панель (лев.)',
-  insidePanelRight: 'Внутренняя панель (прав.)',
-  frontWheelHouseLeft: 'Передняя колёсная арка (лев.)',
-  frontWheelHouseRight: 'Передняя колёсная арка (прав.)',
-  crossMember: 'Поперечина',
-  dashPanel: 'Панель приборов',
-  roofPanel: 'Крыша',
-  floorPanel: 'Днище',
-  rearDashPanel: 'Задняя панель приборов',
-  rearWheelHouseLeft: 'Задняя колёсная арка (лев.)',
-  rearWheelHouseRight: 'Задняя колёсная арка (прав.)',
-  trunkFloor: 'Пол багажника',
-  rearPanel: 'Задняя панель',
-  quarterPanelLeft: 'Заднее крыло (лев.)',
-  quarterPanelRight: 'Заднее крыло (прав.)',
-  sideSillPanelLeft: 'Порог (лев.)',
-  sideSillPanelRight: 'Порог (прав.)',
-  pillarPanelFrontLeft: 'Стойка A (лев.)',
-  pillarPanelFrontRight: 'Стойка A (прав.)',
-  pillarPanelMiddleLeft: 'Стойка B (лев.)',
-  pillarPanelMiddleRight: 'Стойка B (прав.)',
-  pillarPanelRearLeft: 'Стойка C (лев.)',
-  pillarPanelRearRight: 'Стойка C (прав.)',
-  rearSideMemberLeft: 'Задний лонжерон (лев.)',
-  rearSideMemberRight: 'Задний лонжерон (прав.)',
-  frontSideMemberLeft: 'Передний лонжерон (лев.)',
-  frontSideMemberRight: 'Передний лонжерон (прав.)',
-  radiatorSupport: 'Суппорт радиатора',
-  packageTray: 'Полка багажника',
-};
-
-// Panel rank from the performanceCheck dataGroup
-const panelRankMap: Record<string, string> = {
-  hood: '1', frontFenderLeft: '1', frontFenderRight: '1',
-  frontDoorLeft: '1', frontDoorRight: '1', rearDoorLeft: '1', rearDoorRight: '1',
-  trunkLead: '1', radiatorSupport: '1',
-  roofPanel: '2', quarterPanelLeft: '2', quarterPanelRight: '2',
-  sideSillPanelLeft: '2', sideSillPanelRight: '2',
-  frontPanel: 'A', insidePanelLeft: 'A', insidePanelRight: 'A',
-  crossMember: 'A', trunkFloor: 'A', rearPanel: 'A',
-  frontWheelHouseLeft: 'B', frontWheelHouseRight: 'B',
-  rearWheelHouseLeft: 'B', rearWheelHouseRight: 'B',
-  pillarPanelFrontLeft: 'B', pillarPanelFrontRight: 'B',
-  pillarPanelMiddleLeft: 'B', pillarPanelMiddleRight: 'B',
-  pillarPanelRearLeft: 'B', pillarPanelRearRight: 'B',
-  rearSideMemberLeft: 'B', rearSideMemberRight: 'B',
-  frontSideMemberLeft: 'B', frontSideMemberRight: 'B',
-  dashPanel: 'C', floorPanel: 'C', packageTray: 'C',
-};
-
-async function fetchInspectionData(carId: string): Promise<InspectionData | null> {
-  try {
-    // Resolve vehicleId (listing ID and vehicleId can differ)
-    const readRes = await fetch(
-      `${ENCAR_READSIDE_BASE}/vehicle/${carId}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
-    );
-    if (!readRes.ok) return null;
-    const readData = await readRes.json();
-    const vehicleId = readData.vehicleId || carId;
-
-    // Fetch inspection data from the legacy JSON API
-    const res = await fetch(
-      `${ENCAR_INSPECTION_BASE}/${vehicleId}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
-    );
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const outer: Record<string, string[] | null> = data.outer || {};
-    const accidentSummary = data.inspectAccidentSummary || {};
-
-    const panels: PanelDamage[] = [];
-    const summary = { change: 0, metal: 0, corrosion: 0, scratch: 0, dent: 0, damage: 0 };
-
-    for (const [panelName, damages] of Object.entries(outer)) {
-      if (!damages || !Array.isArray(damages) || damages.length === 0) continue;
-      if (panelName === 'crossMemberType1') continue;
-
-      const validDamages = damages.filter((d): d is DamageType =>
-        ['CHANGE', 'METAL', 'CORROSION', 'SCRATCH', 'HILLS', 'DAMAGE'].includes(d)
-      );
-
-      if (validDamages.length === 0) continue;
-
-      panels.push({
-        name: panelName,
-        nameRu: panelNameRu[panelName] || panelName,
-        rank: panelRankMap[panelName] || '',
-        damages: validDamages,
-      });
-
-      for (const d of validDamages) {
-        if (d === 'CHANGE') summary.change++;
-        else if (d === 'METAL') summary.metal++;
-        else if (d === 'CORROSION') summary.corrosion++;
-        else if (d === 'SCRATCH') summary.scratch++;
-        else if (d === 'HILLS') summary.dent++;
-        else if (d === 'DAMAGE') summary.damage++;
-      }
-    }
-
-    const accidentHistory = accidentSummary.accident === 'EXISTS' ? true
-      : accidentSummary.accident === 'NONE' ? false : undefined;
-    const simpleRepair = accidentSummary.simpleRepair === 'EXISTS' ? true
-      : accidentSummary.simpleRepair === 'NONE' ? false : undefined;
-
-    return {
-      panels,
-      summary,
-      hasDamage: panels.length > 0,
-      accidentHistory,
-      simpleRepair,
-    };
-  } catch (error) {
-    console.error('Encar inspection fetch error:', error);
-    return null;
-  }
-}
-
 export async function enrichDetailWithPanAuto(car: CarListing): Promise<CarListing> {
   const reference = await getPanAutoVehicleReference(car.id);
   if (!reference) return car;
@@ -1420,7 +1290,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
 
     const [equipment, inspectionData, vinData] = await Promise.all([
       resolveOptionCodes(optionCodes),
-      fetchInspectionData(carId),
+      fetchEncarInspection(carId, String(readData.vehicleId || carId)).then(result => result.inspectionData),
       fetchDataFromVin(readData.vin),
     ]);
 

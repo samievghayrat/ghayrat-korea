@@ -8,7 +8,7 @@ import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
 import PriceBreakdown from '@/components/detail/PriceBreakdown';
 import Equipment from '@/components/detail/Equipment';
-import AccidentHistory from '@/components/detail/AccidentHistory';
+import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { calculateImportCost, TJ_CONTAINER_SHIPPING_USD } from '@/lib/calculator';
@@ -581,7 +581,7 @@ export default function CarDetailPage() {
         {/* Detail sections - below gallery on desktop (left col), below price on mobile */}
         <div className="lg:col-span-8 order-3 lg:order-2 space-y-5">
           <CarSpecs car={displayCar} />
-          <AccidentHistory records={car.accidentHistory || []} carId={car.id} inspectionData={car.inspectionData} />
+          <CarCondition records={car.accidentHistory || []} carId={car.id} source={car.source} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
           <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} destination={destination} />
         </div>

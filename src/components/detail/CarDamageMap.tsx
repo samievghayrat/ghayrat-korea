@@ -83,7 +83,7 @@ const panelWords: Record<Exclude<Lang, 'ru'>, Record<string, string>> = {
   uz: { radiator: 'radiator', support: 'tayanch', hood: 'kapot', front: 'old', rear: 'orqa', fender: 'qanot', left: 'chap', right: 'o‘ng', door: 'eshik', roof: 'tom', panel: 'panel', quarter: 'yon', side: 'yon', sill: 'ostona', trunk: 'bagaj', lead: 'qopqoq', cross: 'ko‘ndalang', member: 'tayanch', inside: 'ichki', dash: 'to‘siq', wheel: 'g‘ildirak', house: 'qism', pillar: 'ustun', middle: 'o‘rta', floor: 'pol', package: 'tokcha', tray: 'orqa' },
 };
 
-function getPanelLabel(panel: PanelDamage, lang: Lang): string {
+export function getPanelLabel(panel: Pick<PanelDamage, 'name' | 'nameRu'>, lang: Lang): string {
   if (lang === 'ru') return panel.nameRu;
   const words = panel.name.replace(/([a-z])([A-Z])/g, '$1 $2').toLocaleLowerCase().split(' ');
   const label = words.map(word => panelWords[lang][word] || word).join(' ');

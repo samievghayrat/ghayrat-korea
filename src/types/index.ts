@@ -126,6 +126,8 @@ export interface PriceBreakdownData {
   exciseTaxDetails?: string;
   vatTax?: number;
   procedureFee?: number;
+  customsTotal?: number;
+  customsMinimumMatched?: boolean;
   deliveryVladivostok?: number; // Korea → Vladivostok
   deliveryKhujand?: number;    // Vladivostok → Khujand
   total: number;

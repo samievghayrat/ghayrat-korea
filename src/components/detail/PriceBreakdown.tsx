@@ -68,6 +68,11 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
           value: fmtUsd(breakdown.serviceFee),
           sublabel: t('price.deliveryTjDesc'),
         },
+        {
+          label: t('price.customsClearance'),
+          value: fmtUsd(breakdown.customsTotal || 0),
+          sublabel: t('price.customsClearanceDesc'),
+        },
       ];
 
   const totalValue = totalOverride ?? breakdown.total;
@@ -112,7 +117,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
       <div className="border-t-2 border-primary/20 pt-4">
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-base font-bold text-gray-900">{isRussia ? t('price.totalTurnkey') : t('price.totalDelivered')}</span>
+            <span className="text-base font-bold text-gray-900">{isRussia ? t('price.totalTurnkey') : t('price.totalDeliveredTj')}</span>
             <div className="text-xs text-gray-400">{isRussia ? t('price.inVladivostok') : t('price.inTajikistan')}</div>
           </div>
           <div className="text-right">

@@ -806,18 +806,18 @@ async function transformSearchResults(
       // Use Encar displacement first, then fallback to ENGINE_FALLBACK cc from local lookup
       const displacement = engineData.cc || (item.Displacement as number) || 0;
       const fuel = translateFuel((item.FuelType as string) || '');
+      const rawBadge = (item.Badge as string) || '';
+      const rawBadgeDetail = (item.BadgeDetail as string) || '';
 
       // Pre-calculate turnkey prices on server with accurate HP and live rates
       const russiaBreakdown = calculateImportCost({
         priceKrw, priceRub, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, brand, model, destination: 'tajikistan', eurRate, usdRate,
+        priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, brand, model, badge: rawBadge, destination: 'tajikistan', eurRate, usdRate,
       });
 
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
-      const rawBadge = (item.Badge as string) || '';
-      const rawBadgeDetail = (item.BadgeDetail as string) || '';
       const explicitDrive = rawBadge.match(/(?:^|\s)(2\s*WD|4\s*WD|AWD)(?:\s|$)/i)?.[1]?.replace(/\s/g, '').toUpperCase();
       const drivetrainFromBadge = explicitDrive
         || (/콰트로|quattro|xDrive|4MATIC|ALL4/i.test(rawBadge) ? 'AWD' : '');
@@ -1461,7 +1461,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     });
     const tjBreakdown = calculateImportCost({
       priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, badge: detailBadge, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
 
     const car: CarListing = {

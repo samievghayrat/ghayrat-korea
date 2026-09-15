@@ -1,6 +1,6 @@
 import type { PriceBreakdownData } from '@/types';
 import { EXCHANGE_RATES } from './constants';
-import { TJ_MIN_PRICES } from './tj-min-prices';
+import { lookupTjCustomsMinimum } from './tj-customs';
 
 interface CalcInput {
   priceKrw: number;
@@ -14,6 +14,7 @@ interface CalcInput {
   hp?: number;
   brand?: string;
   model?: string;
+  badge?: string;
   destination?: 'russia' | 'tajikistan';
   eurRate?: number; // live EUR/RUB rate, falls back to EXCHANGE_RATES.EUR
   usdRate?: number; // live USD/RUB rate, falls back to EXCHANGE_RATES.USD
@@ -251,51 +252,6 @@ function calculateUtilizationFee(
   return { fee, details };
 }
 
-// Brand name mapping: our system → rastamojka.tj keys
-const TJ_BRAND_MAP: Record<string, string> = {
-  'Mercedes-Benz': 'Mercede Benz',
-  'SsangYong': 'Ssang Yong',
-  'Chevrolet': 'Chevrolet (Корея)',
-  'Land Rover': 'Land Rover',
-  'Rolls-Royce': 'Rolls-Royce',
-  'Alfa Romeo': 'Alfa Romeo',
-};
-
-function lookupTjMinPrice(brand: string, model: string, year: number): number | undefined {
-  const tjBrand = TJ_BRAND_MAP[brand] || brand;
-  const brandData = TJ_MIN_PRICES[tjBrand];
-  if (!brandData) return undefined;
-
-  // Try exact model match first
-  if (brandData[model]) {
-    const price = brandData[model][String(year)];
-    if (price) return Number(price);
-  }
-
-  // Fuzzy match: find a model key that contains or is contained in our model name
-  const modelLower = model.toLowerCase();
-  for (const [tjModel, years] of Object.entries(brandData)) {
-    const tjLower = tjModel.toLowerCase();
-    if (tjLower.includes(modelLower) || modelLower.includes(tjLower)) {
-      const price = years[String(year)];
-      if (price) return Number(price);
-    }
-  }
-
-  // Try matching first word of model (e.g., "Sportage" from "Sportage 5th Gen")
-  const firstWord = model.split(' ')[0].toLowerCase();
-  if (firstWord.length >= 3) {
-    for (const [tjModel, years] of Object.entries(brandData)) {
-      if (tjModel.toLowerCase().startsWith(firstWord)) {
-        const price = years[String(year)];
-        if (price) return Number(price);
-      }
-    }
-  }
-
-  return undefined;
-}
-
 export function calculateImportCost(input: CalcInput): PriceBreakdownData {
   const eurToRub = input.eurRate || EXCHANGE_RATES.EUR;
   const usdToRub = input.usdRate || EXCHANGE_RATES.USD;
@@ -317,47 +273,22 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     : 0;
 
   if (destination === 'tajikistan') {
-    // Tajikistan customs calculation (all in USD)
-    // Based on rastamojka.tj formulas (Tax Code of Tajikistan)
+    // Tajikistan estimate (all in USD).
     const actualPriceUsd = input.priceUsd || Math.round(carPrice / usdToRub);
     const encarFeeUsd = input.priceKrw > 0
       ? Math.round(actualPriceUsd * (encarFeeKrw / input.priceKrw))
       : 0;
 
-    // Use minimum customs value from rastamojka.tj database
-    const minPrice = lookupTjMinPrice(input.brand || '', input.model || '', input.year);
-    const customsValueUsd = minPrice && minPrice > actualPriceUsd ? minPrice : actualPriceUsd;
-
-    // 1. Customs duty: 10% of car price (0% for CIS-manufactured)
-    const customsDutyRate = 0.10;
-    const customsDutyUsd = Math.round(customsValueUsd * customsDutyRate);
-
-    // 2. Excise tax: MAX(excise by price, excise by engine displacement)
-    // Excise by price: 14% of (price + duty)
-    const exciseByPrice = Math.round((customsValueUsd + customsDutyUsd) * 0.14);
-    // Excise by engine: displacement_cc × 0.15 EUR, converted to USD
-    const eurToUsd = eurToRub / usdToRub; // EUR/USD cross rate
-    const exciseByEngine = isElectric
-      ? 0
-      : Math.round(input.displacement * 0.15 * eurToUsd);
-    const exciseTaxUsd = Math.max(exciseByPrice, exciseByEngine);
-    const exciseDetails = exciseByEngine > exciseByPrice
-      ? `${input.displacement} cc × 0.15 EUR`
-      : `14% × ($${(customsValueUsd + customsDutyUsd).toLocaleString('en-US')})`;
-
-    // 3. VAT: 14% of (price + duty + excise)
-    const vatUsd = Math.round((customsValueUsd + customsDutyUsd + exciseTaxUsd) * 0.14);
-
-    // 4. Procedure fee (by price bracket in USD)
-    let procedureFeeUsd = 70;
-    if (customsValueUsd <= 5000) procedureFeeUsd = 10;
-    else if (customsValueUsd <= 10000) procedureFeeUsd = 20;
-    else if (customsValueUsd <= 50000) procedureFeeUsd = 70;
-    else if (customsValueUsd <= 100000) procedureFeeUsd = 150;
-    else procedureFeeUsd = 450;
-
-    // 5. Utilization fee: 144 × 78 somoni ≈ ~$1,030 (11,232 TJS / ~10.9 TJS/USD)
-    const utilizationUsd = 1030;
+    const minimumMatch = lookupTjCustomsMinimum(
+      input.brand || '',
+      input.model || '',
+      input.year,
+      input.badge,
+    );
+    const customsValueUsd = minimumMatch?.minimumUsd || 0;
+    const customsDutyUsd = minimumMatch ? Math.round(customsValueUsd * 0.4) : 0;
+    const utilizationUsd = minimumMatch ? 1400 : 0;
+    const customsTotalUsd = customsDutyUsd + utilizationUsd;
 
     // Delivery to Tajikistan is quoted separately from customs clearance.
     // $3,000 is the baseline container estimate and may vary by vehicle.
@@ -365,8 +296,10 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     const deliveryKhujand = 3000;
     const serviceFeeUsd = deliveryKhujand;
 
-    // The customer-facing Tajikistan total excludes customs clearance.
-    const totalUsd = actualPriceUsd + encarFeeUsd + serviceFeeUsd;
+    // Do not show a partial "total" when the vehicle is absent from the table.
+    const totalUsd = minimumMatch
+      ? actualPriceUsd + encarFeeUsd + serviceFeeUsd + customsTotalUsd
+      : 0;
 
     return {
       carPrice: actualPriceUsd,
@@ -374,13 +307,16 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
       encarFeeKrw,
       customsValue: customsValueUsd,
       customsDuty: customsDutyUsd,
-      customsDutyDetails: `10% × $${customsValueUsd.toLocaleString('en-US')}`,
+      customsDutyDetails: minimumMatch
+        ? `40% × $${customsValueUsd.toLocaleString('en-US')}`
+        : undefined,
       customsFee: 0,
-      exciseTax: exciseTaxUsd,
-      exciseTaxDetails: exciseDetails,
-      vatTax: vatUsd,
-      procedureFee: procedureFeeUsd,
+      exciseTax: 0,
+      vatTax: 0,
+      procedureFee: 0,
       utilizationFee: utilizationUsd,
+      customsTotal: customsTotalUsd,
+      customsMinimumMatched: Boolean(minimumMatch),
       deliveryVladivostok,
       deliveryKhujand,
       serviceFee: serviceFeeUsd,
@@ -388,7 +324,7 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
       brokerFee: 0,
       total: totalUsd,
       currency: 'USD',
-      calculationComplete: true,
+      calculationComplete: Boolean(minimumMatch),
     };
   }
 

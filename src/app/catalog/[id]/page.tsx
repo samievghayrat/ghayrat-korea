@@ -191,6 +191,7 @@ export default function CarDetailPage() {
       hp: effectiveHp,
       brand: car.brand,
       model: car.model,
+      badge: car.badge,
       destination,
       eurRate: car.eur_to_rub,
       usdRate: car.usd_to_rub,
@@ -216,7 +217,8 @@ export default function CarDetailPage() {
   const turnkeyPriceRub = destination === 'russia' ? breakdown?.total : undefined;
   const turnkeyPriceUsd = destination === 'tajikistan' ? breakdown?.total : undefined;
   const calculationReady = destination === 'tajikistan'
-    || (breakdown?.calculationComplete ?? car.russia_calculation_complete ?? Boolean(turnkeyPriceRub));
+    ? Boolean(breakdown?.calculationComplete)
+    : (breakdown?.calculationComplete ?? car.russia_calculation_complete ?? Boolean(turnkeyPriceRub));
   const fuelLower = car.fuel.toLowerCase();
   const isElectricPower = fuelLower.includes('электро') || fuelLower.includes('electric');
   const isHybridPower = fuelLower.includes('гибрид') || fuelLower.includes('hybrid');
@@ -404,8 +406,13 @@ export default function CarDetailPage() {
                 </>
               ) : apiLoaded ? (
                 <div>
-                  <div className="text-base font-bold text-amber-300">{t('price.needsEngineData')}</div>
-                  <div className="mt-1 text-sm leading-5 text-white/65">{t('price.needsEngineDataDesc')}</div>
+                  <div className="text-base font-bold text-amber-300">
+                    {t(destination === 'tajikistan' ? 'price.customsNeedsConfirmation' : 'price.needsEngineData')}
+                  </div>
+                  <div className="mt-1 text-sm leading-5 text-white/65">
+                    {t(destination === 'tajikistan' ? 'price.customsNeedsConfirmationDesc' : 'price.needsEngineDataDesc')}
+                  </div>
+                  {destination === 'russia' && (
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     {!car.displacement && (
                       <label className="text-xs font-semibold text-white/80">
@@ -438,6 +445,7 @@ export default function CarDetailPage() {
                       </label>
                     )}
                   </div>
+                  )}
                 </div>
               ) : (
                 <div className="animate-pulse space-y-2">
@@ -503,7 +511,7 @@ export default function CarDetailPage() {
             </a>
 
             {/* Detailed calculation */}
-            {breakdown && (destination === 'tajikistan' || breakdown.calculationComplete) && (
+            {breakdown?.calculationComplete && (
               <>
                 <button
                   onClick={() => setShowBreakdown(!showBreakdown)}

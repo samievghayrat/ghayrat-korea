@@ -11,7 +11,7 @@ import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
-import { calculateImportCost, TJ_CONTAINER_SHIPPING_USD } from '@/lib/calculator';
+import { calculateImportCost, getTjContainerShippingUsd } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
@@ -49,7 +49,7 @@ export default function CarDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
 
-  const { t, formatListingPrice } = useApp();
+  const { t } = useApp();
   const sessionCar = typeof window !== 'undefined' ? getSessionCar(id) : null;
   const [car, setCar] = useState<CarListing | null>(sessionCar);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -181,6 +181,7 @@ export default function CarDetailPage() {
       brand: car.brand,
       model: car.model,
       badge: car.badge,
+      bodyType: car.bodyType,
       destination,
       eurRate: car.eur_to_rub,
       usdRate: car.usd_to_rub,
@@ -200,9 +201,6 @@ export default function CarDetailPage() {
     );
   }
 
-  const priceLabel = destination === 'russia'
-    ? t('card.turnkeyVladivostok')
-    : t('card.turnkeyTajikistan');
   const turnkeyPriceRub = destination === 'russia' ? breakdown?.total : undefined;
   const turnkeyPriceUsd = destination === 'tajikistan' ? breakdown?.total : undefined;
   const calculationReady = destination === 'tajikistan'
@@ -245,7 +243,7 @@ export default function CarDetailPage() {
     },
     {
       label: t('price.shippingShort'),
-      value: formatUsd(breakdown?.serviceFee ?? TJ_CONTAINER_SHIPPING_USD),
+      value: formatUsd(breakdown?.serviceFee ?? getTjContainerShippingUsd(car)),
     },
     {
       label: t('price.customsShort'),
@@ -253,6 +251,14 @@ export default function CarDetailPage() {
         ? formatUsd(breakdown.customsTotal)
         : t('price.confirmingShort'),
     },
+  ];
+  const russianPriceRows = [
+    { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice + (breakdown.encarFee || 0) : displayPrice.priceRub) },
+    { label: t('price.delivery'), value: breakdown ? formatRub(breakdown.serviceFee) : '—' },
+    { label: t('price.broker'), value: breakdown ? formatRub(breakdown.brokerFee) : '—' },
+    { label: t('price.customsDuty'), value: calculationReady && breakdown ? formatRub(breakdown.customsDuty) : t('price.confirmingShort') },
+    { label: t('price.customsFee'), value: calculationReady && breakdown ? formatRub(breakdown.customsFee) : t('price.confirmingShort') },
+    { label: t('price.utilizationFee'), value: calculationReady && breakdown ? formatRub(breakdown.utilizationFee) : t('price.confirmingShort') },
   ];
 
   return (
@@ -336,7 +342,7 @@ export default function CarDetailPage() {
             )}
 
             {/* Destination toggle */}
-            <div className="mt-5 lg:mt-0">
+            <div>
               <h2 className="text-base font-bold text-gray-950">{t('detail.destinationTitle')}</h2>
               <p className="mt-1 text-sm leading-5 text-gray-500">{t('detail.destinationHint')}</p>
             </div>
@@ -407,41 +413,41 @@ export default function CarDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
-                <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
-                <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
-                  {formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd)}
+              <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4">
+                <dl className="divide-y divide-gray-100">
+                  {russianPriceRows.map(row => (
+                    <div key={row.label} className="flex items-center justify-between gap-3 py-3">
+                      <dt className="min-w-0 text-sm font-medium text-gray-600">{row.label}</dt>
+                      <dd className="shrink-0 text-right text-base font-semibold tabular-nums text-gray-950">{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="border-t border-gray-200 py-4">
+                  {calculationReady && formattedDeliveryTotal && (
+                    <p className="mb-3 text-xs leading-5 tabular-nums text-gray-500">
+                      {russianPriceRows.map(row => row.value).join(' + ')} = {formattedDeliveryTotal}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between gap-3" aria-live="polite">
+                    <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
+                    {calculationReady && formattedDeliveryTotal ? (
+                      <span className="text-2xl font-bold tracking-tight tabular-nums text-gray-950">{formattedDeliveryTotal}</span>
+                    ) : apiLoaded ? (
+                      <span className="text-base font-semibold text-gray-500">{t('price.confirmingShort')}</span>
+                    ) : (
+                      <span className="h-8 w-28 animate-pulse rounded bg-gray-100" />
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">{t('price.inVladivostok')}</p>
+                  <p className="mt-3 text-xs leading-5 text-gray-500" role="note">{t('price.estimateShort')}</p>
                 </div>
-                <div className="mt-1 text-xs font-medium text-emerald-700/70">
-                  ₩{displayPrice.priceKrw.toLocaleString('ko-KR')}
-                </div>
-              </div>
-            )}
-
-            {destination === 'russia' && (
-            <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
-              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>
-              {calculationReady && formattedDeliveryTotal ? (
-                <>
-                  <div className="text-3xl font-extrabold tracking-tight">
-                    {formattedDeliveryTotal}
-                  </div>
-                  <div className="text-sm text-white/65 mt-1">
-                    {priceLabel}
-                  </div>
-                </>
-              ) : apiLoaded ? (
-                <div>
-                  <div className="text-base font-bold text-amber-300">
-                    {t('price.needsEngineData')}
-                  </div>
-                  <div className="mt-1 text-sm leading-5 text-white/65">
-                    {t('price.needsEngineDataDesc')}
-                  </div>
-                  {destination === 'russia' && (
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {apiLoaded && !calculationReady && (
+                  <div className="border-t border-gray-100 py-4">
+                    <h3 className="text-sm font-semibold text-gray-900">{t('price.needsEngineData')}</h3>
+                    <p className="mt-1 text-xs leading-5 text-gray-500">{t('price.needsEngineDataDesc')}</p>
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     {!car.displacement && (
-                      <label className="text-xs font-semibold text-white/80">
+                      <label className="text-xs font-semibold text-gray-600">
                         {t('price.enterDisplacement')}
                         <input
                           type="number"
@@ -450,13 +456,13 @@ export default function CarDetailPage() {
                           inputMode="numeric"
                           value={manualDisplacement ?? ''}
                           onChange={(event) => setManualDisplacement(Number(event.target.value) || undefined)}
-                          className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white outline-none focus:border-emerald-400"
+                          className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                           placeholder="1998"
                         />
                       </label>
                     )}
                     {!car.hp && (
-                      <label className="text-xs font-semibold text-white/80">
+                      <label className="text-xs font-semibold text-gray-600">
                         {t('price.enterHp')}
                         <input
                           type="number"
@@ -465,29 +471,24 @@ export default function CarDetailPage() {
                           inputMode="numeric"
                           value={manualHp ?? ''}
                           onChange={(event) => setManualHp(Number(event.target.value) || undefined)}
-                          className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white outline-none focus:border-emerald-400"
+                          className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                           placeholder="150"
                         />
                       </label>
                     )}
+                    </div>
                   </div>
-                  )}
-                </div>
-              ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-9 w-48 bg-gray-200 rounded" />
-                  <div className="h-4 w-36 bg-gray-200 rounded" />
-                  <div className="h-3 w-44 bg-gray-200 rounded" />
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              {destination === 'russia' && hasHighPower && (
-                <div className="mt-4 rounded-xl border border-amber-300/35 bg-amber-400/10 p-3" role="note">
-                  <div className="flex items-center gap-2 text-sm font-bold text-amber-300">
+            {destination === 'russia' && hasHighPower && (
+                <div className="mt-3 border-l-2 border-amber-400 pl-3" role="note">
+                  <div className="text-sm font-semibold text-amber-800">
                     <span aria-hidden="true">⚠</span>
                     {t('price.highPowerTitle')}
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-white/75">
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
                     {t('price.highPowerDesc')
                       .replace('{hp}', calculationHp.toLocaleString('ru-RU'))
                       .replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
@@ -496,25 +497,24 @@ export default function CarDetailPage() {
               )}
 
               {destination === 'russia' && isPowerBoundary && (
-                <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-400/10 p-3" role="note">
-                  <div className="text-sm font-bold text-sky-200">{t('price.powerBoundaryTitle')}</div>
-                  <p className="mt-1 text-xs leading-5 text-white/70">
+                <div className="mt-3 border-l-2 border-gray-300 pl-3" role="note">
+                  <div className="text-sm font-semibold text-gray-700">{t('price.powerBoundaryTitle')}</div>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
                     {t('price.powerBoundaryDesc').replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
                   </p>
                 </div>
               )}
 
               {destination === 'russia' && isHybridPower && (
-                <div className="mt-3 rounded-xl border border-sky-300/25 bg-sky-400/10 p-3" role="note">
-                  <div className="text-sm font-bold text-sky-200">{t('price.hybridPowerTitle')}</div>
-                  <p className="mt-1 text-xs leading-5 text-white/70">{t('price.hybridPowerDesc')}</p>
+                <div className="mt-3 border-l-2 border-gray-300 pl-3" role="note">
+                  <div className="text-sm font-semibold text-gray-700">{t('price.hybridPowerTitle')}</div>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">{t('price.hybridPowerDesc')}</p>
                 </div>
               )}
 
               {destination === 'russia' && hasPreferentialPower && (
-                <div className="mt-3 rounded-xl border border-emerald-300/25 bg-emerald-400/10 p-3" role="note">
-                  <div className="text-sm font-bold text-emerald-300">{t('price.preferentialUtilTitle')}</div>
-                  <p className="mt-1 text-xs leading-5 text-white/70">
+                <div className="mt-3 text-xs leading-5 text-gray-500" role="note">
+                  <p>
                     {t('price.preferentialUtilDesc')
                       .replace('{hp}', calculationHp.toLocaleString('ru-RU'))
                       .replace('{limit}', powerLimitHp.toLocaleString('ru-RU'))}
@@ -522,8 +522,6 @@ export default function CarDetailPage() {
                 </div>
               )}
 
-            </div>
-            )}
 
             <a
               href="https://t.me/ghayrat_korea"
@@ -538,7 +536,7 @@ export default function CarDetailPage() {
             </a>
 
             {/* Detailed calculation */}
-            {breakdown?.calculationComplete && (
+            {destination === 'tajikistan' && breakdown?.calculationComplete && (
               <>
                 <button
                   onClick={() => setShowBreakdown(!showBreakdown)}
@@ -557,7 +555,7 @@ export default function CarDetailPage() {
                     priceRub={car.price_rub}
                     priceUsd={car.price_usd}
                     destination={destination}
-                    totalOverride={destination === 'russia' ? turnkeyPriceRub : turnkeyPriceUsd}
+                    totalOverride={turnkeyPriceUsd}
                   />
                 )}
               </>

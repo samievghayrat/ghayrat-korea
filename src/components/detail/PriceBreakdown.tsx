@@ -66,7 +66,7 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
         {
           label: t('price.deliveryTj'),
           value: fmtUsd(breakdown.serviceFee),
-          sublabel: t('price.deliveryTjDesc'),
+          sublabel: t('price.deliveryKhujandDesc'),
         },
         {
           label: t('price.customsClearance'),

@@ -1,8 +1,9 @@
 import type { PriceBreakdownData } from '@/types';
 import { EXCHANGE_RATES } from './constants';
 import { lookupTjCustomsMinimum } from './tj-customs';
+import { getTjContainerShippingUsd } from './tj-shipping';
 
-export const TJ_CONTAINER_SHIPPING_USD = 3000;
+export { TJ_CONTAINER_SHIPPING_USD, TJ_SUV_CONTAINER_SHIPPING_USD, getTjContainerShippingUsd } from './tj-shipping';
 
 interface CalcInput {
   priceKrw: number;
@@ -17,6 +18,7 @@ interface CalcInput {
   brand?: string;
   model?: string;
   badge?: string;
+  bodyType?: string;
   destination?: 'russia' | 'tajikistan';
   eurRate?: number; // live EUR/RUB rate, falls back to EXCHANGE_RATES.EUR
   usdRate?: number; // live USD/RUB rate, falls back to EXCHANGE_RATES.USD
@@ -293,9 +295,9 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     const customsTotalUsd = customsDutyUsd + utilizationUsd;
 
     // Delivery to Tajikistan is quoted separately from customs clearance.
-    // $3,000 is the baseline container estimate and may vary by vehicle.
+    // Container shipping: $3,200 for SUVs, $3,000 for other cars.
     const deliveryVladivostok = 0;
-    const deliveryKhujand = TJ_CONTAINER_SHIPPING_USD;
+    const deliveryKhujand = getTjContainerShippingUsd(input);
     const serviceFeeUsd = deliveryKhujand;
 
     // Do not show a partial "total" when the vehicle is absent from the table.

@@ -815,7 +815,7 @@ async function transformSearchResults(
         priceKrw, priceRub, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, destination: 'russia', eurRate, usdRate,
       });
       const tjBreakdown = calculateImportCost({
-        priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, brand, model, badge: rawBadge, destination: 'tajikistan', eurRate, usdRate,
+        priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement, year, month, fuel, hp: hp || undefined, brand, model, badge: rawBadge, bodyType: translateBodyType((item.BodyType as string) || ''), destination: 'tajikistan', eurRate, usdRate,
       });
 
       // Build badge: "2.5 가솔린 2WD" + "프리미엄" → "2.5 Бензин 2WD Премиум"
@@ -1331,7 +1331,7 @@ export async function getCarDetail(carId: string): Promise<CarListing | null> {
     });
     const tjBreakdown = calculateImportCost({
       priceKrw, priceRub, priceUsd, encarFeeKrw: ENCAR_FEE_KRW, displacement: finalDisplacement,
-      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, badge: detailBadge, destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
+      year: carYear, month: carMonth, fuel: finalFuel, hp: finalHp, brand, model, badge: detailBadge, bodyType: translateBodyType(bodyName), destination: 'tajikistan', eurRate: detailEurRate, usdRate: detailUsdRate,
     });
 
     const car: CarListing = {

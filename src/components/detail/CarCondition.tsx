@@ -96,6 +96,12 @@ export default function CarCondition({ records, carId, inspectionData, source }:
         )}
         {report && (
           <>
+            {!!report.panels.length && (
+              <details className="mb-4 rounded-xl border border-gray-200 p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-gray-900">{t('condition.bodyRepairs')} ({report.panels.length})</summary>
+                <div className="mt-4"><CarDamageMap panels={report.panels} /></div>
+              </details>
+            )}
             {(reportDate || report.reportedMileage !== undefined) && (
               <div className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                 {reportDate && <span>{t('condition.reportDate')}: {reportDate}</span>}
@@ -156,12 +162,6 @@ export default function CarCondition({ records, carId, inspectionData, source }:
             )}
             {hasDamage && !report.panels.length && (
               <p className="mt-4 text-sm text-amber-800">{t('condition.bodyDetailsMissing')}</p>
-            )}
-            {!!report.panels.length && (
-              <details className="mt-4 rounded-xl border border-gray-200 p-3">
-                <summary className="cursor-pointer text-sm font-semibold text-gray-900">{t('condition.bodyRepairs')} ({report.panels.length})</summary>
-                <div className="mt-4"><CarDamageMap panels={report.panels} /></div>
-              </details>
             )}
             {report.inspectorNotes && (
               <details className="mt-3 text-sm">

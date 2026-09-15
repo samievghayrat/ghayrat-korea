@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:encar-condition": "node --experimental-strip-types --test tests/encar-inspection.test.mjs tests/encar-condition-fetch.test.cjs",
+    "test:detail-calculation": "node --test tests/detail-calculation.test.cjs",
     "deploy:auction-worker": "npm run deploy --prefix auction-worker"
   },
   "dependencies": {

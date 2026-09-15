@@ -277,7 +277,7 @@ const t = {
   'price.hideBreakdown': { ru: 'Скрыть расчёт цены', en: 'Hide price breakdown', tj: 'Пинҳон кардани ҳисоб', uz: 'Narx tafsilotini yashirish' },
   'price.priceInKorea': { ru: 'Цена в Корее:', en: 'Price in Korea:', tj: 'Нарх дар Корея:', uz: 'Koreyadagi narx:' },
   'price.calculatingExact': { ru: 'Уточняем стоимость...', en: 'Calculating exact price...', tj: 'Ҳисоби дақиқ...', uz: 'Aniq narx hisoblanmoqda...' },
-  'price.estimatedTotal': { ru: 'Расчёт с доставкой и оформлением', en: 'Estimated delivery and processing total', tj: 'Ҳисоб бо таҳвил ва расмиёт', uz: 'Yetkazish va rasmiylashtirish hisobi' },
+  'price.estimatedTotal': { ru: 'Расчёт с доставкой и растаможкой', en: 'Estimated total with delivery and customs clearance', tj: 'Ҳисоб бо таҳвил ва расмиёти гумрукӣ', uz: 'Yetkazish va bojxona rasmiylashtiruvi hisobi' },
   'price.needsEngineData': { ru: 'Нужно уточнить данные двигателя', en: 'Engine details need confirmation', tj: 'Маълумоти муҳаррикро бояд дақиқ кард', uz: 'Dvigatel ma’lumotlarini aniqlash kerak' },
   'price.needsEngineDataDesc': { ru: 'Укажите недостающие данные — расчёт появится сразу. Перед заказом мы сверим параметры по документам.', en: 'Enter the missing details to see an estimate now. We will verify them against the documents before ordering.', tj: 'Маълумоти норасоро ворид кунед — ҳисоб фавран пайдо мешавад. Пеш аз фармоиш параметрҳоро бо ҳуҷҷатҳо месанҷем.', uz: 'Yetishmayotgan ma’lumotni kiriting — hisob darhol chiqadi. Buyurtmadan oldin hujjatlar bilan tekshiramiz.' },
   'price.enterHp': { ru: 'Мощность, л.с.', en: 'Power, hp', tj: 'Қувва, қ.о.', uz: 'Quvvat, o.k.' },

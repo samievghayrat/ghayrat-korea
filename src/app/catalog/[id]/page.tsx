@@ -250,6 +250,26 @@ export default function CarDetailPage() {
     ? { ...car, hp: effectiveHp, displacement: effectiveDisplacement }
     : car;
   const displayPrice = getPriceIncludingEncarFee(car);
+  const tajikCarPriceUsd = breakdown
+    ? breakdown.carPrice + (breakdown.encarFee || 0)
+    : (displayPrice.priceUsd || 0);
+  const tajikPriceColumns = [
+    {
+      label: t('card.priceInKorea'),
+      value: tajikCarPriceUsd > 0 ? formatUsd(tajikCarPriceUsd) : '—',
+    },
+    {
+      label: t('price.shippingShort'),
+      value: breakdown?.serviceFee ? formatUsd(breakdown.serviceFee) : '—',
+    },
+    {
+      label: t('price.customsShort'),
+      value: calculationReady && breakdown?.customsTotal
+        ? formatUsd(breakdown.customsTotal)
+        : t('price.confirmingShort'),
+      note: t('price.approximateShort'),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -381,16 +401,35 @@ export default function CarDetailPage() {
               <span className="mt-1.5 block text-xs font-normal leading-4 text-gray-500">{t('detail.deliveryCityHint')}</span>
             </label>
 
-            {/* Keep the catalog price visible, then show the separate delivery estimate. */}
-            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
-              <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
-              <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
-                {formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd)}
+            {destination === 'tajikistan' ? (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div className="grid grid-cols-3 divide-x divide-gray-200">
+                  {tajikPriceColumns.map((column) => (
+                    <div key={column.label} className="min-w-0 px-2.5 py-3.5 text-center sm:px-3">
+                      <div className="min-h-8 text-[11px] font-semibold leading-4 text-gray-500 sm:text-xs">
+                        {column.label}
+                      </div>
+                      <div className="mt-1 truncate text-base font-extrabold tracking-tight text-gray-950 sm:text-lg">
+                        {column.value}
+                      </div>
+                      {'note' in column && column.note && (
+                        <div className="mt-0.5 text-[10px] leading-3 text-gray-400">{column.note}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="mt-1 text-xs font-medium text-emerald-700/70">
-                ₩{displayPrice.priceKrw.toLocaleString('ko-KR')}
+            ) : (
+              <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                <div className="text-sm font-semibold text-emerald-700">{t('card.priceInKorea')}</div>
+                <div className="mt-1 text-3xl font-extrabold tracking-tight text-emerald-800">
+                  {formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd)}
+                </div>
+                <div className="mt-1 text-xs font-medium text-emerald-700/70">
+                  ₩{displayPrice.priceKrw.toLocaleString('ko-KR')}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>

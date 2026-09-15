@@ -202,7 +202,7 @@ const t = {
   'card.priceInKoreaUsd': { ru: 'Цена в Корее · USD', en: 'Korea price · USD', tj: 'Нарх дар Корея · USD', uz: 'Koreya narxi · USD' },
   'card.viewAndCalculate': { ru: 'Открыть и рассчитать доставку', en: 'Open and calculate delivery', tj: 'Кушодан ва ҳисоб кардани таҳвил', uz: 'Ochish va yetkazishni hisoblash' },
   'card.turnkeyVladivostok': { ru: 'до Владивостока, с доставкой и растаможкой', en: 'to Vladivostok, including shipping and customs', tj: 'то Владивосток, бо интиқол ва расмиёти гумрукӣ', uz: 'Vladivostokgacha, yetkazish va bojxona bilan' },
-  'card.turnkeyTajikistan': { ru: 'до Таджикистана контейнером, без растаможки', en: 'container shipping to Tajikistan, excluding customs', tj: 'бо контейнер то Тоҷикистон, бе расмиёти гумрукӣ', uz: 'Tojikistongacha konteynerda, bojxonasiz' },
+  'card.turnkeyTajikistan': { ru: 'до Таджикистана с доставкой и растаможкой', en: 'to Tajikistan with shipping and customs', tj: 'то Тоҷикистон бо таҳвил ва расмиёти гумрукӣ', uz: 'Tojikistongacha yetkazish va bojxona bilan' },
 
   // Car specs
   'spec.generalData': { ru: 'Общие данные', en: 'General info', tj: 'Маълумоти умумӣ', uz: 'Umumiy ma\'lumot' },
@@ -258,6 +258,10 @@ const t = {
   'price.serviceFeeKoreaDesc': { ru: 'документы, расходы на авто, комиссия', en: 'documents, car expenses, commission', tj: 'ҳуҷҷатҳо, хароҷоти мошин, комиссия', uz: 'hujjatlar, avto xarajatlari, komissiya' },
   'price.deliveryTj': { ru: 'Доставка контейнером', en: 'Container shipping', tj: 'Таҳвил бо контейнер', uz: 'Konteynerda yetkazish' },
   'price.deliveryTjDesc': { ru: 'около $3,000 — зависит от автомобиля', en: 'about $3,000 — depends on the vehicle', tj: 'тақрибан $3,000 — аз мошин вобаста аст', uz: 'taxminan $3,000 — avtomobilga bog‘liq' },
+  'price.shippingShort': { ru: 'Доставка', en: 'Shipping', tj: 'Таҳвил', uz: 'Yetkazish' },
+  'price.customsShort': { ru: 'Растаможка', en: 'Customs', tj: 'Гумрук', uz: 'Bojxona' },
+  'price.approximateShort': { ru: 'примерно', en: 'estimated', tj: 'тахминӣ', uz: 'taxminiy' },
+  'price.confirmingShort': { ru: 'Уточняется', en: 'Confirming', tj: 'Дақиқ мешавад', uz: 'Aniqlanmoqda' },
   'price.totalTurnkey': { ru: 'Итого под ключ', en: 'Total turnkey', tj: 'Ҷамъ таёр', uz: 'Jami tayyor' },
   'price.totalDelivered': { ru: 'Итого с доставкой', en: 'Total delivered', tj: 'Ҷамъ бо интиқол', uz: 'Jami yetkazib berish bilan' },
   'price.totalDeliveredTj': { ru: 'Итого с доставкой и растаможкой', en: 'Total with delivery and customs', tj: 'Ҷамъ бо таҳвил ва расмиёти гумрукӣ', uz: 'Yetkazish va bojxona bilan jami' },

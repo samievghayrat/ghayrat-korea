@@ -25,17 +25,17 @@ export async function fetchEncarInspection(carId: string, resolvedVehicleId?: st
       headers, cache: 'no-store', signal: AbortSignal.timeout(8000),
     }).catch(() => null);
     const inspectionData = report?.ok && report.status !== 204
-      ? parseEncarInspection(await report.json()) : null;
+      ? parseEncarInspection(await report.json().catch(() => null)) : null;
     if (inspectionData) return { status: 'available', inspectionData };
 
     const diagnosis = await fetch(`${ENCAR_DIAGNOSIS_BASE}/${vehicleId}`, {
       headers, cache: 'no-store', signal: AbortSignal.timeout(8000),
     }).catch(() => null);
     const bodyReport = diagnosis?.ok && diagnosis.status !== 204
-      ? parseEncarDiagnosis(await diagnosis.json()) : null;
+      ? parseEncarDiagnosis(await diagnosis.json().catch(() => null)) : null;
     if (bodyReport) return { status: 'available', inspectionData: bodyReport };
-    const reportMissing = report && (report.ok || [400, 404, 204].includes(report.status));
-    const diagnosisMissing = diagnosis && (diagnosis.ok || [400, 404, 204].includes(diagnosis.status));
+    const reportMissing = report && [400, 404, 204].includes(report.status);
+    const diagnosisMissing = diagnosis && [400, 404, 204].includes(diagnosis.status);
     return { status: reportMissing && diagnosisMissing ? 'not_published' : 'unavailable', inspectionData: null };
   } catch {
     return { status: 'unavailable', inspectionData: null };

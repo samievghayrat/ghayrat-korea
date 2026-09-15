@@ -8,4 +8,4 @@ export const ENCAR_INSPECTION_BASE = process.env.ENCAR_INSPECTION_BASE_URL
   || 'https://api.encar.com/legacy/usedcar/inspect';
 
 export const ENCAR_DIAGNOSIS_BASE = process.env.ENCAR_DIAGNOSIS_BASE_URL
-  || 'https://api.encar.com/legacy/usedcar/diagnosis';
+  || 'https://api.encar.com/v1/readside/diagnosis/vehicle';

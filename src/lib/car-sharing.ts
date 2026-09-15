@@ -18,6 +18,29 @@ export function getCarShareLinks(title: string, url: string) {
   };
 }
 
+// Open the manager's chat with a draft, rather than the generic sharing picker.
+// The visitor still chooses when to send it.
+export function getManagerContactLinks(message?: string) {
+  const text = message?.trim();
+  const query = text ? `?${new URLSearchParams({ text })}` : '';
+  return {
+    whatsapp: `https://wa.me/821099221601${query}`,
+    telegram: `https://t.me/ghayrat_korea${query}`,
+  };
+}
+
+export function getPageManagerContactLinks(pathname: string, interestText: string) {
+  const match = pathname.match(/^\/(catalog|auction|our-cars)\/([^/]+)\/?$/);
+  if (!match) return getManagerContactLinks();
+  try {
+    const id = decodeURIComponent(match[2]);
+    const url = getCarShareUrl(match[1] as 'catalog' | 'auction' | 'our-cars', id);
+    return getManagerContactLinks(`${interestText} ${id}\n${url}`);
+  } catch {
+    return getManagerContactLinks();
+  }
+}
+
 export async function tryNativeCarShare(
   data: { title: string; url: string },
   share?: (data: { title: string; url: string }) => Promise<void>,

@@ -32,6 +32,7 @@ const base = { priceKrw: 10000000, priceRub: 600000, priceUsd: 8000, encarFeeKrw
   brand: 'Kia', model: 'Sportage', usdRate: 75, eurRate: 90 };
 const { getTranslation } = loadTs(path.resolve(__dirname, '../src/lib/i18n.ts'));
 const { parseEncarInsuranceHistory } = loadTs(path.resolve(__dirname, '../src/lib/encar-inspection.ts'));
+const sharing = loadTs(path.resolve(__dirname, '../src/lib/car-sharing.ts'));
 const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
   path.resolve(__dirname, '../src/components/detail/RussiaCustomsSummary.tsx'), {
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru') }) },
@@ -236,6 +237,7 @@ test('body repair details are open by default and appear before the other condit
     './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
     './AccidentHistory': { __esModule: true, default: () => null },
     '@/lib/encar-inspection': { parseEncarInsuranceHistory },
+    '@/lib/car-sharing': sharing,
     '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru', formatMileage: String }) },
   });
   const report = { panels: [{ name: 'hood', nameRu: 'Капот', rank: '1', damages: ['CHANGE'] }],
@@ -261,6 +263,7 @@ function renderInsuranceHistory(data, lang = 'ru') {
     './CarDamageMap': { __esModule: true, ...damageMap },
     './AccidentHistory': { __esModule: true, default: () => null },
     '@/lib/encar-inspection': { parseEncarInsuranceHistory },
+    '@/lib/car-sharing': sharing,
     '@/contexts/AppContext': app,
   });
   return renderToStaticMarkup(React.createElement(CarCondition, {
@@ -347,6 +350,7 @@ test('unavailable inspection data does not show an empty diagram as though a rep
     './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
     './AccidentHistory': { __esModule: true, default: () => null },
     '@/lib/encar-inspection': { parseEncarInsuranceHistory },
+    '@/lib/car-sharing': sharing,
     '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru', formatMileage: String }) },
   });
   const html = renderToStaticMarkup(React.createElement(CarCondition, { records: [], carId: '123', source: 'encar' }));

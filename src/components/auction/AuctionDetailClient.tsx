@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import CarShareButton from "@/components/shared/CarShareButton";
-import { getCarShareUrl } from "@/lib/car-sharing";
+import { getCarShareUrl, getManagerContactLinks } from "@/lib/car-sharing";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/contexts/AppContext";
@@ -89,8 +89,9 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
     hasStartPrice ? `${copy.yourBid}: ${formatAuctionAmount(bidKrw)}` : copy.pricePendingNote,
     hasStartPrice ? `${copy.extraCosts}: ${formatAuctionAmount(extraCostsKrw)}` : null,
     hasStartPrice ? `${copy.total}: ${formatAuctionAmount(totalKrw, { baseKrw: bidKrw })}` : null,
+    getCarShareUrl('auction', car.id),
   ].filter(Boolean).join("\n");
-  const whatsappUrl = `https://wa.me/821099221601?text=${encodeURIComponent(contactMessage)}`;
+  const whatsappUrl = getManagerContactLinks(contactMessage).whatsapp;
   const backHref = searchParams.toString() ? `/auction?${searchParams.toString()}` : "/auction";
   const currentImage = images[selectedImage] || images[0] || "/images/no-image.svg";
   const regYear = car.firstRegDate && car.firstRegDate.length >= 6

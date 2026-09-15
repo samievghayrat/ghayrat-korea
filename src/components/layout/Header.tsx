@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/contexts/AppContext';
 import type { Lang, Currency } from '@/lib/i18n';
+import { getPageManagerContactLinks } from '@/lib/car-sharing';
 
 const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: 'ru', label: 'Русский', flag: '🇷🇺' },
@@ -28,6 +29,7 @@ export default function Header() {
   const langRef = useRef<HTMLDivElement>(null);
   const currRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const contactLinks = getPageManagerContactLinks(pathname, t('contact.carInterest'));
 
   useEffect(() => {
     const updateCount = () => {
@@ -179,7 +181,7 @@ export default function Header() {
 
             {/* Telegram CTA -- desktop only */}
             <a
-              href="https://t.me/ghayrat_korea"
+              href={contactLinks.telegram}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden lg:inline-flex btn-primary text-sm py-2.5 px-6"

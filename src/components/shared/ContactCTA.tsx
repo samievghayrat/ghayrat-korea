@@ -1,6 +1,8 @@
 'use client';
 
 import { useApp } from '@/contexts/AppContext';
+import { usePathname } from 'next/navigation';
+import { getCarShareUrl, getManagerContactLinks, getPageManagerContactLinks } from '@/lib/car-sharing';
 
 interface ContactCTAProps {
   variant?: 'dark' | 'light';
@@ -9,12 +11,16 @@ interface ContactCTAProps {
 
 export default function ContactCTA({ variant = 'dark', carId }: ContactCTAProps) {
   const { t } = useApp();
+  const pathname = usePathname();
+  const contactLinks = carId
+    ? getManagerContactLinks(`${t('contact.carInterest')} ${carId}\n${getCarShareUrl('catalog', carId)}`)
+    : getPageManagerContactLinks(pathname, t('contact.carInterest'));
   const isDark = variant === 'dark';
 
   return (
     <div className="flex flex-wrap justify-center gap-4">
       <a
-        href={`https://wa.me/821099221601${carId ? `?text=${encodeURIComponent(`${t('contact.carInterest')} ${carId}`)}` : ''}`}
+        href={contactLinks.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
         className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
@@ -29,7 +35,7 @@ export default function ContactCTA({ variant = 'dark', carId }: ContactCTAProps)
         WhatsApp
       </a>
       <a
-        href="https://t.me/ghayrat_korea"
+        href={contactLinks.telegram}
         target="_blank"
         rel="noopener noreferrer"
         className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${

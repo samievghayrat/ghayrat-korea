@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { CarListing } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName } from '@/lib/translations';
-import { getCarShareUrl } from '@/lib/car-sharing';
+import { getCarShareUrl, getManagerContactLinks } from '@/lib/car-sharing';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
 import Equipment from '@/components/detail/Equipment';
@@ -15,6 +15,9 @@ import CarShareButton from '@/components/shared/CarShareButton';
 export default function OwnCarDetail({ car }: { car: CarListing }) {
   const { t, formatListingPrice } = useApp();
   const title = `${car.brand} ${getCompactModelName(car.model)}`;
+  const contactLinks = getManagerContactLinks(
+    `${t('contact.carInterest')} ${title} ${car.year}\n${getCarShareUrl('our-cars', car.id)}`,
+  );
   const suffix = t('brand.subtitle');
   useEffect(() => { document.title = `${title} — ${suffix} | GHAYRAT`; }, [title, suffix]);
   return (
@@ -39,7 +42,7 @@ export default function OwnCarDetail({ car }: { car: CarListing }) {
             <p className="text-sm text-gray-500">{t('own.salePrice')}</p>
             <p className="mt-2 text-3xl font-bold text-emerald-700">{formatListingPrice(car.price_krw, car.price_rub, car.price_usd)}</p>
             {car.location && <div className="mt-5 border-t border-gray-100 pt-4"><p className="text-xs text-gray-500">{t('own.location')}</p><p className="mt-1 font-medium text-gray-900">{car.location}</p></div>}
-            <Link href="https://t.me/ghayrat_korea" target="_blank" rel="noopener noreferrer" className="btn-cta-green mt-6">{t('nav.writeManager')}</Link>
+            <Link href={contactLinks.telegram} target="_blank" rel="noopener noreferrer" className="btn-cta-green mt-6">{t('nav.writeManager')}</Link>
             <Link href="/our-cars" className="mt-4 block text-center text-sm text-gray-500 hover:text-primary">{t('own.back')}</Link>
           </aside>
           <div className="order-3 space-y-5 lg:col-span-8">

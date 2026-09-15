@@ -22,6 +22,34 @@ function loadTs(relative, overrides = {}) {
 const sharing = loadTs('src/lib/car-sharing.ts');
 const { getTranslation } = loadTs('src/lib/i18n.ts');
 
+test('manager contact links target the manager directly and safely encode the car title and URL', () => {
+  const url = sharing.getCarShareUrl('catalog', '42738544', 'russia');
+  const message = `Интересует автомобиль Mercedes-Benz S-Class W223 2021\n${url}`;
+  const links = sharing.getManagerContactLinks(message);
+  assert.equal(new URL(links.whatsapp).origin + new URL(links.whatsapp).pathname, 'https://wa.me/821099221601');
+  assert.equal(new URL(links.telegram).origin + new URL(links.telegram).pathname, 'https://t.me/ghayrat_korea');
+  for (const link of Object.values(links)) assert.equal(new URL(link).searchParams.get('text'), message);
+  const special = sharing.getManagerContactLinks('Kia & BMW? + # /\nhttps://ghayrat.vercel.app/auction/1001');
+  for (const link of Object.values(special)) assert.equal(new URL(link).searchParams.get('text'), 'Kia & BMW? + # /\nhttps://ghayrat.vercel.app/auction/1001');
+});
+
+test('page-level contact carries the correct catalog, auction or own-car URL without unrelated query data', () => {
+  for (const route of ['/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
+    const links = sharing.getPageManagerContactLinks(route, 'Интересует автомобиль');
+    for (const link of Object.values(links)) assert.equal(new URL(link).searchParams.get('text'),
+      `Интересует автомобиль ${route.split('/').at(-1)}\nhttps://ghayrat.vercel.app${route}`);
+  }
+  assert.deepEqual(sharing.getPageManagerContactLinks('/catalog/42738544/', 'Car'), sharing.getPageManagerContactLinks('/catalog/42738544', 'Car'));
+});
+
+test('generic contact has no stale car draft on non-car pages or malformed paths', () => {
+  const generic = { whatsapp: 'https://wa.me/821099221601', telegram: 'https://t.me/ghayrat_korea' };
+  for (const route of ['/', '/auction', '/our-cars', '/about', '/admin/cars/new', '/catalog', '/catalog/123/extra', '/catalog/%']) {
+    assert.deepEqual(sharing.getPageManagerContactLinks(route, 'Car'), generic, route);
+  }
+  assert.deepEqual(sharing.getManagerContactLinks('  '), generic);
+});
+
 test('shared catalog URL is public and preserves the selected delivery country', () => {
   for (const destination of ['russia', 'tajikistan']) {
     assert.equal(sharing.getCarShareUrl('catalog', '42733716', destination),

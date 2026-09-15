@@ -12,7 +12,7 @@ import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import CarShareButton from '@/components/shared/CarShareButton';
-import { getCarShareUrl } from '@/lib/car-sharing';
+import { getCarShareUrl, getManagerContactLinks } from '@/lib/car-sharing';
 import { calculateImportCost, getTjContainerShippingUsd } from '@/lib/calculator';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import CountryFlag from '@/components/shared/CountryFlag';
@@ -271,6 +271,9 @@ export default function CarDetailPage() {
   const russianCustomsTotal = getRussiaCustomsTotal(breakdown);
   const russianTotalTerms = [...russianPriceRows.map(row => row.value),
     russianCustomsTotal !== null ? formatRub(russianCustomsTotal) : t('price.confirmingShort')];
+  const contactLinks = getManagerContactLinks(
+    `${t('contact.carInterest')} ${fullTitle} ${car.year}\n${getCarShareUrl('catalog', car.id, destination)}`,
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -541,7 +544,7 @@ export default function CarDetailPage() {
 
 
             <a
-              href="https://t.me/ghayrat_korea"
+              href={contactLinks.telegram}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-cta-green mt-5"

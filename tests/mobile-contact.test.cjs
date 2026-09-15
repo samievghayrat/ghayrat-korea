@@ -20,11 +20,13 @@ function loadTs(relative, overrides = {}) {
 }
 
 const { getTranslation } = loadTs('src/lib/i18n.ts');
+const sharing = loadTs('src/lib/car-sharing.ts');
 
 function renderFloating(pathname = '/', lang = 'ru', open = false) {
   const { default: Contact } = loadTs('src/components/shared/FloatingContact.tsx', {
     'next/navigation': { usePathname: () => pathname },
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, lang) }) },
+    '@/lib/car-sharing': sharing,
     react: { ...React, useState: () => [open, () => {}] },
   });
   return renderToStaticMarkup(React.createElement(Contact));
@@ -58,12 +60,58 @@ test('expanded floating action shows the existing safe WhatsApp and Telegram lin
   assert.equal((html.match(/rel="noopener noreferrer"/g) || []).length, 2);
 });
 
-test('floating contact is available on list and information pages but not admin or car details', () => {
-  for (const route of ['/', '/catalog', '/auction', '/our-cars', '/favorites', '/about', '/contacts', '/how-to-buy']) {
+test('floating contact is available on car details as well as list and information pages, but not admin', () => {
+  for (const route of ['/', '/catalog', '/auction', '/our-cars', '/favorites', '/about', '/contacts', '/how-to-buy',
+    '/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
     assert.ok(renderFloating(route).includes('data-testid="floating-contact"'), route);
   }
-  for (const route of ['/admin', '/admin/cars', '/catalog/42741172', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
+  for (const route of ['/admin', '/admin/cars']) {
     assert.equal(renderFloating(route), '', route);
+  }
+});
+
+test('car-page contact sits near the safe bottom edge without reserving space for the hidden navigation', () => {
+  const html = renderFloating('/catalog/42738544');
+  assert.ok(html.includes('bottom-[calc(1rem+env(safe-area-inset-bottom))]'));
+  assert.ok(!html.includes('bottom-[calc(4.5rem+env(safe-area-inset-bottom))]'));
+  assert.ok(html.includes('h-12 w-12'));
+  assert.ok(html.includes('aria-expanded="false"'));
+});
+
+test('WhatsApp and Telegram drafts include the current car link in every selected language', () => {
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    for (const route of ['/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
+      const html = renderFloating(route, lang, true);
+      const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map(match => new URL(match[1].replaceAll('&amp;', '&')));
+      assert.equal(hrefs.length, 2);
+      assert.equal(hrefs[0].pathname, '/ghayrat_korea');
+      assert.equal(hrefs[1].pathname, '/821099221601');
+      for (const link of hrefs) {
+        const message = link.searchParams.get('text');
+        assert.ok(message.startsWith(getTranslation('contact.carInterest', lang)));
+        assert.ok(message.endsWith(`https://ghayrat.vercel.app${route}`));
+      }
+      assert.equal(hrefs[0].searchParams.get('text'), hrefs[1].searchParams.get('text'));
+    }
+  }
+});
+
+test('header, footer and contact actions also include the current listing link', () => {
+  const route = '/catalog/42738544';
+  for (const file of ['src/components/layout/Header.tsx', 'src/components/layout/Footer.tsx',
+    'src/components/shared/ContactCTA.tsx']) {
+    const { default: Component } = loadTs(file, {
+      'next/navigation': { usePathname: () => route },
+      'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
+      '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru'), lang: 'ru', currency: 'USD' }) },
+      '@/lib/car-sharing': sharing,
+    });
+    const html = renderToStaticMarkup(React.createElement(Component));
+    const links = [...html.matchAll(/href="(https:\/\/(?:wa\.me\/821099221601|t\.me\/ghayrat_korea)[^"]*)"/g)]
+      .map(match => new URL(match[1].replaceAll('&amp;', '&')))
+      .filter(url => url.pathname === '/821099221601' || url.pathname === '/ghayrat_korea');
+    assert.ok(links.length > 0, file);
+    for (const link of links) assert.ok(link.searchParams.get('text').endsWith(`https://ghayrat.vercel.app${route}`), file);
   }
 });
 

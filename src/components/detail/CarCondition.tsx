@@ -7,6 +7,7 @@ import AccidentHistory from './AccidentHistory';
 import { useApp } from '@/contexts/AppContext';
 import type { TranslationKey } from '@/lib/i18n';
 import { parseEncarInsuranceHistory } from '@/lib/encar-inspection';
+import { getCarShareUrl, getManagerContactLinks } from '@/lib/car-sharing';
 
 interface CarConditionProps {
   records: AccidentRecord[];
@@ -56,6 +57,9 @@ export default function CarCondition({ records, carId, inspectionData, source }:
   const insuranceHistory = report?.insuranceHistory || parseEncarInsuranceHistory(report?.inspectorNotes);
   const isLoading = canFetch && !currentRemote && !report;
   const isUnavailable = currentRemote?.status === 'unavailable';
+  const reportContactLinks = getManagerContactLinks(
+    `${t('condition.requestReport')}\n${t('contact.carInterest')} ${carId}\n${getCarShareUrl('catalog', carId)}`,
+  );
 
   // Privately listed cars keep their existing manually supplied condition/history.
   if (!canFetch) return <AccidentHistory records={records} inspectionData={inspectionData} />;
@@ -90,7 +94,7 @@ export default function CarCondition({ records, carId, inspectionData, source }:
                 {t('condition.retry')}
               </button>
             ) : (
-              <a href="https://t.me/ghayrat_korea" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
+              <a href={reportContactLinks.telegram} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
                 {t('condition.requestReport')}
               </a>
             )}

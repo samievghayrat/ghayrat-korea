@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/contexts/AppContext';
+import { getPageManagerContactLinks } from '@/lib/car-sharing';
 
 export default function FloatingContact() {
   const pathname = usePathname();
   const { t } = useApp();
+  const contactLinks = getPageManagerContactLinks(pathname, t('contact.carInterest'));
+  const isCarDetail = /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname);
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -34,19 +37,19 @@ export default function FloatingContact() {
     };
   }, [open]);
 
-  // Detail pages already have a full-width contact action beside the price.
-  // Removing the floating control there keeps it off photos and calculations.
-  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname)) return null;
+  if (pathname.startsWith('/admin')) return null;
 
   return (
     <div ref={container} data-testid="floating-contact"
-      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col items-end gap-3 lg:bottom-6 lg:right-6">
+      className={`fixed right-4 z-40 flex flex-col items-end gap-3 lg:bottom-6 lg:right-6 ${isCarDetail
+        ? 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'
+        : 'bottom-[calc(4.5rem+env(safe-area-inset-bottom))]'}`}>
       {/* Expanded buttons */}
       {open && (
         <div id="floating-contact-options" className="flex flex-col gap-2">
           <a
             ref={firstAction}
-            href="https://t.me/ghayrat_korea"
+            href={contactLinks.telegram}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
@@ -58,7 +61,7 @@ export default function FloatingContact() {
             Telegram
           </a>
           <a
-            href="https://wa.me/821099221601"
+            href={contactLinks.whatsapp}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}

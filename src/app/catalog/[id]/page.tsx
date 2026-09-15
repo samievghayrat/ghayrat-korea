@@ -388,11 +388,6 @@ export default function CarDetailPage() {
               <div className="mt-1 text-xs font-medium text-emerald-700/70">
                 ₩{displayPrice.priceKrw.toLocaleString('ko-KR')}
               </div>
-              {car.source === 'encar' && (
-                <div className="mt-1 text-xs font-medium text-emerald-700/70">
-                  {t('price.includesEncarFee')}
-                </div>
-              )}
             </div>
 
             <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">

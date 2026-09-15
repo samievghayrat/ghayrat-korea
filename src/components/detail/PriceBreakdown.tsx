@@ -20,19 +20,16 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
   const fmtRub = (v: number) => `${v.toLocaleString('ru-RU')} ₽`;
   const rubDetails = (value: number, details?: string) =>
     [fmtRub(value), details].filter(Boolean).join(' · ');
+  const carPriceWithIncludedFee = breakdown.carPrice + (breakdown.encarFee || 0);
+  const carPriceKrwWithIncludedFee = priceKrw + (breakdown.encarFeeKrw || 0);
 
   const rows = isRussia
     ? [
         {
           label: t('price.carPriceKorea'),
-          value: fmtRub(breakdown.carPrice),
-          sublabel: `₩${priceKrw.toLocaleString('ko-KR')}`,
+          value: fmtRub(carPriceWithIncludedFee),
+          sublabel: `₩${carPriceKrwWithIncludedFee.toLocaleString('ko-KR')}`,
         },
-        ...(breakdown.encarFee ? [{
-          label: t('price.encarFee'),
-          value: fmtRub(breakdown.encarFee),
-          sublabel: `₩${(breakdown.encarFeeKrw || 0).toLocaleString('ko-KR')}`,
-        }] : []),
         {
           label: t('price.customsDuty'),
           value: fmtRub(breakdown.customsDuty),
@@ -63,14 +60,9 @@ export default function PriceBreakdown({ breakdown, priceKrw, destination = 'rus
     : [
         {
           label: t('price.carPriceKorea'),
-          value: fmtUsd(breakdown.carPrice),
-          sublabel: `${priceKrw.toLocaleString('ko-KR')} KRW`,
+          value: fmtUsd(carPriceWithIncludedFee),
+          sublabel: `${carPriceKrwWithIncludedFee.toLocaleString('ko-KR')} KRW`,
         },
-        ...(breakdown.encarFee ? [{
-          label: t('price.encarFee'),
-          value: fmtUsd(breakdown.encarFee),
-          sublabel: `${(breakdown.encarFeeKrw || 0).toLocaleString('ko-KR')} KRW`,
-        }] : []),
         {
           label: t('price.deliveryTj'),
           value: fmtUsd(breakdown.serviceFee),

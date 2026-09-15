@@ -86,6 +86,7 @@ export interface InspectionData {
   checks?: InspectionCheck[];
   previousUsage?: Array<'rental' | 'taxi'>;
   inspectorNotes?: string;
+  insuranceHistory?: { ownDamageClaims?: number; thirdPartyDamageClaims?: number };
   reportKind?: 'inspection' | 'body_diagnosis';
   bodyChecks?: Array<{ name: string; nameRu: string; status: 'normal' | 'replacement' | 'unknown' }>;
 }

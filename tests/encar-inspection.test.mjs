@@ -1,6 +1,43 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseEncarDiagnosis, parseEncarInspection } from '../src/lib/encar-inspection.ts';
+import { parseEncarDiagnosis, parseEncarInspection, parseEncarInsuranceHistory } from '../src/lib/encar-inspection.ts';
+
+test('extracts the user’s insurance count without counting maintenance or repair amounts', () => {
+  const notes = '내차피해1회 (1,213,922원)/정비이력1건/ 비금속(FRP 플라스틱)의 탈부착 가능 부품은 점검사항에서 제외됩니다.';
+  const report = parseEncarInspection({ master: { comments: notes } });
+  assert.deepEqual(report.insuranceHistory, { ownDamageClaims: 1, thirdPartyDamageClaims: undefined });
+  assert.equal(report.inspectorNotes, notes);
+  assert.equal(report.accidentHistory, undefined);
+});
+
+test('keeps own-car and third-party insurance counts separate, without summing or double-counting them', () => {
+  assert.deepEqual(parseEncarInsuranceHistory('내 차 피해 : 2 회 (2,000,000원) / 타차가해3회 / 내차피해2회'),
+    { ownDamageClaims: 2, thirdPartyDamageClaims: 3 });
+});
+
+test('explicitly reported zero is preserved, but missing insurance data never means zero', () => {
+  assert.deepEqual(parseEncarInsuranceHistory('내차피해0회/타차가해없음'),
+    { ownDamageClaims: 0, thirdPartyDamageClaims: 0 });
+  for (const notes of [undefined, '', '정비이력1건', '내차피해 (1,213,922원)', '내차피해-1회', '내차피해1.5회']) {
+    assert.equal(parseEncarInsuranceHistory(notes), undefined, notes);
+  }
+});
+
+test('conflicting or invalid claim counts stay unknown rather than presenting a guessed history', () => {
+  assert.deepEqual(parseEncarInsuranceHistory('내차피해1회/내차피해2회/타차가해1회'),
+    { ownDamageClaims: undefined, thirdPartyDamageClaims: 1 });
+  assert.equal(parseEncarInsuranceHistory('내차피해999999999999999999999999회'), undefined);
+});
+
+test('insurance counts are also available in body-diagnosis comments without implying mechanical inspection', () => {
+  const report = parseEncarDiagnosis({ items: [
+    { name: 'HOOD', resultCd: 'NORMAL' },
+    { name: 'CHECKER_COMMENT', result: '내차피해1회/정비이력1건' },
+  ] });
+  assert.equal(report.insuranceHistory.ownDamageClaims, 1);
+  assert.equal(report.reportKind, 'body_diagnosis');
+  assert.deepEqual(report.checks, []);
+});
 
 test('rejects an absent or empty report rather than marking the car undamaged', () => {
   for (const value of [null, {}, { outer: null }, { outer: {} }, { carSaleDto: { carId: 123 } }]) {

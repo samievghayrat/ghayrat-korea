@@ -6,6 +6,7 @@ import CarDamageMap, { getPanelLabel } from './CarDamageMap';
 import AccidentHistory from './AccidentHistory';
 import { useApp } from '@/contexts/AppContext';
 import type { TranslationKey } from '@/lib/i18n';
+import { parseEncarInsuranceHistory } from '@/lib/encar-inspection';
 
 interface CarConditionProps {
   records: AccidentRecord[];
@@ -52,6 +53,7 @@ export default function CarCondition({ records, carId, inspectionData, source }:
   const currentRemote = remote?.carId === carId ? remote : undefined;
   const report = currentRemote?.inspectionData || inspectionData;
   const hasDamage = report?.hasDamage ?? false;
+  const insuranceHistory = report?.insuranceHistory || parseEncarInsuranceHistory(report?.inspectorNotes);
   const isLoading = canFetch && !currentRemote && !report;
   const isUnavailable = currentRemote?.status === 'unavailable';
 
@@ -163,12 +165,20 @@ export default function CarCondition({ records, carId, inspectionData, source }:
             {hasDamage && !report.panels.length && (
               <p className="mt-4 text-sm text-amber-800">{t('condition.bodyDetailsMissing')}</p>
             )}
-            {report.inspectorNotes && (
-              <details className="mt-3 text-sm">
-                <summary className="cursor-pointer font-medium text-gray-600">{t('condition.originalNotes')}</summary>
-                <p className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-gray-50 p-3 text-xs leading-6 text-gray-600" lang="ko">{report.inspectorNotes}</p>
-              </details>
-            )}
+            <dl className="mt-4 border-t border-gray-100 pt-1">
+              <div className="flex items-start justify-between gap-3 py-2.5 text-sm">
+                <dt className="text-gray-500">{t('condition.insuranceCases')}</dt>
+                <dd className="shrink-0 text-right font-semibold text-gray-900">
+                  {insuranceHistory?.ownDamageClaims ?? t('condition.unknown')}
+                </dd>
+              </div>
+              {insuranceHistory?.thirdPartyDamageClaims !== undefined && (
+                <div className="flex items-start justify-between gap-3 py-2.5 text-sm">
+                  <dt className="text-gray-500">{t('condition.thirdPartyInsuranceCases')}</dt>
+                  <dd className="shrink-0 text-right font-semibold text-gray-900">{insuranceHistory.thirdPartyDamageClaims}</dd>
+                </div>
+              )}
+            </dl>
             <p className="mt-4 text-xs leading-5 text-gray-500" role="note">{t('condition.disclaimer')}</p>
           </>
         )}

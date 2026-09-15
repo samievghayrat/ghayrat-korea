@@ -74,6 +74,22 @@ function reportDate(value: unknown): string | undefined {
 }
 
 // Only explicit report values are translated. Missing/unknown data is never a clean result.
+export function parseEncarInsuranceHistory(notes?: string): InspectionData['insuranceHistory'] {
+  if (!notes) return undefined;
+  const normalized = notes.normalize('NFKC').replace(/\s/g, '');
+  const countFor = (label: string): number | undefined => {
+    const matches = Array.from(normalized.matchAll(new RegExp(`${label}(?::|：)?(\\d+회|없음)`, 'g')));
+    const counts = new Set(matches.map(match => match[1] === '없음' ? 0 : Number(match[1].slice(0, -1))));
+    if (counts.size !== 1) return undefined;
+    const count = Array.from(counts)[0];
+    return Number.isSafeInteger(count) && count >= 0 ? count : undefined;
+  };
+  const ownDamageClaims = countFor('내차피해');
+  const thirdPartyDamageClaims = countFor('타차가해');
+  if (ownDamageClaims === undefined && thirdPartyDamageClaims === undefined) return undefined;
+  return { ownDamageClaims, thirdPartyDamageClaims };
+}
+
 export function parseEncarInspection(value: unknown): InspectionData | null {
   const data = record(value);
   const master = record(data.master);
@@ -137,6 +153,7 @@ export function parseEncarInspection(value: unknown): InspectionData | null {
     panels, summary, hasDamage, bodyInspectionAvailable,
     accidentHistory, simpleRepair, floodHistory, tuning,
     reportDate: reportDate(master.issuedt), reportedMileage, checks, previousUsage, inspectorNotes,
+    insuranceHistory: parseEncarInsuranceHistory(inspectorNotes),
     reportKind: 'inspection',
   };
 }

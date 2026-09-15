@@ -377,6 +377,8 @@ const t = {
   'condition.bodyOnly': { ru: 'Доступен отчёт по кузову. Он показывает замену проверенных панелей, но не оценивает двигатель, КПП и историю затопления.', en: 'A body report is available. It covers replacement of the checked panels, not the engine, transmission or flood history.', tj: 'Ҳисоботи кузов дастрас аст. Он ивазшавии панелҳои санҷидашударо нишон медиҳад, на ҳолати муҳаррик, қуттии суръат ё таърихи обхезиро.', uz: 'Kuzov hisoboti mavjud. U tekshirilgan panellar almashganini ko‘rsatadi, dvigatel, uzatma yoki suv bosishi tarixini baholamaydi.' },
   'condition.noReplacement': { ru: 'Без замены', en: 'No replacement', tj: 'Иваз нашудааст', uz: 'Almashmagan' },
   'condition.originalNotes': { ru: 'Примечание инспектора (оригинал)', en: 'Inspector’s notes (original)', tj: 'Қайди мутахассис (асл)', uz: 'Tekshiruvchi izohi (asl nusxa)' },
+  'condition.insuranceCases': { ru: 'Страховые случаи по этому авто', en: 'Insurance claims for this car', tj: 'Ҳодисаҳои суғуртавии ин мошин', uz: 'Ushbu avtomobil bo‘yicha sug‘urta holatlari' },
+  'condition.thirdPartyInsuranceCases': { ru: 'Страховые случаи — ущерб другим авто', en: 'Insurance claims for damage to other cars', tj: 'Ҳодисаҳои суғуртавӣ — зарар ба мошинҳои дигар', uz: 'Sug‘urta holatlari — boshqa avtomobillarga zarar' },
   'condition.disclaimer': { ru: 'Состояние указано на дату отчёта. Перед покупкой рекомендуем независимый осмотр.', en: 'Condition is reported as of the inspection date. We recommend an independent inspection before purchase.', tj: 'Ҳолат дар санаи ҳисобот нишон дода шудааст. Пеш аз харид муоинаи мустақилро тавсия медиҳем.', uz: 'Holat ko‘rik sanasiga tegishli. Xariddan oldin mustaqil tekshiruvni tavsiya qilamiz.' },
 
   // Damage map

@@ -30,6 +30,7 @@ const base = { priceKrw: 10000000, priceRub: 600000, priceUsd: 8000, encarFeeKrw
   displacement: 1998, year: 2022, month: 1, fuel: 'Бензин', hp: 150,
   brand: 'Kia', model: 'Sportage', usdRate: 75, eurRate: 90 };
 const { getTranslation } = loadTs(path.resolve(__dirname, '../src/lib/i18n.ts'));
+const { parseEncarInsuranceHistory } = loadTs(path.resolve(__dirname, '../src/lib/encar-inspection.ts'));
 const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
   path.resolve(__dirname, '../src/components/detail/RussiaCustomsSummary.tsx'), {
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru') }) },
@@ -181,6 +182,7 @@ test('body repair details are open by default and appear before the other condit
   const { default: CarCondition } = loadTs(path.resolve(__dirname, '../src/components/detail/CarCondition.tsx'), {
     './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
     './AccidentHistory': { __esModule: true, default: () => null },
+    '@/lib/encar-inspection': { parseEncarInsuranceHistory },
     '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru', formatMileage: String }) },
   });
   const report = { panels: [{ name: 'hood', nameRu: 'Капот', rank: '1', damages: ['CHANGE'] }],
@@ -194,5 +196,45 @@ test('body repair details are open by default and appear before the other condit
   assert.ok(repairs >= 0);
   for (const label of ['condition.reportDate', 'accident.history', 'condition.engine']) {
     assert.ok(html.indexOf(label) > repairs, label);
+  }
+});
+
+function renderInsuranceHistory(data, lang = 'ru') {
+  const { default: CarCondition } = loadTs(path.resolve(__dirname, '../src/components/detail/CarCondition.tsx'), {
+    './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
+    './AccidentHistory': { __esModule: true, default: () => null },
+    '@/lib/encar-inspection': { parseEncarInsuranceHistory },
+    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, lang), lang, formatMileage: String }) },
+  });
+  return renderToStaticMarkup(React.createElement(CarCondition, {
+    records: [], carId: '123', source: 'encar',
+    inspectionData: { panels: [], hasDamage: false, reportKind: 'inspection', ...data },
+  }));
+}
+
+test('condition UI replaces the original Korean paragraph with the insurance count, including cached reports', () => {
+  const html = renderInsuranceHistory({ inspectorNotes: '내차피해1회 (1,213,922원)/정비이력1건/비금속(FRP 플라스틱)' });
+  assert.match(html, /Страховые случаи по этому авто<\/dt>\s*<dd[^>]*>1<\/dd>/);
+  assert.ok(!html.includes('Примечание инспектора'));
+  assert.ok(!/[가-힣]/.test(html));
+  assert.ok(!html.includes('1,213,922'));
+});
+
+test('condition UI uses saved insurance counts and shows unknown, not zero, for unreported own-car claims', () => {
+  const structured = renderInsuranceHistory({ insuranceHistory: { ownDamageClaims: 2, thirdPartyDamageClaims: 3 }, inspectorNotes: '내차피해1회' });
+  assert.match(structured, /Страховые случаи по этому авто<\/dt>\s*<dd[^>]*>2<\/dd>/);
+  assert.match(structured, /Страховые случаи — ущерб другим авто<\/dt>\s*<dd[^>]*>3<\/dd>/);
+  const missing = renderInsuranceHistory({ inspectorNotes: '정비이력1건' });
+  const unknown = getTranslation('condition.unknown', 'ru');
+  assert.ok(missing.includes(`>${unknown}</dd>`));
+  assert.ok(!/Страховые случаи по этому авто<\/dt>\s*<dd[^>]*>0<\/dd>/.test(missing));
+});
+
+test('insurance counts and labels are visible without expanding a note in every selected language', () => {
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    const html = renderInsuranceHistory({ insuranceHistory: { ownDamageClaims: 0 } }, lang);
+    assert.ok(html.includes(getTranslation('condition.insuranceCases', lang)), lang);
+    assert.match(html, /<dd[^>]*>0<\/dd>/);
+    assert.ok(!html.includes('<details'));
   }
 });

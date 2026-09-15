@@ -200,11 +200,15 @@ test('body repair details are open by default and appear before the other condit
 });
 
 function renderInsuranceHistory(data, lang = 'ru') {
+  const app = { useApp: () => ({ t: key => getTranslation(key, lang), lang, formatMileage: String }) };
+  const damageMap = loadTs(path.resolve(__dirname, '../src/components/detail/CarDamageMap.tsx'), {
+    '@/contexts/AppContext': app,
+  });
   const { default: CarCondition } = loadTs(path.resolve(__dirname, '../src/components/detail/CarCondition.tsx'), {
-    './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
+    './CarDamageMap': { __esModule: true, ...damageMap },
     './AccidentHistory': { __esModule: true, default: () => null },
     '@/lib/encar-inspection': { parseEncarInsuranceHistory },
-    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, lang), lang, formatMileage: String }) },
+    '@/contexts/AppContext': app,
   });
   return renderToStaticMarkup(React.createElement(CarCondition, {
     records: [], carId: '123', source: 'encar',
@@ -235,6 +239,64 @@ test('insurance counts and labels are visible without expanding a note in every 
     const html = renderInsuranceHistory({ insuranceHistory: { ownDamageClaims: 0 } }, lang);
     assert.ok(html.includes(getTranslation('condition.insuranceCases', lang)), lang);
     assert.match(html, /<dd[^>]*>0<\/dd>/);
-    assert.ok(!html.includes('<details'));
+    assert.ok(!html.includes(getTranslation('condition.originalNotes', lang)));
+    assert.match(html, /<details[^>]*\sopen=""/);
   }
+});
+
+test('both body diagrams remain open for a report with no damaged or repaired panels', () => {
+  const html = renderInsuranceHistory({ bodyInspectionAvailable: true, accidentHistory: false, simpleRepair: false });
+  assert.match(html, /<details[^>]*open=""[^>]*data-testid="body-repair-diagram"/);
+  assert.ok(html.includes('/images/inspect_exterior.png'));
+  assert.ok(html.includes('/images/inspect_structural.png'));
+  assert.ok(html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
+  assert.ok(!html.includes('absolute flex items-center justify-center'));
+  assert.ok(!html.includes('Повреждения и ремонт кузова (0)'));
+});
+
+test('missing panel data shows an unmarked diagram with an explicit unknown-data explanation', () => {
+  const html = renderInsuranceHistory({ bodyInspectionAvailable: false, checks: [{ key: 'engine', status: 'good' }] });
+  assert.ok(html.includes('data-testid="body-repair-diagram"'));
+  assert.ok(html.includes(getTranslation('condition.bodyMarksNotListed', 'ru')));
+  assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
+  assert.ok(!html.includes('absolute flex items-center justify-center'));
+});
+
+test('known repairs without a panel list keep the diagram visible and retain the repair warning', () => {
+  const html = renderInsuranceHistory({ hasDamage: true, accidentHistory: true, bodyInspectionAvailable: true });
+  assert.ok(html.includes('data-testid="body-repair-diagram"'));
+  assert.ok(html.includes(getTranslation('condition.bodyDetailsMissing', 'ru')));
+  assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
+  assert.ok(!html.includes('absolute flex items-center justify-center'));
+});
+
+test('partial body diagnosis stays visible without implying the whole vehicle was inspected or clean', () => {
+  const html = renderInsuranceHistory({ reportKind: 'body_diagnosis', bodyInspectionAvailable: true,
+    bodyChecks: [{ name: 'hood', nameRu: 'Капот', status: 'normal' }] });
+  assert.ok(html.includes('data-testid="body-repair-diagram"'));
+  assert.ok(html.includes(getTranslation('condition.bodyOnly', 'ru')));
+  assert.ok(html.includes(getTranslation('condition.bodyMarksNotListed', 'ru')));
+  assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
+});
+
+test('repair markers and the panel count still appear only for actual reported panels', () => {
+  const html = renderInsuranceHistory({ hasDamage: true, bodyInspectionAvailable: true,
+    panels: [{ name: 'hood', nameRu: 'Капот', rank: '1', damages: ['CHANGE'] },
+      { name: 'rearPanel', nameRu: 'Задняя панель', rank: 'A', damages: ['METAL'] }] });
+  assert.ok(html.includes('Повреждения и ремонт кузова (2)'));
+  assert.ok(html.includes('title="Капот: Замена"'));
+  assert.ok(html.includes('title="Задняя панель: Рихтовка/сварка"'));
+  assert.equal((html.match(/absolute flex items-center justify-center/g) || []).length, 2);
+});
+
+test('unavailable inspection data does not show an empty diagram as though a report had loaded', () => {
+  const { default: CarCondition } = loadTs(path.resolve(__dirname, '../src/components/detail/CarCondition.tsx'), {
+    './CarDamageMap': { __esModule: true, default: () => null, getPanelLabel: panel => panel.name },
+    './AccidentHistory': { __esModule: true, default: () => null },
+    '@/lib/encar-inspection': { parseEncarInsuranceHistory },
+    '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru', formatMileage: String }) },
+  });
+  const html = renderToStaticMarkup(React.createElement(CarCondition, { records: [], carId: '123', source: 'encar' }));
+  assert.ok(html.includes('condition.loading'));
+  assert.ok(!html.includes('body-repair-diagram'));
 });

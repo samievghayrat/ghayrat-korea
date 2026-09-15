@@ -98,12 +98,19 @@ export default function CarCondition({ records, carId, inspectionData, source }:
         )}
         {report && (
           <>
-            {!!report.panels.length && (
-              <details open className="mb-4 rounded-xl border border-gray-200 p-3">
-                <summary className="cursor-pointer text-sm font-semibold text-gray-900">{t('condition.bodyRepairs')} ({report.panels.length})</summary>
-                <div className="mt-4"><CarDamageMap panels={report.panels} /></div>
-              </details>
-            )}
+            <details open data-testid="body-repair-diagram" className="mb-4 rounded-xl border border-gray-200 p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-gray-900">
+                {t('condition.bodyRepairs')}{report.panels.length > 0 ? ` (${report.panels.length})` : ''}
+              </summary>
+              <div className="mt-4"><CarDamageMap panels={report.panels} /></div>
+              {!report.panels.length && (
+                <p className={`mt-3 text-sm leading-6 ${hasDamage ? 'text-amber-800' : 'text-gray-500'}`} role="note">
+                  {t(hasDamage ? 'condition.bodyDetailsMissing'
+                    : report.reportKind !== 'body_diagnosis' && report.bodyInspectionAvailable
+                      ? 'condition.noBodyRepairs' : 'condition.bodyMarksNotListed')}
+                </p>
+              )}
+            </details>
             {(reportDate || report.reportedMileage !== undefined) && (
               <div className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                 {reportDate && <span>{t('condition.reportDate')}: {reportDate}</span>}
@@ -158,12 +165,6 @@ export default function CarCondition({ records, carId, inspectionData, source }:
                   </div>
                 ))}
               </dl>
-            )}
-            {report.reportKind !== 'body_diagnosis' && report.bodyInspectionAvailable && !hasDamage && (
-              <p className="mt-4 text-sm text-emerald-700">{t('condition.noBodyRepairs')}</p>
-            )}
-            {hasDamage && !report.panels.length && (
-              <p className="mt-4 text-sm text-amber-800">{t('condition.bodyDetailsMissing')}</p>
             )}
             <dl className="mt-4 border-t border-gray-100 pt-1">
               <div className="flex items-start justify-between gap-3 py-2.5 text-sm">

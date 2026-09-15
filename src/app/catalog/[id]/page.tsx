@@ -383,9 +383,28 @@ export default function CarDetailPage() {
                     </div>
                   ))}
                 </dl>
-                <p className="border-t border-gray-100 py-3 text-xs leading-5 text-gray-500" role="note">
-                  {t('price.disclaimerTj')}
-                </p>
+                <div className="border-t border-gray-200 py-4">
+                  {calculationReady && formattedDeliveryTotal && (
+                    <p className="mb-3 text-xs leading-5 tabular-nums text-gray-500">
+                      {tajikPriceRows.map((row) => row.value).join(' + ')} = {formattedDeliveryTotal}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between gap-4" aria-live="polite">
+                    <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
+                    {calculationReady && formattedDeliveryTotal ? (
+                      <span className="text-2xl font-bold tracking-tight text-gray-950">{formattedDeliveryTotal}</span>
+                    ) : apiLoaded ? (
+                      <span className="text-base font-semibold text-gray-500">{t('price.confirmingShort')}</span>
+                    ) : (
+                      <span className="h-8 w-28 animate-pulse rounded bg-gray-100" />
+                    )}
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-gray-500" role="note">
+                    {apiLoaded && !calculationReady
+                      ? t('price.customsNeedsConfirmationDesc')
+                      : t('price.customsEstimateShort')}
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
@@ -399,6 +418,7 @@ export default function CarDetailPage() {
               </div>
             )}
 
+            {destination === 'russia' && (
             <div className="mt-3 rounded-2xl bg-gray-950 p-4 text-white">
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/55">{t('price.estimatedTotal')}</div>
               {calculationReady && formattedDeliveryTotal ? (
@@ -414,10 +434,10 @@ export default function CarDetailPage() {
               ) : apiLoaded ? (
                 <div>
                   <div className="text-base font-bold text-amber-300">
-                    {t(destination === 'tajikistan' ? 'price.customsNeedsConfirmation' : 'price.needsEngineData')}
+                    {t('price.needsEngineData')}
                   </div>
                   <div className="mt-1 text-sm leading-5 text-white/65">
-                    {t(destination === 'tajikistan' ? 'price.customsNeedsConfirmationDesc' : 'price.needsEngineDataDesc')}
+                    {t('price.needsEngineDataDesc')}
                   </div>
                   {destination === 'russia' && (
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
@@ -504,6 +524,7 @@ export default function CarDetailPage() {
               )}
 
             </div>
+            )}
 
             <a
               href="https://t.me/ghayrat_korea"

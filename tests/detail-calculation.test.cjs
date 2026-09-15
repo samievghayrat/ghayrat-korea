@@ -38,6 +38,17 @@ const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
 const russianExample = { currency: 'RUB', calculationComplete: true,
   brokerFee: 100000, customsDuty: 1025972, customsFee: 4924, utilizationFee: 3501600 };
 
+test('car breadcrumb shows the compact brand and model after the listing ID and wraps on mobile', () => {
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const breadcrumb = page.match(/\{\/\* Breadcrumb \*\/\}([\s\S]*?)<\/nav>/)[1];
+  assert.match(breadcrumb, /flex-wrap/);
+  assert.doesNotMatch(breadcrumb, /whitespace-nowrap|overflow-x-auto/);
+  assert.ok(breadcrumb.indexOf("t('nav.catalog')") < breadcrumb.indexOf('{car.id}'));
+  assert.ok(breadcrumb.indexOf('{car.id}') < breadcrumb.indexOf('{fullTitle}'));
+  assert.match(breadcrumb, /aria-current="page">\{fullTitle\}/);
+  assert.match(page, /return \[car\.brand, getCompactModelName\(car\.model\)\]/);
+});
+
 test('cars from 2021 onward default to Russia', () => {
   for (const year of [2021, 2022, 2025, 2026]) {
     assert.equal(getCarDeliveryDestination(year), 'russia', String(year));

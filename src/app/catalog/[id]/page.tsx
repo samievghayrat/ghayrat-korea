@@ -275,10 +275,12 @@ export default function CarDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-400 mb-4">
+      <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-400 mb-4">
         <Link href="/" className="shrink-0 hover:text-primary transition-colors">{t('nav.catalog')}</Link>
         <span className="shrink-0">/</span>
         <span className="shrink-0 text-gray-700 font-medium">{car.id}</span>
+        <span className="shrink-0" aria-hidden="true">/</span>
+        <span className="min-w-0 break-words text-gray-700 font-medium" aria-current="page">{fullTitle}</span>
       </nav>
 
       <div className="mb-5 lg:mb-6">

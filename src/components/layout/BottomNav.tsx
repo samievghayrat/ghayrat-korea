@@ -39,8 +39,8 @@ export default function BottomNav() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
-    { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/auction', label: t('nav.auction') },
+    { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -61,6 +61,16 @@ export default function BottomNav() {
           </Link>
 
           <Link
+            href="/auction"
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 ${isAuction ? 'text-primary' : 'text-gray-400'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13h18M5 13l2-5h10l2 5M7 13v5m10-5v5M6 18h12M8 8V6h8v2" />
+            </svg>
+            <span className="text-[10px] font-medium">{t('nav.auction')}</span>
+          </Link>
+
+          <Link
             href="/our-cars"
             aria-current={isOwn ? 'page' : undefined}
             className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isOwn ? 'text-primary' : 'text-gray-400'}`}
@@ -69,16 +79,6 @@ export default function BottomNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h10M6 13v1m12-1v1" />
             </svg>
             <span className="text-[10px] font-medium">{t('nav.ourCars')}</span>
-          </Link>
-
-          <Link
-            href="/auction"
-            className={`flex flex-col items-center gap-0.5 px-2 py-1 ${isAuction ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13h18M5 13l2-5h10l2 5M7 13v5m10-5v5M6 18h12M8 8V6h8v2" />
-            </svg>
-            <span className="text-[10px] font-medium">{t('nav.auction')}</span>
           </Link>
 
           <Link

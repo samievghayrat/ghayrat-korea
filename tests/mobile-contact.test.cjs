@@ -131,6 +131,9 @@ test('bottom navigation includes our cars without a duplicate contact tab', () =
   });
   const html = renderToStaticMarkup(React.createElement(Nav));
   for (const href of ['/', '/our-cars', '/auction', '/favorites']) assert.ok(html.includes(`href="${href}"`));
+  assert.ok(html.indexOf('href="/"') < html.indexOf('href="/auction"'));
+  assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/our-cars"'));
+  assert.ok(html.indexOf('href="/our-cars"') < html.indexOf('href="/favorites"'));
   assert.ok(html.includes('Меню'));
   assert.equal((html.match(/<a /g) || []).length, 4);
   assert.ok(html.includes('grid-cols-5'));

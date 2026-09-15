@@ -17,6 +17,7 @@ import CountryFlag from '@/components/shared/CountryFlag';
 import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName, translateColor } from '@/lib/translations';
 import { getEncarFeeKrw, getPriceIncludingEncarFee } from '@/lib/encar-fee';
+import { getCarDeliveryDestination, type CarDestination } from '@/lib/car-destination';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -60,11 +61,18 @@ export default function CarDetailPage() {
   const [error, setError] = useState(false);
   const [manualHp, setManualHp] = useState<number | undefined>();
   const [manualDisplacement, setManualDisplacement] = useState<number | undefined>();
-  const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
-    searchParams.get('destination') === 'tajikistan' ? 'tajikistan' : 'russia',
+  const [destinationChoice, setDestinationChoice] = useState<{
+    carId: string;
+    destination: CarDestination;
+  } | null>(null);
+  const destination = getCarDeliveryDestination(
+    car?.id === id ? car.year : undefined,
+    destinationChoice?.carId === id
+      ? destinationChoice.destination
+      : searchParams.get('destination'),
   );
-  const chooseDestination = (nextDestination: 'russia' | 'tajikistan') => {
-    setDestination(nextDestination);
+  const chooseDestination = (nextDestination: CarDestination) => {
+    setDestinationChoice({ carId: id, destination: nextDestination });
     localStorage.setItem('deliveryDestination', nextDestination);
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set('destination', nextDestination);
@@ -556,7 +564,7 @@ export default function CarDetailPage() {
           <CarSpecs car={displayCar} />
           <CarCondition records={car.accidentHistory || []} carId={car.id} source={car.source} inspectionData={car.inspectionData} />
           <Equipment items={car.equipment || []} />
-          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} destination={destination} />
+          <SimilarCars brand={car.brand} model={car.model} excludeId={car.id} priceRub={car.price_rub} />
         </div>
 
       </div>

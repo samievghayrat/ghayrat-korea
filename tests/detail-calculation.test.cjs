@@ -22,6 +22,7 @@ function loadTs(file, overrides = {}) {
 }
 
 const { getTjContainerShippingUsd } = loadTs(path.resolve(__dirname, '../src/lib/tj-shipping.ts'));
+const { getCarDeliveryDestination } = loadTs(path.resolve(__dirname, '../src/lib/car-destination.ts'));
 const { calculateImportCost } = loadTs(path.resolve(__dirname, '../src/lib/calculator.ts'), {
   './tj-customs': { lookupTjCustomsMinimum: brand => brand ? { minimumUsd: 10000 } : undefined },
 });
@@ -35,6 +36,41 @@ const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
   });
 const russianExample = { currency: 'RUB', calculationComplete: true,
   brokerFee: 100000, customsDuty: 1025972, customsFee: 4924, utilizationFee: 3501600 };
+
+test('cars from 2021 onward default to Russia', () => {
+  for (const year of [2021, 2022, 2025, 2026]) {
+    assert.equal(getCarDeliveryDestination(year), 'russia', String(year));
+  }
+});
+
+test('cars from 2014 through 2020 default to Tajikistan', () => {
+  for (const year of [2014, 2015, 2018, 2020]) {
+    assert.equal(getCarDeliveryDestination(year), 'tajikistan', String(year));
+  }
+});
+
+test('older cars, missing years and invalid country parameters keep the existing fallback', () => {
+  for (const year of [2013, 2000, undefined, NaN]) {
+    assert.equal(getCarDeliveryDestination(year, 'invalid'), 'russia');
+  }
+  assert.equal(getCarDeliveryDestination(2018, 'invalid'), 'tajikistan');
+});
+
+test('an explicit country choice is not overwritten by the car year or later specification updates', () => {
+  for (const destination of ['russia', 'tajikistan']) {
+    for (const year of [undefined, 2014, 2020, 2021, 2026]) {
+      assert.equal(getCarDeliveryDestination(year, destination), destination);
+    }
+  }
+});
+
+test('automatic destination uses the matching calculation currency', () => {
+  for (const year of [2014, 2020, 2021, 2026]) {
+    const destination = getCarDeliveryDestination(year);
+    const result = calculateImportCost({ ...base, year, destination });
+    assert.equal(result.currency, year >= 2021 ? 'RUB' : 'USD');
+  }
+});
 
 test('Russian customs summary includes all four charges in the requested example', () => {
   assert.equal(getRussiaCustomsTotal(russianExample), 4632496);

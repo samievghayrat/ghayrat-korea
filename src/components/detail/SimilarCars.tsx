@@ -14,10 +14,9 @@ interface SimilarCarsProps {
   model: string;
   excludeId: string;
   priceRub: number;
-  destination?: 'russia' | 'tajikistan';
 }
 
-export default function SimilarCars({ brand, model, excludeId, priceRub, destination = 'russia' }: SimilarCarsProps) {
+export default function SimilarCars({ brand, model, excludeId, priceRub }: SimilarCarsProps) {
   const [cars, setCars] = useState<CarListing[]>([]);
   const { t, lang, formatListingPrice, formatMileage } = useApp();
 
@@ -48,7 +47,7 @@ export default function SimilarCars({ brand, model, excludeId, priceRub, destina
           return (
           <Link
             key={car.id}
-            href={`/catalog/${car.id}?destination=${destination}`}
+            href={`/catalog/${car.id}`}
             className="w-64 flex-shrink-0 snap-start rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
           >
             <div className="relative aspect-[16/10] bg-gray-100">

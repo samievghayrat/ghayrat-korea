@@ -55,6 +55,23 @@ test('the selector payload is compact and does not send vehicle records to the b
   assert.doesNotMatch(json, /"(?:cars|Photo|VIN|Mileage)":/);
 });
 
+test('preparing navigation translates repeated model names only once', () => {
+  let translations = 0;
+  const cars = Array.from({ length: 5000 }, () => ({ Manufacturer: '기아', Model: 'K3' }));
+  cars.push({ Manufacturer: '기아', Model: 'K5' });
+  const fixture = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'), {
+    '@/data/encar-snapshot.json': { generatedAt: '2026-09-15', cars },
+    './translations': { reverseTranslateBrand: () => undefined, reverseTranslateModel: () => undefined,
+      translateBrand: name => name === '기아' ? 'Kia' : name,
+      translateModel: name => { translations++; return name; } },
+  });
+  const result = fixture.getSnapshotNavigation();
+  assert.equal(translations, 2);
+  assert.equal(result.modelsByBrand.Kia[0].count, 5000);
+  assert.equal(fixture.getSnapshotNavigation(), result);
+  assert.equal(translations, 2);
+});
+
 function filterHarness(initialQuery = '') {
   let state = null;
   let params = new URLSearchParams(initialQuery);

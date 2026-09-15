@@ -237,6 +237,7 @@ export function getSnapshotNavigation(): CatalogNavigation {
   const supportedBrands = new Set<string>(ENCAR_BRANDS.map(brand => brand.name));
   const counts = new Map<string, number>();
   const modelGroups = new Map<string, Map<string, CatalogModelOption>>();
+  const modelNames = new Map<string, { name: string; nameKo: string }>();
 
   // Build the compact selector index in one pass, not one scan per brand.
   for (const car of snapshot.cars) {
@@ -247,9 +248,15 @@ export function getSnapshotNavigation(): CatalogNavigation {
     // exactly as matchesBrand does for the existing model endpoint.
     const brand = countedBrand || translateBrand(manufacturer);
     if (!supportedBrands.has(brand)) continue;
-    const nameKo = getBaseModelName(car.Model || '');
-    if (!nameKo) continue;
-    const name = translateModel(nameKo);
+    const rawModel = car.Model || '';
+    let model = modelNames.get(rawModel);
+    if (!model) {
+      const nameKo = getBaseModelName(rawModel);
+      model = { nameKo, name: translateModel(nameKo) };
+      modelNames.set(rawModel, model);
+    }
+    if (!model.nameKo) continue;
+    const { name, nameKo } = model;
     let groups = modelGroups.get(brand);
     if (!groups) {
       groups = new Map();

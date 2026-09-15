@@ -261,7 +261,7 @@ export default function CarDetailPage() {
       label: t('price.customsShort'),
       value: calculationReady && breakdown?.customsTotal
         ? formatUsd(breakdown.customsTotal)
-        : t('price.confirmingShort'),
+        : apiLoaded ? t('price.noInformationShort') : '—',
     },
   ];
   const russianPriceRows = [
@@ -402,7 +402,7 @@ export default function CarDetailPage() {
                   {tajikPriceRows.map((row) => (
                     <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
                       <dt className="text-sm font-medium text-gray-600">{row.label}</dt>
-                      <dd className="shrink-0 text-lg font-bold tracking-tight text-gray-950">{row.value}</dd>
+                      <dd className="min-w-0 text-right text-lg font-bold tracking-tight text-gray-950">{row.value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -417,7 +417,7 @@ export default function CarDetailPage() {
                     {calculationReady && formattedDeliveryTotal ? (
                       <span className="text-2xl font-bold tracking-tight text-gray-950">{formattedDeliveryTotal}</span>
                     ) : apiLoaded ? (
-                      <span className="text-base font-semibold text-gray-500">{t('price.confirmingShort')}</span>
+                      <span className="text-base font-semibold text-gray-500">{t('price.totalUnavailableShort')}</span>
                     ) : (
                       <span className="h-8 w-28 animate-pulse rounded bg-gray-100" />
                     )}

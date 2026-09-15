@@ -20,6 +20,7 @@ import { useApp } from '@/contexts/AppContext';
 import { getCompactModelName, translateColor } from '@/lib/translations';
 import { getEncarFeeKrw, getPriceIncludingEncarFee } from '@/lib/encar-fee';
 import { getCarDeliveryDestination, type CarDestination } from '@/lib/car-destination';
+import { parseManualEngineInput } from '@/lib/manual-engine-input';
 
 function getSessionCar(id: string): CarListing | null {
   try {
@@ -61,8 +62,8 @@ export default function CarDetailPage() {
   const [remoteCarDetails, setRemoteCarDetails] = useState<RemoteCarDetails | null>(null);
   const [loading, setLoading] = useState(!sessionCar);
   const [error, setError] = useState(false);
-  const [manualHp, setManualHp] = useState<number | undefined>();
-  const [manualDisplacement, setManualDisplacement] = useState<number | undefined>();
+  const [manualHp, setManualHp] = useState('');
+  const [manualDisplacement, setManualDisplacement] = useState('');
   const [destinationChoice, setDestinationChoice] = useState<{
     carId: string;
     destination: CarDestination;
@@ -163,12 +164,12 @@ export default function CarDetailPage() {
   }, [remoteCarDetails, apiLoaded]);
 
   useEffect(() => {
-    setManualHp(undefined);
-    setManualDisplacement(undefined);
+    setManualHp('');
+    setManualDisplacement('');
   }, [id]);
 
-  const effectiveHp = car?.hp || manualHp;
-  const effectiveDisplacement = car?.displacement || manualDisplacement || 0;
+  const effectiveHp = car?.hp || parseManualEngineInput(manualHp, 'hp');
+  const effectiveDisplacement = car?.displacement || parseManualEngineInput(manualDisplacement, 'displacement') || 0;
   const fullTitle = car ? buildCarTitle(car) : '';
   const titleSuffix = t('brand.subtitle');
 
@@ -455,7 +456,7 @@ export default function CarDetailPage() {
                   <p className="mt-1 text-xs text-gray-500">{t('price.inVladivostok')}</p>
                   <p className="mt-3 text-xs leading-5 text-gray-500" role="note">{t('price.estimateShort')}</p>
                 </div>
-                {apiLoaded && !calculationReady && (
+                {apiLoaded && (!car.hp || !car.displacement) && (
                   <div className="border-t border-gray-100 py-4">
                     <h3 className="text-sm font-semibold text-gray-900">{t('price.needsEngineData')}</h3>
                     <p className="mt-1 text-xs leading-5 text-gray-500">{t('price.needsEngineDataDesc')}</p>
@@ -467,9 +468,10 @@ export default function CarDetailPage() {
                           type="number"
                           min="500"
                           max="10000"
+                          step="1"
                           inputMode="numeric"
-                          value={manualDisplacement ?? ''}
-                          onChange={(event) => setManualDisplacement(Number(event.target.value) || undefined)}
+                          value={manualDisplacement}
+                          onChange={(event) => setManualDisplacement(event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                           placeholder="1998"
                         />
@@ -482,9 +484,10 @@ export default function CarDetailPage() {
                           type="number"
                           min="30"
                           max="1500"
+                          step="1"
                           inputMode="numeric"
-                          value={manualHp ?? ''}
-                          onChange={(event) => setManualHp(Number(event.target.value) || undefined)}
+                          value={manualHp}
+                          onChange={(event) => setManualHp(event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                           placeholder="150"
                         />

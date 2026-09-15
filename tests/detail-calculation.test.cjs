@@ -23,6 +23,7 @@ function loadTs(file, overrides = {}) {
 
 const { getTjContainerShippingUsd } = loadTs(path.resolve(__dirname, '../src/lib/tj-shipping.ts'));
 const { getCarDeliveryDestination } = loadTs(path.resolve(__dirname, '../src/lib/car-destination.ts'));
+const { parseManualEngineInput } = loadTs(path.resolve(__dirname, '../src/lib/manual-engine-input.ts'));
 const { calculateImportCost } = loadTs(path.resolve(__dirname, '../src/lib/calculator.ts'), {
   './tj-customs': { lookupTjCustomsMinimum: brand => brand ? { minimumUsd: 10000 } : undefined },
 });
@@ -37,6 +38,47 @@ const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
   });
 const russianExample = { currency: 'RUB', calculationComplete: true,
   brokerFee: 100000, customsDuty: 1025972, customsFee: 4924, utilizationFee: 3501600 };
+
+test('missing horsepower stays pending for a partial first digit and accepts the complete number', () => {
+  for (const value of ['', '1', '15']) {
+    const hp = parseManualEngineInput(value, 'hp');
+    assert.equal(hp, undefined, value);
+    assert.equal(calculateImportCost({ ...base, hp, destination: 'russia' }).calculationComplete, false);
+  }
+  for (const value of ['150', '360']) {
+    const hp = parseManualEngineInput(value, 'hp');
+    assert.equal(hp, Number(value));
+    assert.equal(calculateImportCost({ ...base, hp, destination: 'russia' }).calculationComplete, true);
+  }
+});
+
+test('manual engine values enforce the existing integer limits and allow clearing and correcting input', () => {
+  for (const [field, min, max] of [['hp', 30, 1500], ['displacement', 500, 10000]]) {
+    for (const value of ['', ' ', '-1', 'NaN', 'Infinity', '1e3', '150.5', String(min - 1), String(max + 1)]) {
+      assert.equal(parseManualEngineInput(value, field), undefined, `${field}: ${value}`);
+    }
+    for (const value of [String(min), String(max), `0${min}`]) {
+      assert.equal(parseManualEngineInput(value, field), Number(value), `${field}: ${value}`);
+    }
+  }
+  assert.equal(parseManualEngineInput('1', 'displacement'), undefined);
+  assert.equal(parseManualEngineInput('19', 'displacement'), undefined);
+  assert.equal(parseManualEngineInput('199', 'displacement'), undefined);
+  assert.equal(parseManualEngineInput('1998', 'displacement'), 1998);
+});
+
+test('missing engine editors depend on source specifications, not calculation completion', () => {
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const editor = page.match(/\{apiLoaded && \(!car\.hp \|\| !car\.displacement\) && \(([\s\S]*?)\n                \)\}/);
+  assert.ok(editor, 'The engine editor stays mounted after a valid estimate appears');
+  assert.doesNotMatch(editor[1], /calculationReady/);
+  for (const field of ['Hp', 'Displacement']) {
+    assert.ok(editor[1].includes(`setManual${field}(event.target.value)`));
+    assert.ok(editor[1].includes(`value={manual${field}}`));
+  }
+  assert.ok(page.includes("parseManualEngineInput(manualHp, 'hp')"));
+  assert.ok(page.includes("parseManualEngineInput(manualDisplacement, 'displacement')"));
+});
 
 test('car breadcrumb shows the compact brand and model after the listing ID and wraps on mobile', () => {
   const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');

@@ -423,7 +423,7 @@ test('body condition uses the clear reference labels and readable legend in ever
     const legend = html.match(/<div[^>]+data-testid="damage-legend"[\s\S]*?<\/div>/)[0];
     for (const key of labels) assert.ok(legend.includes(getTranslation(key, lang)), `${lang}: ${key}`);
     assert.match(legend, /text-sm/);
-    assert.match(legend, /w-6 h-6/);
+    assert.match(legend, /w-4 h-4/);
     assert.doesNotMatch(html, /Рихтовка\/сварка/);
     assert.ok(html.includes(getTranslation('condition.noBodyRepairs', lang)), lang);
   }
@@ -437,6 +437,22 @@ test('affected panels spell out each finding instead of relying on letters alone
   assert.ok(html.includes('background-color:#3498db'));
   assert.ok(html.includes('background-color:#f97316'));
   assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
+});
+
+test('condition symbols stay compact on diagrams, panel descriptions and the legend', () => {
+  const html = renderInsuranceHistory({ hasDamage: true, bodyInspectionAvailable: true,
+    panels: [{ name: 'hood', nameRu: 'Капот', rank: '1', damages: ['CHANGE'] }] });
+  const marker = html.match(/<span[^>]*class="absolute flex items-center justify-center[^>]*>/)[0];
+  assert.match(marker, /w-3\.5 h-3\.5 sm:w-4 sm:h-4/);
+  assert.match(marker, /text-\[8px\] sm:text-\[9px\]/);
+  const panel = html.match(/<dt[^>]*>Капот<\/dt>[\s\S]*?<dd[^>]*>[\s\S]*?<\/dd>/)[0];
+  assert.match(panel, /w-4 h-4/);
+  assert.ok(panel.includes('Замена'));
+  const legend = html.match(/<div[^>]+data-testid="damage-legend"[\s\S]*?<\/div>/)[0];
+  assert.match(legend, /w-4 h-4/);
+  assert.match(legend, /text-sm/);
+  assert.doesNotMatch(html, /w-5 h-5|w-6 h-6/);
+  assert.ok(html.includes('title="Капот: Замена"'));
 });
 
 test('unavailable inspection data does not show an empty diagram as though a report had loaded', () => {

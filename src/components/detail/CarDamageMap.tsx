@@ -94,7 +94,7 @@ function DamageMarker({ damage, style, label, damageText }: { damage: DamageType
   const m = damageMarker[damage];
   return (
     <span
-      className="absolute flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold leading-none -translate-x-1/2 -translate-y-1/2 shadow-sm cursor-default"
+      className="absolute flex items-center justify-center w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full text-[8px] sm:text-[9px] font-bold leading-none -translate-x-1/2 -translate-y-1/2 shadow-sm cursor-default"
       style={{ ...style, backgroundColor: m.bg, color: m.text }}
       title={`${label}: ${damageText}`}
     >
@@ -190,7 +190,7 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
                   <span key={d} className="inline-flex items-center gap-1.5 leading-6 text-gray-600">
                     <span
                       aria-hidden="true"
-                      className="inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold leading-none"
+                      className="inline-flex shrink-0 items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-bold leading-none"
                       style={{ backgroundColor: damageMarker[d].bg }}
                     >
                       {damageMarker[d].letter}
@@ -210,7 +210,7 @@ export default function CarDamageMap({ panels }: CarDamageMapProps) {
             <span key={key} className="inline-flex items-center gap-2 text-sm leading-6 text-gray-600">
               <span
                 aria-hidden="true"
-                className="inline-flex shrink-0 items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold leading-none"
+                className="inline-flex shrink-0 items-center justify-center w-4 h-4 rounded-full text-white text-[9px] font-bold leading-none"
                 style={{ backgroundColor: m.bg }}
               >
                 {m.letter}

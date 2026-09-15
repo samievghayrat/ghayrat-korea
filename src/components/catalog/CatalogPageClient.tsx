@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CarListing } from '@/types';
 import { useFilters } from '@/hooks/useFilters';
@@ -10,39 +9,21 @@ import Pagination from '@/components/catalog/Pagination';
 import SortSelect from '@/components/catalog/SortSelect';
 import EncarSearch from '@/components/catalog/EncarSearch';
 import CatalogWelcome from '@/components/catalog/CatalogWelcome';
-
-interface BrandCount {
-  name: string;
-  nameKo: string;
-  count: number;
-}
+import type { CatalogNavigation } from '@/lib/catalog-navigation';
 
 interface CatalogPageClientProps {
   cars: CarListing[];
   total: number;
   totalPages: number;
   error?: boolean;
+  navigation: CatalogNavigation;
 }
 
-export default function CatalogPageClient({ cars, total, totalPages, error = false }: CatalogPageClientProps) {
+export default function CatalogPageClient({ cars, total, totalPages, error = false, navigation }: CatalogPageClientProps) {
   const { t } = useApp();
-  const { filters, setFilters, resetFilters } = useFilters();
+  const { filters, setFilters, resetFilters, isUpdating } = useFilters();
   const router = useRouter();
-  const [brandCounts, setBrandCounts] = useState<BrandCount[]>([]);
-  const [totalCars, setTotalCars] = useState(total);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch('/api/brand-counts', { signal: controller.signal })
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
-        if (!data) return;
-        setBrandCounts(data.brands || []);
-        setTotalCars(data.total || total);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [total]);
+  const { brands: brandCounts, total: totalCars } = navigation;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,6 +39,7 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
               totalResults={total}
               brandCounts={brandCounts}
               totalCars={totalCars}
+              navigation={navigation}
               compact
             />
           </div>
@@ -83,6 +65,7 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
                 totalResults={total}
                 brandCounts={brandCounts}
                 totalCars={totalCars}
+                navigation={navigation}
               />
             </div>
           </aside>
@@ -98,7 +81,9 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
               />
             </div>
 
-            <CarGrid cars={cars} loading={false} error={error} onRetry={() => router.refresh()} />
+            <div aria-busy={isUpdating}>
+              <CarGrid cars={cars} loading={isUpdating} error={error} onRetry={() => router.refresh()} />
+            </div>
             <Pagination
               currentPage={filters.page || 1}
               totalPages={totalPages}

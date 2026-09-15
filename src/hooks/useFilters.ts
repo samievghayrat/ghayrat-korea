@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CarFilters } from '@/types';
 
 export function useFilters() {
@@ -9,7 +9,7 @@ export function useFilters() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const filters: CarFilters = useMemo(() => ({
+  const urlFilters: CarFilters = useMemo(() => ({
     brand: searchParams.get('brand') || undefined,
     model: searchParams.get('model') || undefined,
     modelVariant: searchParams.get('modelVariant') || undefined,
@@ -36,6 +36,22 @@ export function useFilters() {
     search: searchParams.get('search') || undefined,
   }), [searchParams]);
 
+  const query = searchParams.toString();
+  const [optimistic, setOptimistic] = useState<{ filters: CarFilters; query: string; pathname: string } | null>(null);
+  const filters = optimistic?.pathname === pathname ? optimistic.filters : urlFilters;
+  const isUpdating = Boolean(optimistic?.pathname === pathname && optimistic.query !== query);
+
+  // A slower, older result must not overwrite a newer brand/model selection.
+  useEffect(() => {
+    if (optimistic && (optimistic.pathname !== pathname || optimistic.query === query)) setOptimistic(null);
+  }, [optimistic, pathname, query]);
+
+  useEffect(() => {
+    const onHistoryNavigation = () => setOptimistic(null);
+    window.addEventListener('popstate', onHistoryNavigation);
+    return () => window.removeEventListener('popstate', onHistoryNavigation);
+  }, []);
+
   const setFilters = useCallback((newFilters: CarFilters) => {
     const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([key, value]) => {
@@ -48,12 +64,15 @@ export function useFilters() {
       }
     });
     const query = params.toString();
+    // Update selectors now; the server-rendered car results can finish later.
+    setOptimistic({ filters: newFilters, query, pathname });
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [router, pathname]);
 
   const resetFilters = useCallback(() => {
+    setOptimistic({ filters: { page: 1 }, query: '', pathname });
     router.push(pathname);
   }, [router, pathname]);
 
-  return { filters, setFilters, resetFilters };
+  return { filters, setFilters, resetFilters, isUpdating };
 }

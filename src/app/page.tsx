@@ -1,6 +1,7 @@
 import type { CarFilters } from '@/types';
 import { searchCars } from '@/lib/encar-api';
 import CatalogPageClient from '@/components/catalog/CatalogPageClient';
+import { getSnapshotNavigation } from '@/lib/encar-snapshot';
 
 export const revalidate = 900;
 
@@ -55,6 +56,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       total={result.total}
       totalPages={result.totalPages}
       error={Boolean(result.error)}
+      navigation={getSnapshotNavigation()}
     />
   );
 }

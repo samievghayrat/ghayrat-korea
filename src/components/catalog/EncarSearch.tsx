@@ -6,6 +6,7 @@ import { translateGenerationName, translateBadgeDetail } from '@/lib/translation
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import BottomSheet from '@/components/shared/BottomSheet';
+import { getCatalogModels, type CatalogNavigation } from '@/lib/catalog-navigation';
 
 interface BrandCount {
   name: string;
@@ -21,6 +22,7 @@ interface EncarSearchProps {
   brandCounts?: BrandCount[];
   totalCars?: number;
   compact?: boolean;
+  navigation: CatalogNavigation;
 }
 
 interface ModelVariant {
@@ -54,14 +56,22 @@ interface BadgeTreeGroup {
 }
 
 const clientCache = new Map<string, unknown>();
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 async function fetchCachedJson<T>(key: string, url: string): Promise<T> {
   const cached = clientCache.get(key);
   if (cached) return cached as T;
-  const res = await fetch(url);
-  const data = await res.json();
-  clientCache.set(key, data);
-  return data as T;
+  const pending = pendingRequests.get(key);
+  if (pending) return await pending as T;
+  const request = (async () => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Search options unavailable (${res.status})`);
+    const data = await res.json();
+    clientCache.set(key, data);
+    return data as T;
+  })();
+  pendingRequests.set(key, request);
+  try { return await request; } finally { pendingRequests.delete(key); }
 }
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
@@ -219,7 +229,6 @@ function BrandModelPicker({
   models,
   selectedBrand,
   selectedModel,
-  modelLoading,
   totalCars,
   labels,
   onBrandSelect,
@@ -231,7 +240,6 @@ function BrandModelPicker({
   models: ModelOption[];
   selectedBrand?: string;
   selectedModel?: string;
-  modelLoading: boolean;
   totalCars?: number;
   labels: {
     brand: string;
@@ -243,7 +251,6 @@ function BrandModelPicker({
     allModels: string;
     noModels: string;
     noMatches: string;
-    loading: string;
     cars: string;
   };
   onBrandSelect: (brand: string) => void;
@@ -395,14 +402,6 @@ function BrandModelPicker({
             </span>
             <p className="text-sm font-medium">{labels.chooseBrand}</p>
           </div>
-        ) : modelLoading ? (
-          <div className="flex min-h-52 items-center justify-center gap-2 text-sm text-gray-400">
-            <svg className="h-4 w-4 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            {labels.loading}
-          </div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
             <button
@@ -543,7 +542,7 @@ function BrandModelPicker({
   );
 }
 
-export default function EncarSearch({ filters, onChange, brandCounts, totalCars, compact }: EncarSearchProps) {
+export default function EncarSearch({ filters, onChange, brandCounts, totalCars, compact, navigation }: EncarSearchProps) {
   const { t, lang } = useApp();
   const [generationVariants, setGenerationVariants] = useState<ModelVariant[]>([]);
   const [generationTotal, setGenerationTotal] = useState(0);
@@ -605,41 +604,13 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     { code: '091', label: t('opt.091') },
   ];
 
-  const [modelList, setModelList] = useState<ModelOption[]>([]);
-  const [modelLoading, setModelLoading] = useState(false);
+  const modelList = getCatalogModels(navigation, filters.brand);
   const [badgeList, setBadgeList] = useState<BadgeOption[]>([]);
   const [badgeTree, setBadgeTree] = useState<BadgeTreeGroup[]>([]);
   const [badgeLoading, setBadgeLoading] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [expandedBadge, setExpandedBadge] = useState<string | null>(null);
-
-  // Fetch models dynamically from Encar API when brand changes
-  useEffect(() => {
-    if (!filters.brand) {
-      setModelList([]);
-      return;
-    }
-    const cacheKey = `models:${filters.brand}`;
-    const cached = clientCache.get(cacheKey) as { models?: ModelOption[] } | undefined;
-    if (cached) {
-      setModelList(cached.models || []);
-      setModelLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setModelLoading(true);
-    fetchCachedJson<{ models?: ModelOption[] }>(
-      cacheKey,
-      `/api/car-models?brand=${encodeURIComponent(filters.brand)}`
-    )
-      .then(data => { if (!cancelled) setModelList(data.models || []); })
-      .catch(() => { if (!cancelled) setModelList([]); })
-      .finally(() => { if (!cancelled) setModelLoading(false); });
-
-    return () => { cancelled = true; };
-  }, [filters.brand]);
 
   const fetchGenerations = useCallback(async (brand: string, model: string) => {
     const cacheKey = `generations:${brand}:${model}`;
@@ -727,13 +698,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange({ ...filters, brand, model: undefined, modelVariant: undefined, badge: undefined, badgeDetail: undefined, page: 1 });
     setGenOpen(false);
 
-    const cacheKey = `models:${brand}`;
-    if (!clientCache.has(cacheKey)) {
-      fetchCachedJson<{ models?: ModelOption[] }>(
-        cacheKey,
-        `/api/car-models?brand=${encodeURIComponent(brand)}`
-      ).catch(() => undefined);
-    }
   };
 
   const handleModelSelect = (model: string) => {
@@ -803,7 +767,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         models={modelList}
         selectedBrand={filters.brand}
         selectedModel={filters.model}
-        modelLoading={modelLoading}
         totalCars={totalCars}
         labels={{
           brand: t('search.brandLabel'),
@@ -815,7 +778,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           allModels: t('search.allModels'),
           noModels: t('search.noModels'),
           noMatches: t('search.noMatches'),
-          loading: t('search.loading'),
           cars: t('search.cars'),
         }}
         onBrandSelect={handleBrandSelect}

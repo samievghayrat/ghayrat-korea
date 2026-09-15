@@ -1,5 +1,7 @@
 import snapshotJson from '@/data/encar-snapshot.json';
 import type { CarFilters } from '@/types';
+import { ENCAR_BRANDS } from './encar-brands';
+import type { CatalogNavigation, CatalogModelOption } from './catalog-navigation';
 import {
   reverseTranslateBrand,
   reverseTranslateModel,
@@ -39,6 +41,7 @@ interface SnapshotBrand {
 }
 
 const snapshot = snapshotJson as unknown as SnapshotData;
+const canonicalBrandNames = new Map<string, string>(ENCAR_BRANDS.map(brand => [brand.name, brand.nameKo]));
 
 function getBaseModelName(koreanModelName: string): string {
   let name = koreanModelName;
@@ -61,7 +64,7 @@ function getYear(car: SnapshotCar): number {
 
 function matchesBrand(car: SnapshotCar, brand?: string): boolean {
   if (!brand) return true;
-  const koreanBrand = reverseTranslateBrand(brand) || brand;
+  const koreanBrand = canonicalBrandNames.get(brand) || reverseTranslateBrand(brand) || brand;
   return car.Manufacturer === koreanBrand || translateBrand(car.Manufacturer || '') === brand;
 }
 
@@ -224,6 +227,48 @@ export function getSnapshotBrandCounts(brands: readonly SnapshotBrand[]) {
     source: 'snapshot' as const,
     snapshotGeneratedAt: snapshot.generatedAt,
   };
+}
+
+let navigationCache: CatalogNavigation | undefined;
+
+export function getSnapshotNavigation(): CatalogNavigation {
+  if (navigationCache) return navigationCache;
+  const brandNames = new Map<string, string>(ENCAR_BRANDS.map(brand => [brand.nameKo, brand.name]));
+  const supportedBrands = new Set<string>(ENCAR_BRANDS.map(brand => brand.name));
+  const counts = new Map<string, number>();
+  const modelGroups = new Map<string, Map<string, CatalogModelOption>>();
+
+  // Build the compact selector index in one pass, not one scan per brand.
+  for (const car of snapshot.cars) {
+    const manufacturer = car.Manufacturer || '';
+    const countedBrand = brandNames.get(manufacturer);
+    if (countedBrand) counts.set(countedBrand, (counts.get(countedBrand) || 0) + 1);
+    // Model navigation also includes alternate manufacturer spellings/imports,
+    // exactly as matchesBrand does for the existing model endpoint.
+    const brand = countedBrand || translateBrand(manufacturer);
+    if (!supportedBrands.has(brand)) continue;
+    const nameKo = getBaseModelName(car.Model || '');
+    if (!nameKo) continue;
+    const name = translateModel(nameKo);
+    let groups = modelGroups.get(brand);
+    if (!groups) {
+      groups = new Map();
+      modelGroups.set(brand, groups);
+    }
+    const current = groups.get(name);
+    if (current) current.count++;
+    else groups.set(name, { name, nameKo, count: 1 });
+  }
+
+  navigationCache = {
+    brands: ENCAR_BRANDS.map(brand => ({ ...brand, count: counts.get(brand.name) || 0 }))
+      .filter(brand => brand.count > 0).sort((a, b) => b.count - a.count),
+    modelsByBrand: Object.fromEntries(ENCAR_BRANDS.map(brand => [brand.name,
+      Array.from(modelGroups.get(brand.name)?.values() || []).sort((a, b) => b.count - a.count)])),
+    total: snapshot.cars.length,
+    generatedAt: snapshot.generatedAt,
+  };
+  return navigationCache;
 }
 
 export function getSnapshotModelData(brand: string, model?: string, variant?: string) {

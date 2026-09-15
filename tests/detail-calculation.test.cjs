@@ -28,6 +28,52 @@ const { calculateImportCost } = loadTs(path.resolve(__dirname, '../src/lib/calcu
 const base = { priceKrw: 10000000, priceRub: 600000, priceUsd: 8000, encarFeeKrw: 440000,
   displacement: 1998, year: 2022, month: 1, fuel: 'Бензин', hp: 150,
   brand: 'Kia', model: 'Sportage', usdRate: 75, eurRate: 90 };
+const { getTranslation } = loadTs(path.resolve(__dirname, '../src/lib/i18n.ts'));
+const { default: RussiaCustomsSummary, getRussiaCustomsTotal } = loadTs(
+  path.resolve(__dirname, '../src/components/detail/RussiaCustomsSummary.tsx'), {
+    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru') }) },
+  });
+const russianExample = { currency: 'RUB', calculationComplete: true,
+  brokerFee: 100000, customsDuty: 1025972, customsFee: 4924, utilizationFee: 3501600 };
+
+test('Russian customs summary includes all four charges in the requested example', () => {
+  assert.equal(getRussiaCustomsTotal(russianExample), 4632496);
+});
+
+test('grouping Russian customs does not change the grand total or count any charge twice', () => {
+  for (const hp of [150, 260]) {
+    const result = calculateImportCost({ ...base, hp, destination: 'russia' });
+    assert.equal(result.calculationComplete, true);
+    assert.equal(result.total, result.carPrice + result.encarFee + result.serviceFee + getRussiaCustomsTotal(result));
+  }
+});
+
+test('Russian customs summary does not quote an incomplete or invalid total', () => {
+  for (const result of [null, { ...russianExample, calculationComplete: false },
+    { ...russianExample, currency: 'USD' }, { ...russianExample, customsDuty: NaN },
+    { ...russianExample, customsFee: -1 }, { ...russianExample, utilizationFee: undefined }]) {
+    assert.equal(getRussiaCustomsTotal(result), null);
+  }
+});
+
+test('Russian customs starts collapsed, shows the sum, and contains the renamed breakdown', () => {
+  const html = renderToStaticMarkup(React.createElement(RussiaCustomsSummary, { breakdown: russianExample }));
+  assert.doesNotMatch(html, /<details[^>]*\sopen/);
+  assert.match(html, /<summary[\s\S]*Растаможка в России[\s\S]*4\s632\s496 ₽[\s\S]*<\/summary>/);
+  for (const label of ['Оформление и брокерские услуги', 'Таможенная пошлина', 'Таможенный сбор', 'Утилизационный сбор']) {
+    assert.ok(html.includes(label), label);
+  }
+  assert.equal((html.match(/<dt /g) || []).length, 4);
+  assert.equal(getTranslation('price.delivery', 'ru'), 'Доставка и услуга');
+});
+
+test('missing Russian engine information keeps the customs summary pending', () => {
+  const result = calculateImportCost({ ...base, hp: undefined, destination: 'russia' });
+  const html = renderToStaticMarkup(React.createElement(RussiaCustomsSummary, { breakdown: result }));
+  const summary = html.match(/<summary[\s\S]*?<\/summary>/)[0];
+  assert.ok(summary.includes(getTranslation('price.confirmingShort', 'ru')));
+  assert.doesNotMatch(summary, /\d[\d\s]* ₽/);
+});
 
 test('SUV shipping uses $3,200 for source and translated body labels', () => {
   for (const bodyType of ['SUV', 'suv', 'Кроссовер/Внедорожник', 'Кроссовер', 'Внедорожник', 'Crossover']) {

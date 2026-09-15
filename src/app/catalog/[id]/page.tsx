@@ -7,6 +7,7 @@ import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
 import PriceBreakdown from '@/components/detail/PriceBreakdown';
+import RussiaCustomsSummary, { getRussiaCustomsTotal } from '@/components/detail/RussiaCustomsSummary';
 import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
@@ -258,11 +259,10 @@ export default function CarDetailPage() {
   const russianPriceRows = [
     { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice + (breakdown.encarFee || 0) : displayPrice.priceRub) },
     { label: t('price.delivery'), value: breakdown ? formatRub(breakdown.serviceFee) : '—' },
-    { label: t('price.broker'), value: breakdown ? formatRub(breakdown.brokerFee) : '—' },
-    { label: t('price.customsDuty'), value: calculationReady && breakdown ? formatRub(breakdown.customsDuty) : t('price.confirmingShort') },
-    { label: t('price.customsFee'), value: calculationReady && breakdown ? formatRub(breakdown.customsFee) : t('price.confirmingShort') },
-    { label: t('price.utilizationFee'), value: calculationReady && breakdown ? formatRub(breakdown.utilizationFee) : t('price.confirmingShort') },
   ];
+  const russianCustomsTotal = getRussiaCustomsTotal(breakdown);
+  const russianTotalTerms = [...russianPriceRows.map(row => row.value),
+    russianCustomsTotal !== null ? formatRub(russianCustomsTotal) : t('price.confirmingShort')];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -425,10 +425,11 @@ export default function CarDetailPage() {
                     </div>
                   ))}
                 </dl>
+                <RussiaCustomsSummary breakdown={breakdown} />
                 <div className="border-t border-gray-200 py-4">
                   {calculationReady && formattedDeliveryTotal && (
                     <p className="mb-3 text-xs leading-5 tabular-nums text-gray-500">
-                      {russianPriceRows.map(row => row.value).join(' + ')} = {formattedDeliveryTotal}
+                      {russianTotalTerms.join(' + ')} = {formattedDeliveryTotal}
                     </p>
                   )}
                   <div className="flex items-center justify-between gap-3" aria-live="polite">

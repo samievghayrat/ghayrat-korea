@@ -68,6 +68,11 @@ export async function convertKrwToUsd(amount: number): Promise<number> {
   return Math.round(amount * usdRate);
 }
 
+export async function convertUsdToKrw(amount: number): Promise<number> {
+  const { usdRate } = await getRates();
+  return Math.round(amount / usdRate);
+}
+
 export async function convertKrwToEur(amount: number): Promise<number> {
   const { eurRate } = await getRates();
   return Math.round(amount * eurRate);

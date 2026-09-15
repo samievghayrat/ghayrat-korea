@@ -59,10 +59,10 @@ test('expanded floating action shows the existing safe WhatsApp and Telegram lin
 });
 
 test('floating contact is available on list and information pages but not admin or car details', () => {
-  for (const route of ['/', '/catalog', '/auction', '/favorites', '/about', '/contacts', '/how-to-buy']) {
+  for (const route of ['/', '/catalog', '/auction', '/our-cars', '/favorites', '/about', '/contacts', '/how-to-buy']) {
     assert.ok(renderFloating(route).includes('data-testid="floating-contact"'), route);
   }
-  for (const route of ['/admin', '/admin/cars', '/catalog/42741172', '/auction/1001']) {
+  for (const route of ['/admin', '/admin/cars', '/catalog/42741172', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
     assert.equal(renderFloating(route), '', route);
   }
 });
@@ -74,7 +74,7 @@ test('mobile contact control uses accessible labels in each selected language', 
   }
 });
 
-test('bottom navigation keeps its four main actions without a duplicate contact tab', () => {
+test('bottom navigation includes our cars without a duplicate contact tab', () => {
   const { default: Nav } = loadTs('src/components/layout/BottomNav.tsx', {
     'next/navigation': { usePathname: () => '/' },
     'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
@@ -82,9 +82,10 @@ test('bottom navigation keeps its four main actions without a duplicate contact 
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru') }) },
   });
   const html = renderToStaticMarkup(React.createElement(Nav));
-  for (const href of ['/', '/auction', '/favorites']) assert.ok(html.includes(`href="${href}"`));
+  for (const href of ['/', '/our-cars', '/auction', '/favorites']) assert.ok(html.includes(`href="${href}"`));
   assert.ok(html.includes('Меню'));
-  assert.equal((html.match(/<a /g) || []).length, 3);
+  assert.equal((html.match(/<a /g) || []).length, 4);
+  assert.ok(html.includes('grid-cols-5'));
   assert.ok(!html.includes('WhatsApp'));
   assert.ok(!html.includes('wa.me'));
   assert.ok(html.includes('pb-[env(safe-area-inset-bottom)]'));

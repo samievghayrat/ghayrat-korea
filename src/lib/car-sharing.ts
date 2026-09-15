@@ -3,7 +3,7 @@ import type { CarDestination } from './car-destination';
 
 export const PUBLIC_SITE_URL = 'https://ghayrat.vercel.app';
 
-export function getCarShareUrl(source: 'catalog' | 'auction', id: string, destination?: CarDestination): string {
+export function getCarShareUrl(source: 'catalog' | 'auction' | 'our-cars', id: string, destination?: CarDestination): string {
   const url = new URL(`/${source}/${encodeURIComponent(id)}`, PUBLIC_SITE_URL);
   if (source === 'catalog' && (destination === 'russia' || destination === 'tajikistan')) {
     url.searchParams.set('destination', destination);

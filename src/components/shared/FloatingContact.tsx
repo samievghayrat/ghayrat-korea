@@ -36,7 +36,7 @@ export default function FloatingContact() {
 
   // Detail pages already have a full-width contact action beside the price.
   // Removing the floating control there keeps it off photos and calculations.
-  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction)\/[^/]+/.test(pathname)) return null;
+  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname)) return null;
 
   return (
     <div ref={container} data-testid="floating-contact"

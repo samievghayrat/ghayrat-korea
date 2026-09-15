@@ -7,9 +7,10 @@ import { useApp } from '@/contexts/AppContext';
 interface ImageGalleryProps {
   images: string[];
   alt: string;
+  unoptimized?: boolean;
 }
 
-export default function ImageGallery({ images, alt }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, unoptimized = false }: ImageGalleryProps) {
   const { t } = useApp();
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -148,7 +149,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
 
   // Show 4 big thumbnails, last one shows "+N фото" overlay
   const maxThumbnails = 4;
-  const isDirectEncarImage = (src: string) => src.startsWith('https://ci.encar.com');
+  const isDirectEncarImage = (src: string) => unoptimized || src.startsWith('https://ci.encar.com');
 
   return (
     <>

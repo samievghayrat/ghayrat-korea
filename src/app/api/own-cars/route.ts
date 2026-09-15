@@ -1,56 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
+import { getOwnCars } from '@/lib/own-cars';
+import { validateOwnCarInput } from '@/lib/own-car-input';
+import { convertKrwToRub, convertKrwToUsd, convertUsdToKrw } from '@/lib/currency';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+  const includeHidden = request.nextUrl.searchParams.get('admin') === '1';
+  if (includeHidden) { const denied = requireAdmin(request); if (denied) return denied; }
   try {
-    const { default: dbConnect } = await import('@/lib/mongodb');
-    const { default: Car } = await import('@/models/Car');
-    await dbConnect();
-
-    const cars = await Car.find().sort({ createdAt: -1 }).lean();
-    const formatted = cars.map((car) => ({
-      id: car._id.toString(),
-      source: 'own',
-      brand: car.brand,
-      model: car.model,
-      year: car.year,
-      mileage: car.mileage,
-      fuel: car.fuel,
-      engine: car.engine,
-      displacement: car.displacement,
-      hp: car.hp,
-      color: car.color,
-      bodyType: car.bodyType,
-      transmission: car.transmission,
-      drivetrain: car.drivetrain,
-      price_krw: car.price_krw,
-      price_rub: car.price_rub,
-      price_usd: car.price_usd,
-      imageUrl: car.images?.[0] || '/images/no-image.svg',
-      images: car.images || [],
-      description: car.description,
-      equipment: car.equipment || [],
-      vin: car.vin,
-      isActive: car.isActive,
-      createdAt: car.createdAt,
-    }));
-
-    return NextResponse.json({ cars: formatted });
+    return NextResponse.json({ cars: await getOwnCars(includeHidden) }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
-    return NextResponse.json({ cars: [] });
+    return NextResponse.json({ error: 'Не удалось загрузить автомобили. Попробуйте ещё раз.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const denied = requireAdmin(request, true); if (denied) return denied;
+  let input;
+  try { input = validateOwnCarInput(await request.json()); } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Проверьте данные.' }, { status: 400 });
+  }
   try {
     const { default: dbConnect } = await import('@/lib/mongodb');
     const { default: Car } = await import('@/models/Car');
+    const priceKrw = input.price_usd ? await convertUsdToKrw(input.price_usd) : input.price_krw!;
+    const [priceRub, priceUsd] = await Promise.all([convertKrwToRub(priceKrw), input.price_usd ?? convertKrwToUsd(priceKrw)]);
     await dbConnect();
-
-    const body = await request.json();
-    const car = await Car.create(body);
+    const car = await Car.create({ ...input, price_krw: priceKrw, price_rub: priceRub, price_usd: priceUsd });
     return NextResponse.json({ id: car._id.toString() }, { status: 201 });
-  } catch (error) {
-    console.error('Create car error:', error);
-    return NextResponse.json({ error: 'Failed to create car' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Не удалось сохранить автомобиль. Попробуйте ещё раз.' }, { status: 503 });
   }
 }

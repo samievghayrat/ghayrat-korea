@@ -20,6 +20,7 @@ export interface ICar {
   description?: string;
   equipment: string[];
   vin?: string;
+  location?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +47,7 @@ const CarSchema = new Schema<ICar>(
     description: { type: String },
     equipment: [{ type: String }],
     vin: { type: String },
+    location: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

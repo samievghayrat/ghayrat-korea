@@ -12,8 +12,8 @@ export default function EditCarPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/own-cars/${id}`)
-      .then(res => res.json())
+    fetch(`/api/own-cars/${id}?admin=1`, { cache: 'no-store' })
+      .then(res => { if (!res.ok) throw new Error('Unavailable'); return res.json(); })
       .then(data => {
         setCarData(data);
         setLoading(false);

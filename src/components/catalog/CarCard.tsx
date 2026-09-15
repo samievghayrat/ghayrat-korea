@@ -29,12 +29,12 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
     : `${car.year}`;
   const usesDirectEncarImage = car.imageUrl?.startsWith('https://ci.encar.com');
-  const hasPrice = car.price_krw > 0;
+  const hasPrice = car.price_krw > 0 || (car.source === 'own' && (car.price_rub > 0 || (car.price_usd || 0) > 0));
   const displayPrice = getPriceIncludingEncarFee(car);
 
   return (
     <Link
-      href={`/catalog/${car.id}`}
+      href={car.source === 'own' ? `/our-cars/${car.id}` : `/catalog/${car.id}`}
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
@@ -48,7 +48,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           priority={priority}
-          unoptimized={usesDirectEncarImage}
+          unoptimized={usesDirectEncarImage || car.source === 'own'}
         />
         <div className="absolute top-2 right-2">
           <FavoriteButton carId={car.id} size="sm" />
@@ -92,7 +92,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-700 transition-colors group-hover:text-primary">
-          <span>{t('card.viewAndCalculate')}</span>
+          <span>{t(car.source === 'own' ? 'card.viewCar' : 'card.viewAndCalculate')}</span>
           <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 18 6-6-6-6" />
           </svg>

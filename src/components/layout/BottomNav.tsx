@@ -30,14 +30,16 @@ export default function BottomNav() {
     };
   }, []);
 
-  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction)\/[^/]+/.test(pathname)) return null;
+  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname)) return null;
 
   const isHome = pathname === '/' || pathname === '/catalog';
   const isFav = pathname === '/favorites';
   const isAuction = pathname.startsWith('/auction');
+  const isOwn = pathname.startsWith('/our-cars');
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
+    { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/auction', label: t('nav.auction') },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
@@ -47,7 +49,7 @@ export default function BottomNav() {
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="flex h-14 max-w-lg items-center justify-around mx-auto">
+        <div className="grid h-14 max-w-lg grid-cols-5 items-center mx-auto">
           <Link
             href="/"
             className={`flex flex-col items-center gap-0.5 px-2 py-1 ${isHome ? 'text-primary' : 'text-gray-400'}`}
@@ -56,6 +58,17 @@ export default function BottomNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
             <span className="text-[10px] font-medium">{t('nav.catalog')}</span>
+          </Link>
+
+          <Link
+            href="/our-cars"
+            aria-current={isOwn ? 'page' : undefined}
+            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isOwn ? 'text-primary' : 'text-gray-400'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h10M6 13v1m12-1v1" />
+            </svg>
+            <span className="text-[10px] font-medium">{t('nav.ourCars')}</span>
           </Link>
 
           <Link

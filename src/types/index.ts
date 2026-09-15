@@ -39,6 +39,7 @@ export interface CarListing {
   description?: string;
   equipment?: string[];
   vin?: string;
+  location?: string;
   accidentHistory?: AccidentRecord[];
   inspectionData?: InspectionData;
   displacement?: number;

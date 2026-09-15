@@ -64,12 +64,6 @@ export default function CarDetailPage() {
   const [destination, setDestination] = useState<'russia' | 'tajikistan'>(() =>
     searchParams.get('destination') === 'tajikistan' ? 'tajikistan' : 'russia',
   );
-  const [deliveryCity, setDeliveryCity] = useState('');
-
-  useEffect(() => {
-    setDeliveryCity(localStorage.getItem(`deliveryCity:${destination}`) || '');
-  }, [destination]);
-
   const chooseDestination = (nextDestination: 'russia' | 'tajikistan') => {
     setDestination(nextDestination);
     setShowBreakdown(false);
@@ -77,11 +71,6 @@ export default function CarDetailPage() {
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set('destination', nextDestination);
     window.history.replaceState(null, '', nextUrl);
-  };
-
-  const updateDeliveryCity = (value: string) => {
-    setDeliveryCity(value);
-    localStorage.setItem(`deliveryCity:${destination}`, value);
   };
 
   useEffect(() => {
@@ -235,10 +224,6 @@ export default function CarDetailPage() {
   const formattedDeliveryTotal = destination === 'russia'
     ? (turnkeyPriceRub ? formatRub(turnkeyPriceRub) : null)
     : (turnkeyPriceUsd ? formatUsd(turnkeyPriceUsd) : null);
-  const cityDeliveryCopy = deliveryCity.trim()
-    ? t(destination === 'russia' ? 'detail.routeToCityRussia' : 'detail.routeToCityTajikistan')
-        .replace('{city}', deliveryCity.trim())
-    : t('detail.cityDeliveryNote');
 
   const galleryImages = remoteGalleryImages.length > 0
     ? remoteGalleryImages
@@ -389,18 +374,6 @@ export default function CarDetailPage() {
               </button>
             </div>
 
-            <label className="mt-3 block text-sm font-semibold text-gray-800">
-              {t('detail.deliveryCityLabel')}
-              <input
-                type="text"
-                value={deliveryCity}
-                onChange={(event) => updateDeliveryCity(event.target.value)}
-                placeholder={t(destination === 'russia' ? 'detail.cityPlaceholderRussia' : 'detail.cityPlaceholderTajikistan')}
-                className="mt-1.5 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base font-medium text-gray-900 outline-none transition placeholder:font-normal placeholder:text-gray-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-              />
-              <span className="mt-1.5 block text-xs font-normal leading-4 text-gray-500">{t('detail.deliveryCityHint')}</span>
-            </label>
-
             {destination === 'tajikistan' ? (
               <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white">
                 <div className="grid grid-cols-3 divide-x divide-gray-200">
@@ -441,7 +414,7 @@ export default function CarDetailPage() {
                   <div className="text-sm text-white/65 mt-1">
                     {priceLabel}
                   </div>
-                  <div className="mt-2 text-xs leading-5 text-white/55">{cityDeliveryCopy}</div>
+                  <div className="mt-2 text-xs leading-5 text-white/55">{t('detail.cityDeliveryNote')}</div>
                 </>
               ) : apiLoaded ? (
                 <div>

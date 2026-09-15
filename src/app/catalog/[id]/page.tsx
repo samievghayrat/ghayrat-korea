@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
-import RussiaCustomsSummary, { getRussiaCustomsTotal } from '@/components/detail/RussiaCustomsSummary';
+import RussiaCustomsSummary from '@/components/detail/RussiaCustomsSummary';
 import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
@@ -265,9 +265,6 @@ export default function CarDetailPage() {
     { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice + (breakdown.encarFee || 0) : displayPrice.priceRub) },
     { label: t('price.delivery'), value: breakdown ? formatRub(breakdown.serviceFee) : '—' },
   ];
-  const russianCustomsTotal = getRussiaCustomsTotal(breakdown);
-  const russianTotalTerms = [...russianPriceRows.map(row => row.value),
-    russianCustomsTotal !== null ? formatRub(russianCustomsTotal) : t('price.confirmingShort')];
   const contactLinks = getManagerContactLinks(
     `${t('contact.carInterest')} ${fullTitle} ${car.year}\n${getCarShareUrl('catalog', car.id, destination)}`,
   );
@@ -438,11 +435,6 @@ export default function CarDetailPage() {
                 </dl>
                 <RussiaCustomsSummary breakdown={breakdown} />
                 <div className="border-t border-gray-200 py-4">
-                  {calculationReady && formattedDeliveryTotal && (
-                    <p className="mb-3 text-xs leading-5 tabular-nums text-gray-500">
-                      {russianTotalTerms.join(' + ')} = {formattedDeliveryTotal}
-                    </p>
-                  )}
                   <div className="flex items-center justify-between gap-3" aria-live="polite">
                     <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
                     {calculationReady && formattedDeliveryTotal ? (

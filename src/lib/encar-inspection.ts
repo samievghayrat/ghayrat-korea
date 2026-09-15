@@ -107,7 +107,8 @@ export function parseEncarInspection(value: unknown): InspectionData | null {
     if (!values.length) continue;
     const statuses = values.map(item => typeof item === 'string' && Object.prototype.hasOwnProperty.call(statusMap, item)
       ? statusMap[item] : 'unknown' as const);
-    const status = statuses.reduce((worst, current) => severity[current] > severity[worst] ? current : worst);
+    const status = statuses.every(item => severity[item] === 0) && statuses.includes('good')
+      ? 'good' : statuses.reduce((worst, current) => severity[current] > severity[worst] ? current : worst);
     checks.push({ key, status });
   }
 

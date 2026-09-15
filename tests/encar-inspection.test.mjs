@@ -56,6 +56,12 @@ test('the worst finding in a system is not hidden by other normal checks', () =>
   assert.equal(report.checks.find(check => check.key === 'engineOilLeak').status, 'minor');
 });
 
+test('normal steering and brake systems are not mislabeled as absent when their leak checks say NONE', () => {
+  const report = parseEncarInspection({ inner: { steeringPowerOilLeakage: 'NONE', steeringGear: 'GOOD', brakeOilLeakage: 'NONE', brakeSystemStatus: 'GOOD' } });
+  assert.equal(report.checks.find(check => check.key === 'steering').status, 'good');
+  assert.equal(report.checks.find(check => check.key === 'brakes').status, 'good');
+});
+
 test('accident/repair flags still warn when a detailed body map is absent', () => {
   const report = parseEncarInspection({ master: { accyn: 'Y', simpleRepair: 'Y', waterlogyn: 'Y' }, outer: null });
   assert.equal(report.hasDamage, true);

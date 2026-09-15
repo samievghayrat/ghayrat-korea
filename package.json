@@ -11,6 +11,7 @@
     "lint": "next lint",
     "test:encar-condition": "node --experimental-strip-types --test tests/encar-inspection.test.mjs tests/encar-condition-fetch.test.cjs",
     "test:detail-calculation": "node --test tests/detail-calculation.test.cjs",
+    "test:loading-performance": "node --test tests/loading-performance.test.cjs",
     "test:catalog-navigation": "node --test tests/catalog-navigation.test.cjs",
     "test:car-sharing": "node --test tests/car-sharing.test.cjs",
     "test:mobile-contact": "node --test tests/mobile-contact.test.cjs",

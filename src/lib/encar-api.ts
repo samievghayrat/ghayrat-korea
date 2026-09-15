@@ -1174,18 +1174,20 @@ export async function enrichDetailWithPanAuto(car: CarListing): Promise<CarListi
   };
 }
 
-export async function getCarDetail(carId: string): Promise<CarListing | null> {
-  const getSavedCar = async () => {
-    const snapshotCar = getSnapshotCarById(carId);
-    if (!snapshotCar) return null;
-    const [car] = await transformSearchResults([snapshotCar], {
-      allowRemoteEnrichment: false,
-      directImages: true,
-    });
-    return car || null;
-  };
+// Initial detail HTML uses the local catalogue only. Live galleries, reports
+// and reservation checks continue independently in the browser.
+export async function getSnapshotCarDetail(carId: string): Promise<CarListing | null> {
+  const snapshotCar = getSnapshotCarById(carId);
+  if (!snapshotCar) return null;
+  const [car] = await transformSearchResults([snapshotCar], {
+    allowRemoteEnrichment: false,
+    directImages: true,
+  });
+  return car || null;
+}
 
-  const savedCar = await getSavedCar();
+export async function getCarDetail(carId: string): Promise<CarListing | null> {
+  const savedCar = await getSnapshotCarDetail(carId);
   if (savedCar) return savedCar;
 
   try {

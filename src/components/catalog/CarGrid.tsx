@@ -14,7 +14,7 @@ interface CarGridProps {
 export default function CarGrid({ cars, loading, error, onRetry }: CarGridProps) {
   const { t } = useApp();
 
-  if (loading) {
+  if (loading && cars.length === 0) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...Array(12)].map((_, i) => (
@@ -86,9 +86,9 @@ export default function CarGrid({ cars, loading, error, onRetry }: CarGridProps)
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div aria-busy={Boolean(loading)} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {cars.map((car, index) => (
-        <CarCard key={car.id} car={car} priority={index < 6} />
+        <CarCard key={car.id} car={car} priority={index < 3} />
       ))}
     </div>
   );

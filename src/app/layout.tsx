@@ -44,6 +44,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
+      <head>
+        <link rel="preconnect" href="https://ci.encar.com" />
+        <link rel="dns-prefetch" href="https://ci.encar.com" />
+      </head>
       <body className={`${roboto.className} antialiased`}>
         <AppProvider>
           <Header />

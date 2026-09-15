@@ -70,7 +70,7 @@ test('manual engine values enforce the existing integer limits and allow clearin
 });
 
 test('missing engine editors depend on source specifications, not calculation completion', () => {
-  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   const editor = page.match(/\{apiLoaded && \(!car\.hp \|\| !car\.displacement\) && \(([\s\S]*?)\n                \)\}/);
   assert.ok(editor, 'The engine editor stays mounted after a valid estimate appears');
   assert.doesNotMatch(editor[1], /calculationReady/);
@@ -83,7 +83,7 @@ test('missing engine editors depend on source specifications, not calculation co
 });
 
 test('car breadcrumb shows the compact brand and model after the listing ID and wraps on mobile', () => {
-  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   const breadcrumb = page.match(/\{\/\* Breadcrumb \*\/\}([\s\S]*?)<\/nav>/)[1];
   assert.match(breadcrumb, /flex-wrap/);
   assert.doesNotMatch(breadcrumb, /whitespace-nowrap|overflow-x-auto/);
@@ -128,7 +128,7 @@ test('unfamiliar Korean trim text is preserved phonetically instead of disappear
 });
 
 test('detail heading, photo label and sharing use full names while catalog cards remain short', () => {
-  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   assert.match(page, /const fullTitle = car \? getFullCarName\(car, lang\)/);
   assert.match(page, /<h1 className="break-words[^>]+>\s*\{fullTitle\}/);
   assert.match(page, /alt=\{fullTitle\}/);
@@ -196,7 +196,7 @@ test('grouping Russian customs does not change the grand total or count any char
 });
 
 test('Russia keeps the itemized costs and total without the space-consuming addition line', () => {
-  const page = fs.readFileSync(path.resolve(__dirname, '../src/app/catalog/[id]/page.tsx'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   const russia = page.slice(page.indexOf('{russianPriceRows.map'));
   assert.doesNotMatch(page, /russianTotalTerms/);
   assert.doesNotMatch(russia, /join\(' \+ '\)/);

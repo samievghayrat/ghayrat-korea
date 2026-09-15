@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
+import { getGalleryThumbnailUrl, getNextGalleryImage } from '@/lib/gallery-images';
 
 interface ImageGalleryProps {
   images: string[];
@@ -14,6 +15,8 @@ export default function ImageGallery({ images, alt, unoptimized = false }: Image
   const { t } = useApp();
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const preloadedImages = useRef(new Set<string>());
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
@@ -22,6 +25,27 @@ export default function ImageGallery({ images, alt, unoptimized = false }: Image
   useEffect(() => {
     setActiveIndex(0);
   }, [images.length]);
+
+  // Start only one neighbouring full photo after the visible photo is loaded.
+  // Do not compete with the first image or download the entire gallery.
+  useEffect(() => {
+    const currentSrc = images[activeIndex];
+    const nextSrc = getNextGalleryImage(images, activeIndex);
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (loadedSrc !== currentSrc || !nextSrc || connection?.saveData
+      || !(unoptimized || nextSrc.startsWith('https://ci.encar.com'))
+      || preloadedImages.current.has(nextSrc)) return;
+
+    const timer = window.setTimeout(() => {
+      preloadedImages.current.add(nextSrc);
+      const photo = new window.Image();
+      photo.decoding = 'async';
+      photo.fetchPriority = 'low';
+      photo.onerror = () => { preloadedImages.current.delete(nextSrc); };
+      photo.src = nextSrc;
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [images, activeIndex, loadedSrc, unoptimized]);
 
   // Scroll active thumbnail into view
   useEffect(() => {
@@ -167,6 +191,8 @@ export default function ImageGallery({ images, alt, unoptimized = false }: Image
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 60vw"
           priority
+          fetchPriority="high"
+          onLoad={() => setLoadedSrc(images[activeIndex])}
           unoptimized={isDirectEncarImage(images[activeIndex])}
         />
 
@@ -239,7 +265,7 @@ export default function ImageGallery({ images, alt, unoptimized = false }: Image
                     : 'border-transparent hover:border-gray-300'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="25vw" unoptimized={isDirectEncarImage(img)} />
+                <Image src={getGalleryThumbnailUrl(img)} alt="" fill className="object-cover" sizes="192px" unoptimized={isDirectEncarImage(img)} />
                 {isLast && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">+ {extraCount} {t('gallery.morePhotos')}</span>
@@ -319,7 +345,7 @@ export default function ImageGallery({ images, alt, unoptimized = false }: Image
                     : 'border-transparent opacity-50 hover:opacity-80'
                 }`}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="48px" unoptimized={isDirectEncarImage(img)} />
+                <Image src={getGalleryThumbnailUrl(img)} alt="" fill className="object-cover" sizes="48px" unoptimized={isDirectEncarImage(img)} />
               </button>
             ))}
           </div>

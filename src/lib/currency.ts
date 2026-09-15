@@ -6,7 +6,9 @@ interface RateCache {
 }
 
 let cache: RateCache | null = null;
+let pendingRates: Promise<RateCache> | null = null;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const RATE_TIMEOUT_MS = 1500;
 const FALLBACK_KRW_TO_RUB = 0.068;
 const FALLBACK_KRW_TO_USD = 0.00073;
 const FALLBACK_KRW_TO_EUR = 0.00065;
@@ -19,6 +21,7 @@ async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate
   try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/KRW', {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(RATE_TIMEOUT_MS),
     });
     if (res.ok) {
       const data = await res.json();
@@ -31,7 +34,10 @@ async function fetchRates(): Promise<{ rubRate: number; usdRate: number; eurRate
   } catch { /* try fallback */ }
 
   try {
-    const res = await fetch('https://open.er-api.com/v6/latest/KRW');
+    const res = await fetch('https://open.er-api.com/v6/latest/KRW', {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(RATE_TIMEOUT_MS),
+    });
     if (res.ok) {
       const data = await res.json();
       return {
@@ -53,9 +59,14 @@ async function getRates(): Promise<RateCache> {
   if (cache && Date.now() - cache.timestamp < CACHE_TTL) {
     return cache;
   }
-  const { rubRate, usdRate, eurRate } = await fetchRates();
-  cache = { rate: rubRate, usdRate, eurRate, timestamp: Date.now() };
-  return cache;
+  if (!pendingRates) {
+    pendingRates = fetchRates().then(({ rubRate, usdRate, eurRate }) => {
+      cache = { rate: rubRate, usdRate, eurRate, timestamp: Date.now() };
+      return cache;
+    }).finally(() => { pendingRates = null; });
+  }
+  // Concurrent RUB/USD/EUR conversions share one refresh and rate snapshot.
+  return pendingRates;
 }
 
 export async function convertKrwToRub(amount: number, markup = 1.0): Promise<number> {

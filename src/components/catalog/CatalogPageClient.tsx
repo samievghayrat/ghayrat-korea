@@ -81,7 +81,12 @@ export default function CatalogPageClient({ cars, total, totalPages, error = fal
               />
             </div>
 
-            <div aria-busy={isUpdating}>
+            <div aria-busy={isUpdating} className="relative">
+              {isUpdating && (
+                <div role="status" className="pointer-events-none absolute inset-x-0 -top-1 z-10 h-0.5 animate-pulse bg-primary">
+                  <span className="sr-only">{t('search.loading')}</span>
+                </div>
+              )}
               <CarGrid cars={cars} loading={isUpdating} error={error} onRetry={() => router.refresh()} />
             </div>
             <Pagination

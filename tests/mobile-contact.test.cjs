@@ -132,6 +132,21 @@ test('desktop header shows damaged cars as a separate active section', () => {
   assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/damaged-cars"'));
 });
 
+test('desktop header groups about, buying guide and contacts in one dropdown', () => {
+  const { default: Header } = loadTs('src/components/layout/Header.tsx', {
+    'next/navigation': { usePathname: () => '/contacts' },
+    'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
+    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru'), lang: 'ru', currency: 'USD' }) },
+    '@/lib/car-sharing': sharing,
+  });
+  const html = renderToStaticMarkup(React.createElement(Header));
+  assert.ok(html.includes('aria-haspopup="menu"'));
+  assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('role="menu"'));
+  for (const href of ['/about', '/how-to-buy', '/contacts']) assert.ok(html.includes(`href="${href}"`));
+  assert.ok(html.includes('bg-primary/10 text-primary'));
+});
+
 test('mobile contact control uses accessible labels in each selected language', () => {
   for (const lang of ['ru', 'en', 'tj', 'uz']) {
     assert.ok(renderFloating('/', lang).includes(`aria-label="${getTranslation('nav.writeManager', lang)}"`));

@@ -26,8 +26,10 @@ export default function Header() {
   const [favCount, setFavCount] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const currRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const contactLinks = getPageManagerContactLinks(pathname, t('contact.carInterest'));
 
@@ -57,6 +59,9 @@ export default function Header() {
       if (currRef.current && !currRef.current.contains(e.target as Node)) {
         setCurrOpen(false);
       }
+      if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) {
+        setAboutOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -70,10 +75,13 @@ export default function Header() {
     { href: '/auction', label: t('nav.auction') },
     { href: '/damaged-cars', label: t('damaged.title') },
     { href: '/our-cars', label: t('nav.ourCars') },
-    { href: '/how-to-buy', label: t('nav.howToBuy') },
+  ];
+  const aboutLinks = [
     { href: '/about', label: t('nav.about') },
+    { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/contacts', label: t('nav.contacts') },
   ];
+  const aboutActive = aboutLinks.some(link => pathname === link.href || pathname.startsWith(`${link.href}/`));
 
   if (pathname.startsWith('/admin')) return null;
 
@@ -91,7 +99,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${link.href === '/about' || link.href === '/contacts' ? 'hidden xl:inline-flex' : 'inline-flex'} px-2.5 xl:px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`inline-flex px-2.5 xl:px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
                     ? link.href === '/auction'
                       ? 'bg-red-50 text-red-700'
@@ -102,13 +110,51 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <div className="relative" ref={aboutRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={aboutOpen}
+                onClick={() => { setAboutOpen(!aboutOpen); setLangOpen(false); setCurrOpen(false); }}
+                className={`inline-flex items-center gap-1 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  aboutActive || aboutOpen
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                {t('nav.about')}
+                <svg className={`h-3.5 w-3.5 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div
+                role="menu"
+                className={`absolute left-1/2 top-full z-50 mt-1 w-48 -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg ${aboutOpen ? 'block' : 'hidden'}`}
+              >
+                {aboutLinks.map(link => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    role="menuitem"
+                    onClick={() => setAboutOpen(false)}
+                    className={`flex rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      pathname === link.href || pathname.startsWith(`${link.href}/`)
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <div className="flex items-center gap-1">
             {/* Currency switcher */}
             <div className="relative" ref={currRef}>
               <button
-                onClick={() => { setCurrOpen(!currOpen); setLangOpen(false); }}
+                onClick={() => { setCurrOpen(!currOpen); setLangOpen(false); setAboutOpen(false); }}
                 className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-xs font-bold">{currentCurr.symbol}</span>
@@ -138,7 +184,7 @@ export default function Header() {
             {/* Language switcher */}
             <div className="relative" ref={langRef}>
               <button
-                onClick={() => { setLangOpen(!langOpen); setCurrOpen(false); }}
+                onClick={() => { setLangOpen(!langOpen); setCurrOpen(false); setAboutOpen(false); }}
                 className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100 text-sm"
               >
                 <span className="text-base leading-none">{currentLang.flag}</span>

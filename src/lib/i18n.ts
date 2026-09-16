@@ -45,7 +45,7 @@ const t = {
   'damaged.engineCode': { ru: 'Код двигателя', en: 'Engine code', tj: 'Рамзи муҳаррик', uz: 'Dvigatel kodi' },
   'damaged.storageFee': { ru: 'Хранение (указано в лоте)', en: 'Storage fee (listed)', tj: 'Нигоҳдорӣ (дар лот)', uz: 'Saqlash haqi (lotda)' },
   'damaged.bidCalculator': { ru: 'Расчёт ставки', en: 'Bid calculator', tj: 'Ҳисоби пешниҳод', uz: 'Taklif hisobi' },
-  'damaged.bidCurrency': { ru: 'Введите ставку в корейских вонах. Шаг ставки — 10 000 ₩.', en: 'Enter your bid in Korean won. Bid increment: ₩10,000.', tj: 'Пешниҳодро бо вони Корея ворид кунед. Қадами пешниҳод — 10 000 ₩.', uz: 'Taklifni Koreya vonida kiriting. Taklif qadami — 10 000 ₩.' },
+  'damaged.bidCurrency': { ru: 'Введите ставку в долларах США. Комиссия рассчитывается по текущему курсу.', en: 'Enter your bid in US dollars. Fees are calculated using the current exchange rate.', tj: 'Пешниҳодро бо доллари ИМА ворид кунед. Комиссия бо қурби ҷорӣ ҳисоб мешавад.', uz: 'Taklifni AQSH dollarida kiriting. Komissiya joriy kurs bo‘yicha hisoblanadi.' },
   'damaged.chooseAuctionType': { ru: 'Выберите тип торгов', en: 'Choose auction type', tj: 'Навъи музоядаро интихоб кунед', uz: 'Auksion turini tanlang' },
   'damaged.yourBid': { ru: 'Ваша ставка', en: 'Your bid', tj: 'Пешниҳоди шумо', uz: 'Taklifingiz' },
   'damaged.bidStep': { ru: 'Сумма должна быть кратна 10 000 ₩.', en: 'The amount must be a multiple of ₩10,000.', tj: 'Маблағ бояд ба 10 000 ₩ тақсим шавад.', uz: 'Summa 10 000 ₩ ga karrali bo‘lishi kerak.' },

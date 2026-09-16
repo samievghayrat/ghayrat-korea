@@ -89,7 +89,8 @@ function overrides(lang = 'ru', query = '') {
     'next/link': link, 'next/image': image,
     '@/contexts/AppContext': { useApp: () => ({ lang, t: key => {
       const value = getTranslation(key, lang); assert.notEqual(value, key, `Missing translation: ${key}`); return value;
-    }, formatMileage: value => `${value} km`, formatKrwPrice: value => `${value} KRW` }) },
+    }, formatMileage: value => `${value} km`, formatKrwPrice: value => `${value} KRW`,
+      convertUsdToKrw: value => value * 1400, convertKrwToUsd: value => Math.round(value / 1400) }) },
     '@/components/detail/ImageGallery': { __esModule: true, default: ({ images }) => React.createElement('div', { 'data-gallery-count': images.length }) },
     './DamagedBidCalculator': { __esModule: true, default: ({ category }) => React.createElement('div', { 'data-bid-category': category }) },
   };
@@ -99,8 +100,11 @@ test('bid calculator renders a safe local estimate form in every language', () =
     const { default: Calculator } = loadTs('src/components/damaged/DamagedBidCalculator.tsx', overrides(lang));
     const html = renderToStaticMarkup(React.createElement(Calculator, { category: 'transfer-scrap' }));
     assert.ok(html.includes(getTranslation('damaged.bidCalculator', lang)));
+    assert.ok(html.includes(getTranslation('damaged.bidCurrency', lang)));
     assert.ok(html.includes(getTranslation('damaged.bidEstimate', lang)));
     assert.match(html, /input[Mm]ode="numeric"/);
+    assert.ok(html.includes('>$</span>'));
+    assert.ok(!html.includes('₩'));
     assert.equal((html.match(/type="radio"/g) || []).length, 2);
     assert.ok(!/process_bid|submitBid|action=/.test(html));
   }
@@ -128,6 +132,8 @@ test('detail gallery and damage information are open and contact actions carry t
     assert.ok(html.includes(getTranslation('damaged.airbags', lang)));
     assert.ok(html.includes(getTranslation('damaged.mileageUnverified', lang)));
     assert.ok(html.includes('data-bid-category="transfer"'));
+    assert.ok(!html.includes(getTranslation('damaged.askPrice', lang)));
+    assert.ok(!html.includes(getTranslation('damaged.priceHint', lang)));
     assert.ok(!html.includes('<details'));
     const links = [...html.matchAll(/href="(https:\/\/(?:wa.me|t.me)[^"]*)"/g)].map(match => new URL(match[1].replaceAll('&amp;', '&')));
     assert.equal(links.length, 2);

@@ -17,18 +17,18 @@ function defaultAuctionType(category: DamageCategory): DamagedAuctionType | null
 }
 
 export default function DamagedBidCalculator({ category }: { category: DamageCategory }) {
-  const { t, lang } = useApp();
+  const { t, lang, convertUsdToKrw, convertKrwToUsd } = useApp();
   const [bidInput, setBidInput] = useState('');
   const [auctionType, setAuctionType] = useState<DamagedAuctionType | null>(() => defaultAuctionType(category));
   useEffect(() => { setAuctionType(defaultAuctionType(category)); }, [category]);
 
-  const bidKrw = Number(bidInput.replace(/\D/g, '')) || 0;
-  const usesValidStep = bidKrw > 0 && bidKrw % 10_000 === 0;
+  const bidUsd = Number(bidInput.replace(/\D/g, '')) || 0;
+  const bidKrw = bidUsd > 0 ? convertUsdToKrw(bidUsd) : 0;
   const calculation = useMemo(
-    () => auctionType && usesValidStep ? calculateDamagedAuctionBid(bidKrw, auctionType) : null,
-    [auctionType, bidKrw, usesValidStep],
+    () => auctionType && bidKrw > 0 ? calculateDamagedAuctionBid(bidKrw, auctionType) : null,
+    [auctionType, bidKrw],
   );
-  const formatKrw = (value: number) => `${value.toLocaleString(locales[lang])} ₩`;
+  const formatUsd = (valueKrw: number) => `$${convertKrwToUsd(valueKrw).toLocaleString(locales[lang])}`;
 
   return <section className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
     <h2 className="text-base font-bold text-gray-900">{t('damaged.bidCalculator')}</h2>
@@ -57,20 +57,19 @@ export default function DamagedBidCalculator({ category }: { category: DamageCat
           const digits = event.target.value.replace(/\D/g, '').slice(0, 11);
           setBidInput(digits ? Number(digits).toLocaleString('en-US') : '');
         }}
-        placeholder="10,000,000"
+        placeholder="10,000"
         className="min-h-12 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-base font-semibold text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-semibold text-gray-400">₩</span>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-semibold text-gray-400">$</span>
     </div>
-    {bidKrw > 0 && !usesValidStep && <p role="alert" className="mt-1 text-xs text-amber-700">{t('damaged.bidStep')}</p>}
-    {!auctionType && bidKrw > 0 && <p role="alert" className="mt-1 text-xs text-amber-700">{t('damaged.chooseAuctionType')}</p>}
+    {!auctionType && bidUsd > 0 && <p role="alert" className="mt-1 text-xs text-amber-700">{t('damaged.chooseAuctionType')}</p>}
 
     {calculation && <dl className="mt-4 divide-y divide-gray-200 border-t border-gray-200">
-      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.yourBid')}</dt><dd className="font-semibold text-gray-900">{formatKrw(calculation.bidKrw)}</dd></div>
-      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.auctionFee')}</dt><dd className="font-semibold text-gray-900">{formatKrw(calculation.auctionFeeKrw)}</dd></div>
-      {calculation.vatKrw > 0 && <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.bidVat')}</dt><dd className="font-semibold text-gray-900">{formatKrw(calculation.vatKrw)}</dd></div>}
-      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t(auctionType === 'scrap' ? 'damaged.scrapFee' : 'damaged.documentFee')}</dt><dd className="font-semibold text-gray-900">{formatKrw(calculation.processingFeeKrw)}</dd></div>
-      <div className="flex items-center justify-between gap-3 py-3"><dt className="font-bold text-gray-900">{t('damaged.auctionTotal')}</dt><dd className="text-lg font-extrabold text-primary">{formatKrw(calculation.totalKrw)}</dd></div>
+      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.yourBid')}</dt><dd className="font-semibold text-gray-900">{formatUsd(calculation.bidKrw)}</dd></div>
+      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.auctionFee')}</dt><dd className="font-semibold text-gray-900">{formatUsd(calculation.auctionFeeKrw)}</dd></div>
+      {calculation.vatKrw > 0 && <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t('damaged.bidVat')}</dt><dd className="font-semibold text-gray-900">{formatUsd(calculation.vatKrw)}</dd></div>}
+      <div className="flex items-center justify-between gap-3 py-2.5"><dt className="text-sm text-gray-600">{t(auctionType === 'scrap' ? 'damaged.scrapFee' : 'damaged.documentFee')}</dt><dd className="font-semibold text-gray-900">{formatUsd(calculation.processingFeeKrw)}</dd></div>
+      <div className="flex items-center justify-between gap-3 py-3"><dt className="font-bold text-gray-900">{t('damaged.auctionTotal')}</dt><dd className="text-lg font-extrabold text-primary">{formatUsd(calculation.totalKrw)}</dd></div>
     </dl>}
     <p className="mt-3 text-xs leading-relaxed text-gray-500">{t('damaged.bidEstimate')}</p>
   </section>;

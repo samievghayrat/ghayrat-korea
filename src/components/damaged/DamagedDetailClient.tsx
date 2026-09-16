@@ -73,8 +73,6 @@ export default function DamagedDetailClient({ initial }: { initial: DamagedCar }
           {car.lossType === 'total' && <p className="mb-4 text-xs leading-relaxed text-gray-500">{t('damaged.lossHint')}</p>}
           {closed ? <div className="mb-4 rounded-lg bg-gray-100 p-3"><p className="text-sm font-semibold text-gray-800">{t(removed ? 'damaged.removed' : 'damaged.closed')}</p><p className="mt-1 text-xs text-gray-500">{t('damaged.closedHint')}</p></div>
             : car.closesAt && <div className="mb-4 border-b border-gray-100 pb-3"><p className="text-xs text-gray-500">{t('damaged.closes')}</p><time dateTime={car.closesAt} className="text-sm font-semibold text-gray-900">{new Date(car.closesAt).toLocaleString(localeNames[lang], { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' })}</time><p className="text-xs text-gray-400">{t('damaged.koreaTime')}</p></div>}
-          <p className="mb-2 text-xl font-bold text-primary">{t('damaged.askPrice')}</p>
-          <p className="mb-4 text-sm leading-relaxed text-gray-500">{t('damaged.priceHint')}</p>
           <DamagedBidCalculator category={car.category} />
           {car.storageFeeKrw !== null && car.storageFeeKrw > 0 && <dl className="mb-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3 text-xs"><dt className="text-gray-500">{t('damaged.storageFee')}</dt><dd className="shrink-0 font-semibold text-gray-700">{formatKrwPrice(car.storageFeeKrw)}</dd></dl>}
           <ContactCTA />

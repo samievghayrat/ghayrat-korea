@@ -22,7 +22,7 @@ function loadTs(file, overrides = {}, modules = new Map()) {
   return loaded.exports;
 }
 
-const { getSnapshotNavigation, getSnapshotModelData, getSnapshotBrandCounts } = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'));
+const { getSnapshotNavigation, getSnapshotModelData, getSnapshotBrandCounts, getSnapshotSearch } = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'));
 const { ENCAR_BRANDS } = loadTs(path.resolve(__dirname, '../src/lib/encar-brands.ts'));
 const { getCatalogModels } = loadTs(path.resolve(__dirname, '../src/lib/catalog-navigation.ts'));
 const navigation = getSnapshotNavigation();
@@ -48,6 +48,25 @@ test('model lookup accepts Korean brand links and clears immediately for no or u
   assert.ok(getCatalogModels(navigation, 'BMW').some(model => model.name === '5 Series'));
   assert.ok(getCatalogModels(navigation, 'Kia').some(model => model.name === 'K3'));
   assert.ok(getCatalogModels(navigation, 'Alfa Romeo').length > 0, 'canonical spaced manufacturer names must be recognized');
+});
+
+test('generation and mileage selections filter the saved catalogue records', () => {
+  const generation = getSnapshotModelData('Kia', 'K3').models[0];
+  assert.ok(generation?.name);
+  const selectedGeneration = getSnapshotSearch({
+    brand: 'Kia', model: 'K3', modelVariant: generation.name, limit: 1000,
+  });
+  assert.ok(selectedGeneration.total > 0);
+  assert.ok(selectedGeneration.rows.every(car => car.Model === generation.name));
+
+  const mileage = selectedGeneration.rows.find(car => Number(car.Mileage) > 0)?.Mileage;
+  assert.ok(Number(mileage) > 0);
+  const selectedMileage = getSnapshotSearch({
+    brand: 'Kia', model: 'K3', modelVariant: generation.name,
+    mileageFrom: Number(mileage), mileageTo: Number(mileage), limit: 1000,
+  });
+  assert.ok(selectedMileage.total > 0);
+  assert.ok(selectedMileage.rows.every(car => car.Mileage === mileage));
 });
 
 test('the selector payload is compact and does not send vehicle records to the browser', () => {

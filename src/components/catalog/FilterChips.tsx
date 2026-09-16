@@ -86,6 +86,7 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
   }
   if (filters.priceFrom) chips.push({ label: `${t('chip.from')} ${(filters.priceFrom * 10000).toLocaleString()} ${currencySymbol}`, key: 'priceFrom' });
   if (filters.priceTo) chips.push({ label: `${t('chip.to')} ${(filters.priceTo * 10000).toLocaleString()} ${currencySymbol}`, key: 'priceTo' });
+  if (filters.mileageFrom) chips.push({ label: `${t('chip.from')} ${filters.mileageFrom.toLocaleString()} ${t('chip.km')}`, key: 'mileageFrom' });
   if (filters.mileageTo) chips.push({ label: `${t('chip.to')} ${filters.mileageTo.toLocaleString()} ${t('chip.km')}`, key: 'mileageTo' });
 
   const optionChips = (filters.options || []).map(code => {

@@ -750,6 +750,20 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     onChange(next);
   };
 
+  const updateMileageRange = (key: 'mileageFrom' | 'mileageTo', value?: number) => {
+    const mileage = value && value > 0
+      ? Math.min(2_000_000, Math.round(value))
+      : undefined;
+    const next = { ...filters, [key]: mileage, page: 1 };
+    if (key === 'mileageFrom' && mileage && next.mileageTo && mileage > next.mileageTo) {
+      next.mileageTo = mileage;
+    }
+    if (key === 'mileageTo' && mileage && next.mileageFrom && mileage < next.mileageFrom) {
+      next.mileageFrom = mileage;
+    }
+    onChange(next);
+  };
+
   const activeFilterCount = [
     filters.fuel, filters.yearFrom, filters.yearTo,
     filters.monthFrom, filters.monthTo,
@@ -813,12 +827,43 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         ))}
       </div>
 
+      {/* Primary mileage range */}
+      <div className="mb-2">
+        <div className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">
+          {t('filter.mileage')}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {([['mileageFrom', t('filter.fromKm')], ['mileageTo', t('filter.toKm')]] as const).map(([key, placeholder]) => (
+            <label key={key} className="relative block">
+              <span className="sr-only">{placeholder}</span>
+              <input
+                data-testid={key === 'mileageFrom' ? 'mileage-from' : 'mileage-to'}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={2_000_000}
+                step={1_000}
+                value={filters[key] ?? ''}
+                onChange={(event) => updateMileageRange(key, event.target.value ? Number(event.target.value) : undefined)}
+                placeholder={placeholder}
+                className={`h-12 w-full rounded-xl border px-3 text-sm font-semibold outline-none transition-colors placeholder:font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-primary/15 ${
+                  filters[key]
+                    ? 'border-primary/30 bg-primary/5 text-primary'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
 
       {/* Generation selector */}
-      {showMoreFilters && filters.model && (
-        <SelectBox
+      {filters.model && (
+        <div data-testid="generation-filter">
+          <SelectBox
           label=""
-          value={selectedGenName || t('search.generationPlaceholder')}
+          value={selectedGenName}
           count={filters.modelVariant
             ? sortedGenerationVariants.find(v => v.name === filters.modelVariant)?.count
             : totalGenCount || undefined}
@@ -874,7 +919,8 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               })}
             </div>
           )}
-        </SelectBox>
+          </SelectBox>
+        </div>
       )}
 
       {/* Hierarchical Badge Tree: Fuel+Drivetrain â†’ Engine Badge â†’ Trim */}

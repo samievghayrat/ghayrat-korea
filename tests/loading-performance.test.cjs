@@ -86,6 +86,25 @@ test('catalogue cards match their year-based destination quote without changing 
   assert.ok(own.includes('612000 RUB / 8160 USD'));
 });
 
+test('catalogue exposes generation immediately after a model and provides both mileage bounds', () => {
+  const { default: Search } = loadTs('src/components/catalog/EncarSearch.tsx', {
+    '@/lib/constants': { YEAR_OPTIONS: [2026, 2025] },
+    '@/lib/translations': { translateGenerationName: value => value, translateBadgeDetail: value => value },
+    '@/contexts/AppContext': { useApp: () => ({ t: key => key, lang: 'ru' }) },
+    '@/components/shared/BottomSheet': { __esModule: true, default: ({ children }) => React.createElement('div', null, children) },
+    '@/lib/catalog-navigation': { getCatalogModels: () => [{ name: 'K3', nameKo: 'K3', count: 10 }] },
+  });
+  const html = renderToStaticMarkup(React.createElement(Search, {
+    filters: { brand: 'Kia', model: 'K3', page: 1 },
+    onChange: () => {}, brandCounts: [{ name: 'Kia', nameKo: '기아', count: 10 }],
+    totalCars: 10, navigation: { brands: [], modelsByBrand: {}, total: 10, generatedAt: '' },
+  }));
+  assert.ok(html.includes('data-testid="generation-filter"'));
+  assert.ok(html.includes('search.generationPlaceholder'));
+  assert.ok(html.includes('data-testid="mileage-from"'));
+  assert.ok(html.includes('data-testid="mileage-to"'));
+});
+
 const { getGalleryThumbnailUrl, getNextGalleryImage } = loadTs('src/lib/gallery-images.ts');
 const photo = 'https://ci.encar.com/carpicture04/pic4274/car_001.jpg?impolicy=heightRate&rh=768&cw=1280&ch=768&wtmk=https%3A%2F%2Fci.encar.com%2Fwt_mark%2Fw_mark_04.png';
 

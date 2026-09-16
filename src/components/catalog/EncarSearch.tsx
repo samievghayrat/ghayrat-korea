@@ -800,33 +800,6 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
         onClear={clearBrand}
       />
 
-      {/* Primary year range */}
-      <div className="mb-2 grid grid-cols-2 gap-2">
-        {([
-          ['yearFrom', t('filter.yearFrom')],
-          ['yearTo', t('filter.yearTo')],
-        ] as const).map(([key, placeholder]) => (
-          <label key={key} className="relative block">
-            <span className="sr-only">{placeholder}</span>
-            <select
-              value={filters[key] || ''}
-              onChange={(event) => updateYearRange(key, event.target.value ? Number(event.target.value) : undefined)}
-              className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
-                filters[key]
-                  ? 'border-primary/30 bg-primary/5 text-primary'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <option value="">{placeholder}</option>
-              {YEAR_OPTIONS.map(year => <option key={year} value={year}>{year}</option>)}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-              <ChevronIcon open={false} />
-            </span>
-          </label>
-        ))}
-      </div>
-
       {/* Generation selector */}
       {filters.model && (
         <div data-testid="generation-filter">
@@ -891,6 +864,33 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
           </SelectBox>
         </div>
       )}
+
+      {/* Primary year range */}
+      <div className="mb-2 grid grid-cols-2 gap-2">
+        {([
+          ['yearFrom', t('filter.yearFrom')],
+          ['yearTo', t('filter.yearTo')],
+        ] as const).map(([key, placeholder]) => (
+          <label key={key} className="relative block">
+            <span className="sr-only">{placeholder}</span>
+            <select
+              value={filters[key] || ''}
+              onChange={(event) => updateYearRange(key, event.target.value ? Number(event.target.value) : undefined)}
+              className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
+                filters[key]
+                  ? 'border-primary/30 bg-primary/5 text-primary'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <option value="">{placeholder}</option>
+              {YEAR_OPTIONS.map(year => <option key={year} value={year}>{year}</option>)}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+              <ChevronIcon open={false} />
+            </span>
+          </label>
+        ))}
+      </div>
 
       {/* Hierarchical Badge Tree: Fuel+Drivetrain â†’ Engine Badge â†’ Trim */}
       {showMoreFilters && filters.modelVariant && (badgeTree.length > 0 || badgeLoading) && (

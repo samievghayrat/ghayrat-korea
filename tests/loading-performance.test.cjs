@@ -106,6 +106,10 @@ test('catalogue exposes generation immediately while mileage stays inside more f
   assert.ok(!html.includes('data-testid="mileage-to"'));
 
   const source = fs.readFileSync(path.resolve(__dirname, '../src/components/catalog/EncarSearch.tsx'), 'utf8');
+  assert.ok(
+    source.indexOf('{/* Generation selector */}') < source.indexOf('{/* Primary year range */}'),
+    'generation selector should appear directly after model and before year',
+  );
   const advanced = source.slice(source.indexOf('{showMoreFilters && ('), source.indexOf('{/* Horsepower */}'));
   assert.ok(advanced.includes('data-testid={key === \'mileageFrom\' ? \'mileage-from\' : \'mileage-to\'}'));
   assert.ok(advanced.includes("title={t('filter.mileage')}"));

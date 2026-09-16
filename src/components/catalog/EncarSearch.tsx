@@ -781,8 +781,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
   };
 
   const activeFilterCount = [
-    filters.fuel, filters.yearFrom, filters.yearTo,
-    filters.monthFrom, filters.monthTo,
+    filters.fuel, filters.monthFrom, filters.monthTo,
     filters.hpFrom, filters.hpTo,
     filters.priceFrom, filters.priceTo,
     filters.mileageTo, filters.mileageFrom, filters.transmission,

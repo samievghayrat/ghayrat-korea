@@ -33,8 +33,8 @@ export default function BottomNav() {
   if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars|damaged-cars)\/[^/]+/.test(pathname)) return null;
 
   const isHome = pathname === '/' || pathname === '/catalog';
-  const isFav = pathname === '/favorites';
-  const isAuction = pathname.startsWith('/auction') || pathname.startsWith('/damaged-cars');
+  const isAuction = pathname.startsWith('/auction');
+  const isDamaged = pathname.startsWith('/damaged-cars');
   const isOwn = pathname.startsWith('/our-cars');
 
   const navLinks = [
@@ -83,21 +83,14 @@ export default function BottomNav() {
           </Link>
 
           <Link
-            href="/favorites"
-            className={`relative flex flex-col items-center gap-0.5 px-2 py-1 ${isFav ? 'text-primary' : 'text-gray-400'}`}
+            href="/damaged-cars"
+            aria-current={isDamaged ? 'page' : undefined}
+            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isDamaged ? 'text-primary' : 'text-gray-400'}`}
           >
-            <div className="relative">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              {favCount > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
-                  {favCount}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] font-medium">{t('nav.favorites')}</span>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h4m4 0h2m-5-5-1.5 3H13l-1 3 2 2" />
+            </svg>
+            <span className="max-w-full truncate text-[10px] font-medium">{t('damaged.title')}</span>
           </Link>
 
           <button

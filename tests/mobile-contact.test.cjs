@@ -122,7 +122,7 @@ test('mobile contact control uses accessible labels in each selected language', 
   }
 });
 
-test('bottom navigation includes our cars without a duplicate contact tab', () => {
+test('bottom navigation replaces favorites with damaged cars and keeps our cars', () => {
   const { default: Nav } = loadTs('src/components/layout/BottomNav.tsx', {
     'next/navigation': { usePathname: () => '/' },
     'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
@@ -130,10 +130,11 @@ test('bottom navigation includes our cars without a duplicate contact tab', () =
     '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru') }) },
   });
   const html = renderToStaticMarkup(React.createElement(Nav));
-  for (const href of ['/', '/our-cars', '/auction', '/favorites']) assert.ok(html.includes(`href="${href}"`));
+  for (const href of ['/', '/our-cars', '/auction', '/damaged-cars']) assert.ok(html.includes(`href="${href}"`));
+  assert.ok(!html.includes('href="/favorites"'));
   assert.ok(html.indexOf('href="/"') < html.indexOf('href="/auction"'));
   assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/our-cars"'));
-  assert.ok(html.indexOf('href="/our-cars"') < html.indexOf('href="/favorites"'));
+  assert.ok(html.indexOf('href="/our-cars"') < html.indexOf('href="/damaged-cars"'));
   assert.ok(html.includes('Меню'));
   assert.equal((html.match(/<a /g) || []).length, 4);
   assert.ok(html.includes('grid-cols-5'));

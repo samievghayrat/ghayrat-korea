@@ -13,7 +13,7 @@ interface RateCache {
 let cache: RateCache | null = null;
 let pendingRates: Promise<RateCache> | null = null;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
-const GOOGLE_RATE_TIMEOUT_MS = 2200;
+const GOOGLE_RATE_TIMEOUT_MS = 3500;
 const FALLBACK_RATE_TIMEOUT_MS = 1000;
 const FALLBACK_KRW_TO_RUB = 0.068;
 const FALLBACK_KRW_TO_USD = 0.00073;

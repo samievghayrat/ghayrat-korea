@@ -7,10 +7,10 @@ let cache: { rates: Record<string, number>; timestamp: number } | null = null;
 async function fetchRates(): Promise<Record<string, number>> {
   try {
     const [krwToRub, usdToRub, eurToRub, tjsToRub] = await Promise.all([
-      fetchGoogleFinanceRate('KRW', 'RUB', 2500),
-      fetchGoogleFinanceRate('USD', 'RUB', 2500),
-      fetchGoogleFinanceRate('EUR', 'RUB', 2500),
-      fetchGoogleFinanceRate('TJS', 'RUB', 2500),
+      fetchGoogleFinanceRate('KRW', 'RUB', 3500),
+      fetchGoogleFinanceRate('USD', 'RUB', 3500),
+      fetchGoogleFinanceRate('EUR', 'RUB', 3500),
+      fetchGoogleFinanceRate('TJS', 'RUB', 3500),
     ]);
     if (krwToRub > 0.02 && krwToRub < 0.2
       && usdToRub > 20 && usdToRub < 300

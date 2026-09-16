@@ -184,6 +184,8 @@ test('concurrent currency conversions share one Google refresh and preserve the 
     ]));
     assert.equal(calls.length, 3);
     assert.ok(calls.every(call => call.options.signal instanceof AbortSignal));
+    assert.ok(calls.every(call => String(call.url).includes('google.com/finance/quote/')));
+    assert.ok(calls.every(call => call.options.headers['User-Agent'].includes('Mozilla/5.0')));
     releases.forEach(release => release());
     const results = await Promise.all(jobs);
     for (const [rub, usd, usdRub, eurRub] of results) {
@@ -213,7 +215,7 @@ test('unavailable rate providers share bounded fallback requests, not an unbound
     assert.deepEqual(result, [693600, 7446]);
     assert.equal(calls.length, 5);
     assert.ok(calls.every(call => call.options.signal.aborted));
-    assert.ok(Date.now() - started < 5500);
+    assert.ok(Date.now() - started < 7000);
   } finally { clearTimeout(keepAlive); global.fetch = originalFetch; }
 });
 

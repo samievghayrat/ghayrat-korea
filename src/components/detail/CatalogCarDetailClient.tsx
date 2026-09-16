@@ -410,11 +410,6 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
                   ))}
                 </dl>
                 <div className="border-t border-gray-200 py-4">
-                  {calculationReady && formattedDeliveryTotal && (
-                    <p className="mb-3 text-xs leading-5 tabular-nums text-gray-500">
-                      {tajikPriceRows.map((row) => row.value).join(' + ')} = {formattedDeliveryTotal}
-                    </p>
-                  )}
                   <div className="flex items-center justify-between gap-4" aria-live="polite">
                     <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
                     {calculationReady && formattedDeliveryTotal ? (

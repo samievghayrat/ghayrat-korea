@@ -277,16 +277,15 @@ test('grouping Russian customs does not change the grand total or count any char
   }
 });
 
-test('Russia keeps the itemized costs and total without the space-consuming addition line', () => {
+test('country calculations keep itemized costs and totals without space-consuming addition lines', () => {
   const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   const russia = page.slice(page.indexOf('{russianPriceRows.map'));
   assert.doesNotMatch(page, /russianTotalTerms/);
   assert.doesNotMatch(russia, /join\(' \+ '\)/);
+  assert.doesNotMatch(page, /tajikPriceRows\.map\(\(row\) => row\.value\)\.join/);
   assert.match(russia, /<RussiaCustomsSummary breakdown=\{breakdown\}/);
   assert.match(russia, /t\('price.totalShort'\)/);
   assert.match(russia, /\{formattedDeliveryTotal\}/);
-  assert.ok(page.includes("{tajikPriceRows.map((row) => row.value).join(' + ')} = {formattedDeliveryTotal}"),
-    'The separately requested Tajikistan addition line is unchanged');
 });
 
 test('Russian customs summary does not quote an incomplete or invalid total', () => {

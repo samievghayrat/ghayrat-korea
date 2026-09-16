@@ -86,7 +86,7 @@ test('catalogue cards match their year-based destination quote without changing 
   assert.ok(own.includes('612000 RUB / 8160 USD'));
 });
 
-test('catalogue exposes generation immediately after a model and provides both mileage bounds', () => {
+test('catalogue exposes generation immediately while mileage stays inside more filters', () => {
   const { default: Search } = loadTs('src/components/catalog/EncarSearch.tsx', {
     '@/lib/constants': { YEAR_OPTIONS: [2026, 2025] },
     '@/lib/translations': { translateGenerationName: value => value, translateBadgeDetail: value => value },
@@ -101,8 +101,14 @@ test('catalogue exposes generation immediately after a model and provides both m
   }));
   assert.ok(html.includes('data-testid="generation-filter"'));
   assert.ok(html.includes('search.generationPlaceholder'));
-  assert.ok(html.includes('data-testid="mileage-from"'));
-  assert.ok(html.includes('data-testid="mileage-to"'));
+  assert.ok(html.includes('search.moreFilters'));
+  assert.ok(!html.includes('data-testid="mileage-from"'));
+  assert.ok(!html.includes('data-testid="mileage-to"'));
+
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/components/catalog/EncarSearch.tsx'), 'utf8');
+  const advanced = source.slice(source.indexOf('{showMoreFilters && ('), source.indexOf('{/* Horsepower */}'));
+  assert.ok(advanced.includes('data-testid={key === \'mileageFrom\' ? \'mileage-from\' : \'mileage-to\'}'));
+  assert.ok(advanced.includes("title={t('filter.mileage')}"));
 });
 
 const { getGalleryThumbnailUrl, getNextGalleryImage } = loadTs('src/lib/gallery-images.ts');

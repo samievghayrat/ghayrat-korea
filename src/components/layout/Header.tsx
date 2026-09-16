@@ -67,8 +67,9 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
-    { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/auction', label: t('nav.auction') },
+    { href: '/damaged-cars', label: t('damaged.title') },
+    { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -85,13 +86,13 @@ export default function Header() {
             <span className="text-[11px] font-medium text-gray-500">{t('brand.subtitle')} 🇰🇷</span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) || (link.href === '/auction' && pathname.startsWith('/damaged-cars'))
+                className={`${link.href === '/about' || link.href === '/contacts' ? 'hidden xl:inline-flex' : 'inline-flex'} px-2.5 xl:px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
                     ? link.href === '/auction'
                       ? 'bg-red-50 text-red-700'
                       : 'bg-primary/10 text-primary'
@@ -184,7 +185,7 @@ export default function Header() {
               href={contactLinks.telegram}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:inline-flex btn-primary text-sm py-2.5 px-6"
+              className="hidden lg:inline-flex btn-primary text-sm whitespace-nowrap py-2.5 px-4 xl:px-5"
             >
               {t('nav.writeManager')}
             </a>

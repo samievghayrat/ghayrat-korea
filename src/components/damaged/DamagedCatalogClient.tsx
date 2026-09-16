@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { filterDamagedCars, isDamagedAuctionClosed, type DamagedCatalogue } from '@/lib/damaged-cars';
 import type { TranslationKey } from '@/lib/i18n';
-import AuctionSourceTabs from '@/components/auction/AuctionSourceTabs';
 
 const PAGE_SIZE = 12;
 const categoryKeys: Record<string, TranslationKey> = { transfer: 'damaged.transfer', scrap: 'damaged.scrap', 'transfer-scrap': 'damaged.transferScrap', unknown: 'damaged.unknown' };
@@ -65,7 +64,6 @@ export default function DamagedCatalogClient({ initial }: { initial: DamagedCata
   const locale = locales[lang];
 
   return <>
-    <AuctionSourceTabs />
     <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">{t('damaged.title')}</h1>
     <p className="mb-4 mt-1 max-w-2xl text-sm leading-relaxed text-gray-500">{t('damaged.intro')}</p>
     <div className="mb-4 rounded-xl border border-gray-200 bg-white p-3">

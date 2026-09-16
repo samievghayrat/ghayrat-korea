@@ -115,6 +115,23 @@ test('header, footer and contact actions also include the current listing link',
   }
 });
 
+test('desktop header shows damaged cars as a separate active section', () => {
+  const { default: Header } = loadTs('src/components/layout/Header.tsx', {
+    'next/navigation': { usePathname: () => '/damaged-cars/84202' },
+    'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
+    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru'), lang: 'ru', currency: 'USD' }) },
+    '@/lib/car-sharing': sharing,
+  });
+  const html = renderToStaticMarkup(React.createElement(Header));
+  const auction = html.match(/<a[^>]*href="\/auction"[^>]*class="([^"]+)"/);
+  const damaged = html.match(/<a[^>]*href="\/damaged-cars"[^>]*class="([^"]+)"/);
+  assert.ok(auction);
+  assert.ok(damaged);
+  assert.ok(damaged[1].includes('bg-primary/10'));
+  assert.ok(!auction[1].includes('bg-red-50'));
+  assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/damaged-cars"'));
+});
+
 test('mobile contact control uses accessible labels in each selected language', () => {
   for (const lang of ['ru', 'en', 'tj', 'uz']) {
     assert.ok(renderFloating('/', lang).includes(`aria-label="${getTranslation('nav.writeManager', lang)}"`));

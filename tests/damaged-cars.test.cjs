@@ -113,8 +113,7 @@ test('catalogue SSR displays paginated cars immediately, only three priority pho
     assert.equal((html.match(/target="_blank"/g) || []).length, 12);
     assert.equal((html.match(/data-priority="true"/g) || []).length, 3);
     assert.ok(html.includes(getTranslation('damaged.askPrice', lang)));
-    assert.ok(html.includes('href="/auction"'));
-    assert.ok(html.includes('href="/damaged-cars"'));
+    assert.ok(html.includes('href="/damaged-cars/'));
     assert.ok(html.includes('rel="noopener noreferrer"'));
     assert.ok(html.includes('1 / 3'));
   }

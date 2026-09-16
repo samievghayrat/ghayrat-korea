@@ -167,6 +167,7 @@ function filterHarness(initialQuery = '') {
         effectDeps[index] = deps;
       },
     },
+    '@/lib/constants': { DEFAULT_CATALOG_YEAR_FROM: 2014 },
     'next/navigation': { useSearchParams: () => params, usePathname: () => '/',
       useRouter: () => ({ replace: url => requests.push(url), push: url => requests.push(url) }) },
   });
@@ -202,6 +203,15 @@ test('brand and model controls update before the server finishes the car search'
   } finally { harness.dispose(); }
 });
 
+test('the fresh catalogue starts from 2014 while explicit shared filters stay unchanged', () => {
+  const harness = filterHarness('');
+  try {
+    assert.equal(harness.render().filters.yearFrom, 2014);
+    harness.back('brand=Kia&page=1');
+    assert.equal(harness.render().filters.yearFrom, undefined);
+  } finally { harness.dispose(); }
+});
+
 test('rapid brand changes keep the latest brand while older searches resolve', () => {
   const harness = filterHarness('brand=BMW&page=1');
   try {
@@ -225,6 +235,7 @@ test('clearing filters is immediate and browser history restores the linked filt
     view.resetFilters();
     view = harness.render();
     assert.equal(view.filters.brand, undefined);
+    assert.equal(view.filters.yearFrom, 2014);
     assert.deepEqual(getCatalogModels(navigation, view.filters.brand), []);
     harness.back('brand=Kia&model=K3&page=1');
     view = harness.render();

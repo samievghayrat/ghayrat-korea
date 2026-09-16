@@ -3,38 +3,44 @@
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CarFilters } from '@/types';
+import { DEFAULT_CATALOG_YEAR_FROM } from '@/lib/constants';
 
 export function useFilters() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const urlFilters: CarFilters = useMemo(() => ({
-    brand: searchParams.get('brand') || undefined,
-    model: searchParams.get('model') || undefined,
-    modelVariant: searchParams.get('modelVariant') || undefined,
-    badge: searchParams.get('badge') || undefined,
-    badgeDetail: searchParams.get('badgeDetail') || undefined,
-    yearFrom: searchParams.get('yearFrom') ? parseInt(searchParams.get('yearFrom')!) : undefined,
-    yearTo: searchParams.get('yearTo') ? parseInt(searchParams.get('yearTo')!) : undefined,
-    monthFrom: searchParams.get('monthFrom') ? parseInt(searchParams.get('monthFrom')!) : undefined,
-    monthTo: searchParams.get('monthTo') ? parseInt(searchParams.get('monthTo')!) : undefined,
-    priceFrom: searchParams.get('priceFrom') ? parseInt(searchParams.get('priceFrom')!) : undefined,
-    priceTo: searchParams.get('priceTo') ? parseInt(searchParams.get('priceTo')!) : undefined,
-    fuel: searchParams.get('fuel') || undefined,
-    bodyType: searchParams.get('bodyType') || undefined,
-    mileageFrom: searchParams.get('mileageFrom') ? parseInt(searchParams.get('mileageFrom')!) : undefined,
-    mileageTo: searchParams.get('mileageTo') ? parseInt(searchParams.get('mileageTo')!) : undefined,
-    hpFrom: searchParams.get('hpFrom') ? parseInt(searchParams.get('hpFrom')!) : undefined,
-    hpTo: searchParams.get('hpTo') ? parseInt(searchParams.get('hpTo')!) : undefined,
-    transmission: searchParams.get('transmission') || undefined,
-    drivetrain: searchParams.get('drivetrain') || undefined,
-    color: searchParams.get('color') || undefined,
-    options: searchParams.get('options') ? searchParams.get('options')!.split(',') : undefined,
-    sort: (searchParams.get('sort') as CarFilters['sort']) || undefined,
-    page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
-    search: searchParams.get('search') || undefined,
-  }), [searchParams]);
+  const urlFilters: CarFilters = useMemo(() => {
+    const hasExplicitFilter = Array.from(searchParams.keys()).some(key => key !== 'page');
+    return {
+      brand: searchParams.get('brand') || undefined,
+      model: searchParams.get('model') || undefined,
+      modelVariant: searchParams.get('modelVariant') || undefined,
+      badge: searchParams.get('badge') || undefined,
+      badgeDetail: searchParams.get('badgeDetail') || undefined,
+      yearFrom: searchParams.get('yearFrom')
+        ? parseInt(searchParams.get('yearFrom')!)
+        : hasExplicitFilter ? undefined : DEFAULT_CATALOG_YEAR_FROM,
+      yearTo: searchParams.get('yearTo') ? parseInt(searchParams.get('yearTo')!) : undefined,
+      monthFrom: searchParams.get('monthFrom') ? parseInt(searchParams.get('monthFrom')!) : undefined,
+      monthTo: searchParams.get('monthTo') ? parseInt(searchParams.get('monthTo')!) : undefined,
+      priceFrom: searchParams.get('priceFrom') ? parseInt(searchParams.get('priceFrom')!) : undefined,
+      priceTo: searchParams.get('priceTo') ? parseInt(searchParams.get('priceTo')!) : undefined,
+      fuel: searchParams.get('fuel') || undefined,
+      bodyType: searchParams.get('bodyType') || undefined,
+      mileageFrom: searchParams.get('mileageFrom') ? parseInt(searchParams.get('mileageFrom')!) : undefined,
+      mileageTo: searchParams.get('mileageTo') ? parseInt(searchParams.get('mileageTo')!) : undefined,
+      hpFrom: searchParams.get('hpFrom') ? parseInt(searchParams.get('hpFrom')!) : undefined,
+      hpTo: searchParams.get('hpTo') ? parseInt(searchParams.get('hpTo')!) : undefined,
+      transmission: searchParams.get('transmission') || undefined,
+      drivetrain: searchParams.get('drivetrain') || undefined,
+      color: searchParams.get('color') || undefined,
+      options: searchParams.get('options') ? searchParams.get('options')!.split(',') : undefined,
+      sort: (searchParams.get('sort') as CarFilters['sort']) || undefined,
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
+      search: searchParams.get('search') || undefined,
+    };
+  }, [searchParams]);
 
   const query = searchParams.toString();
   const [optimistic, setOptimistic] = useState<{ filters: CarFilters; query: string; pathname: string } | null>(null);
@@ -70,7 +76,7 @@ export function useFilters() {
   }, [router, pathname]);
 
   const resetFilters = useCallback(() => {
-    setOptimistic({ filters: { page: 1 }, query: '', pathname });
+    setOptimistic({ filters: { yearFrom: DEFAULT_CATALOG_YEAR_FROM, page: 1 }, query: '', pathname });
     router.push(pathname);
   }, [router, pathname]);
 

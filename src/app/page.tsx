@@ -2,6 +2,7 @@ import type { CarFilters } from '@/types';
 import { searchCars } from '@/lib/encar-api';
 import CatalogPageClient from '@/components/catalog/CatalogPageClient';
 import { getSnapshotNavigation } from '@/lib/encar-snapshot';
+import { DEFAULT_CATALOG_YEAR_FROM } from '@/lib/constants';
 
 export const revalidate = 900;
 
@@ -18,13 +19,15 @@ function toNumber(value: string | string[] | undefined): number | undefined {
 
 function buildFilters(params: SearchParams): CarFilters {
   const value = (key: string) => firstValue(params[key]) || undefined;
+  const hasExplicitFilter = Object.entries(params)
+    .some(([key, entry]) => key !== 'page' && Boolean(firstValue(entry)));
   return {
     brand: value('brand'),
     model: value('model'),
     modelVariant: value('modelVariant'),
     badge: value('badge'),
     badgeDetail: value('badgeDetail'),
-    yearFrom: toNumber(params.yearFrom),
+    yearFrom: toNumber(params.yearFrom) ?? (hasExplicitFilter ? undefined : DEFAULT_CATALOG_YEAR_FROM),
     yearTo: toNumber(params.yearTo),
     monthFrom: toNumber(params.monthFrom),
     monthTo: toNumber(params.monthTo),

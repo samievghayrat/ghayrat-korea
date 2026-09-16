@@ -118,6 +118,8 @@ export const YEAR_OPTIONS = Array.from(
   (_, i) => new Date().getFullYear() - i
 );
 
+export const DEFAULT_CATALOG_YEAR_FROM = 2014;
+
 export const PRICE_RANGE_OPTIONS = [
   { value: '50', label: 'до 500 000 ₽' },
   { value: '100', label: 'до 1 000 000 ₽' },

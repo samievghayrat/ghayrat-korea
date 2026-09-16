@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import AuctionCatalogClient from "@/components/auction/AuctionCatalogClient";
 import { getKCarAuctionCars } from "@/lib/kcar-auction";
+import AuctionSourceTabs from '@/components/auction/AuctionSourceTabs';
 
 export const metadata: Metadata = {
   title: "\u0410\u0443\u043a\u0446\u0438\u043e\u043d",
@@ -14,6 +15,7 @@ export default async function AuctionPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+        <AuctionSourceTabs />
         <Suspense fallback={null}>
           <AuctionCatalogClient cars={cars} />
         </Suspense>

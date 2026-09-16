@@ -9,7 +9,7 @@ export default function FloatingContact() {
   const pathname = usePathname();
   const { t } = useApp();
   const contactLinks = getPageManagerContactLinks(pathname, t('contact.carInterest'));
-  const isCarDetail = /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname);
+  const isCarDetail = /^\/(?:catalog|auction|our-cars|damaged-cars)\/[^/]+/.test(pathname);
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);

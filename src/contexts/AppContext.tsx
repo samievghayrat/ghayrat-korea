@@ -117,7 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-    const isVehicleDetail = /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(window.location.pathname);
+    const isVehicleDetail = /^\/(?:catalog|auction|our-cars|damaged-cars)\/[^/]+/.test(window.location.pathname);
     if (!isVehicleDetail) document.title = SITE_TITLES[lang];
   }, [lang]);
 

@@ -6,6 +6,8 @@
     "dev": "next dev",
     "dev:auction-worker": "npm run dev --prefix auction-worker",
     "download:encar": "node scripts/download-encar-snapshot.mjs",
+    "download:damaged": "node scripts/download-alkorea-snapshot.mjs",
+    "test:damaged-cars": "node --test tests/damaged-cars.test.cjs tests/alkorea-parser.test.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -20,6 +22,7 @@
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
+    "cheerio": "1.2.0",
     "mongoose": "^9.10.0",
     "next": "^15.5.25",
     "react": "^18",

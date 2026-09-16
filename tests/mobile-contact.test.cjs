@@ -62,7 +62,7 @@ test('expanded floating action shows the existing safe WhatsApp and Telegram lin
 
 test('floating contact is available on car details as well as list and information pages, but not admin', () => {
   for (const route of ['/', '/catalog', '/auction', '/our-cars', '/favorites', '/about', '/contacts', '/how-to-buy',
-    '/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
+    '/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678', '/damaged-cars', '/damaged-cars/84202']) {
     assert.ok(renderFloating(route).includes('data-testid="floating-contact"'), route);
   }
   for (const route of ['/admin', '/admin/cars']) {
@@ -80,7 +80,7 @@ test('car-page contact sits near the safe bottom edge without reserving space fo
 
 test('WhatsApp and Telegram drafts include the current car link in every selected language', () => {
   for (const lang of ['ru', 'en', 'tj', 'uz']) {
-    for (const route of ['/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678']) {
+    for (const route of ['/catalog/42738544', '/auction/1001', '/our-cars/abcdef123456789012345678', '/damaged-cars/84202']) {
       const html = renderFloating(route, lang, true);
       const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map(match => new URL(match[1].replaceAll('&amp;', '&')));
       assert.equal(hrefs.length, 2);

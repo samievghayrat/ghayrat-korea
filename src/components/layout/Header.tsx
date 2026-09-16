@@ -91,7 +91,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+                  pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) || (link.href === '/auction' && pathname.startsWith('/damaged-cars'))
                     ? link.href === '/auction'
                       ? 'bg-red-50 text-red-700'
                       : 'bg-primary/10 text-primary'

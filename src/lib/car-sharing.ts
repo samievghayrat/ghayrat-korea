@@ -3,7 +3,7 @@ import type { CarDestination } from './car-destination';
 
 export const PUBLIC_SITE_URL = 'https://ghayrat.vercel.app';
 
-export function getCarShareUrl(source: 'catalog' | 'auction' | 'our-cars', id: string, destination?: CarDestination): string {
+export function getCarShareUrl(source: 'catalog' | 'auction' | 'our-cars' | 'damaged-cars', id: string, destination?: CarDestination): string {
   const url = new URL(`/${source}/${encodeURIComponent(id)}`, PUBLIC_SITE_URL);
   if (source === 'catalog' && (destination === 'russia' || destination === 'tajikistan')) {
     url.searchParams.set('destination', destination);
@@ -30,11 +30,11 @@ export function getManagerContactLinks(message?: string) {
 }
 
 export function getPageManagerContactLinks(pathname: string, interestText: string) {
-  const match = pathname.match(/^\/(catalog|auction|our-cars)\/([^/]+)\/?$/);
+  const match = pathname.match(/^\/(catalog|auction|our-cars|damaged-cars)\/([^/]+)\/?$/);
   if (!match) return getManagerContactLinks();
   try {
     const id = decodeURIComponent(match[2]);
-    const url = getCarShareUrl(match[1] as 'catalog' | 'auction' | 'our-cars', id);
+    const url = getCarShareUrl(match[1] as 'catalog' | 'auction' | 'our-cars' | 'damaged-cars', id);
     return getManagerContactLinks(`${interestText} ${id}\n${url}`);
   } catch {
     return getManagerContactLinks();

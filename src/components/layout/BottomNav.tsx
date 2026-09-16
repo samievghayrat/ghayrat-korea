@@ -30,16 +30,17 @@ export default function BottomNav() {
     };
   }, []);
 
-  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars)\/[^/]+/.test(pathname)) return null;
+  if (pathname.startsWith('/admin') || /^\/(?:catalog|auction|our-cars|damaged-cars)\/[^/]+/.test(pathname)) return null;
 
   const isHome = pathname === '/' || pathname === '/catalog';
   const isFav = pathname === '/favorites';
-  const isAuction = pathname.startsWith('/auction');
+  const isAuction = pathname.startsWith('/auction') || pathname.startsWith('/damaged-cars');
   const isOwn = pathname.startsWith('/our-cars');
 
   const navLinks = [
     { href: '/', label: t('nav.catalog') },
     { href: '/auction', label: t('nav.auction') },
+    { href: '/damaged-cars', label: t('damaged.title') },
     { href: '/our-cars', label: t('nav.ourCars') },
     { href: '/how-to-buy', label: t('nav.howToBuy') },
     { href: '/about', label: t('nav.about') },

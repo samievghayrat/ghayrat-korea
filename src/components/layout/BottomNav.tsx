@@ -72,17 +72,6 @@ export default function BottomNav() {
           </Link>
 
           <Link
-            href="/our-cars"
-            aria-current={isOwn ? 'page' : undefined}
-            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isOwn ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h10M6 13v1m12-1v1" />
-            </svg>
-            <span className="text-[10px] font-medium">{t('nav.ourCars')}</span>
-          </Link>
-
-          <Link
             href="/damaged-cars"
             aria-current={isDamaged ? 'page' : undefined}
             className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isDamaged ? 'text-primary' : 'text-gray-400'}`}
@@ -91,6 +80,17 @@ export default function BottomNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h4m4 0h2m-5-5-1.5 3H13l-1 3 2 2" />
             </svg>
             <span className="max-w-full truncate text-[10px] font-medium">{t('damaged.title')}</span>
+          </Link>
+
+          <Link
+            href="/our-cars"
+            aria-current={isOwn ? 'page' : undefined}
+            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 py-1 ${isOwn ? 'text-primary' : 'text-gray-400'}`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 13l2-6h14l2 6v6h-3v-3H6v3H3v-6zm0 0h18M7 10h10M6 13v1m12-1v1" />
+            </svg>
+            <span className="text-[10px] font-medium">{t('nav.ourCars')}</span>
           </Link>
 
           <button

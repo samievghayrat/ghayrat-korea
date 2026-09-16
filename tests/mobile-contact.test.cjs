@@ -165,8 +165,8 @@ test('bottom navigation replaces favorites with damaged cars and keeps our cars'
   for (const href of ['/', '/our-cars', '/auction', '/damaged-cars']) assert.ok(html.includes(`href="${href}"`));
   assert.ok(!html.includes('href="/favorites"'));
   assert.ok(html.indexOf('href="/"') < html.indexOf('href="/auction"'));
-  assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/our-cars"'));
-  assert.ok(html.indexOf('href="/our-cars"') < html.indexOf('href="/damaged-cars"'));
+  assert.ok(html.indexOf('href="/auction"') < html.indexOf('href="/damaged-cars"'));
+  assert.ok(html.indexOf('href="/damaged-cars"') < html.indexOf('href="/our-cars"'));
   assert.ok(html.includes('Меню'));
   assert.equal((html.match(/<a /g) || []).length, 4);
   assert.ok(html.includes('grid-cols-5'));

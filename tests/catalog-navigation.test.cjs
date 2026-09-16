@@ -24,7 +24,7 @@ function loadTs(file, overrides = {}, modules = new Map()) {
 
 const { getSnapshotNavigation, getSnapshotModelData, getSnapshotBrandCounts, getSnapshotSearch } = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'));
 const { ENCAR_BRANDS } = loadTs(path.resolve(__dirname, '../src/lib/encar-brands.ts'));
-const { getCatalogModels } = loadTs(path.resolve(__dirname, '../src/lib/catalog-navigation.ts'));
+const { getCatalogGenerations, getCatalogModels } = loadTs(path.resolve(__dirname, '../src/lib/catalog-navigation.ts'));
 const navigation = getSnapshotNavigation();
 
 test('preloaded brands and counts match the existing catalog navigation', () => {
@@ -50,6 +50,14 @@ test('model lookup accepts Korean brand links and clears immediately for no or u
   assert.ok(getCatalogModels(navigation, 'Alfa Romeo').length > 0, 'canonical spaced manufacturer names must be recognized');
 });
 
+test('generation options are preloaded for instant model selection', () => {
+  const preloaded = getCatalogGenerations(navigation, 'Kia', 'K3');
+  const previous = getSnapshotModelData('Kia', 'K3');
+  assert.deepEqual(preloaded, { models: previous.models, total: previous.total });
+  assert.equal(getCatalogGenerations(navigation, '기아', 'K3'), preloaded);
+  assert.equal(getCatalogGenerations(navigation, 'Kia', 'Unknown'), undefined);
+});
+
 test('generation and mileage selections filter the saved catalogue records', () => {
   const generation = getSnapshotModelData('Kia', 'K3').models[0];
   assert.ok(generation?.name);
@@ -71,7 +79,7 @@ test('generation and mileage selections filter the saved catalogue records', () 
 
 test('the selector payload is compact and does not send vehicle records to the browser', () => {
   const json = JSON.stringify(navigation);
-  assert.ok(Buffer.byteLength(json) < 150000, `${Buffer.byteLength(json)} bytes`);
+  assert.ok(Buffer.byteLength(json) < 500000, `${Buffer.byteLength(json)} bytes`);
   assert.doesNotMatch(json, /"(?:cars|Photo|VIN|Mileage)":/);
 });
 
@@ -113,6 +121,13 @@ test('mobile model lists retain natural height for the bottom-sheet scroll conta
   assert.ok(html.includes('data-testid="model-options"'));
   assert.match(html, /class="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"/);
   assert.ok(!html.includes('h-[min(480px,calc(100vh-180px))]'));
+});
+
+test('mobile sheets use the dynamic viewport and preserve space below the final option', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/components/shared/BottomSheet.tsx'), 'utf8');
+  assert.match(source, /max-h-\[85dvh\]/);
+  assert.match(source, /pb-\[env\(safe-area-inset-bottom\)\]/);
+  assert.match(source, /scroll-pb-20/);
 });
 
 test('preparing navigation translates repeated model names only once', () => {

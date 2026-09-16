@@ -37,7 +37,7 @@ export default function BottomSheet({ open, onClose, title, onBack, children, fo
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up"
+        className="absolute bottom-0 left-0 right-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] animate-slide-up"
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -64,7 +64,7 @@ export default function BottomSheet({ open, onClose, title, onBack, children, fo
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="min-h-0 flex-1 scroll-pb-20 overflow-y-auto overscroll-contain pb-5">
           {children}
         </div>
 

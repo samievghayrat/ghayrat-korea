@@ -1,7 +1,7 @@
 import snapshotJson from '@/data/encar-snapshot.json';
 import type { CarFilters } from '@/types';
 import { ENCAR_BRANDS } from './encar-brands';
-import type { CatalogNavigation, CatalogModelOption } from './catalog-navigation';
+import type { CatalogGenerationOption, CatalogNavigation, CatalogModelOption } from './catalog-navigation';
 import {
   reverseTranslateBrand,
   reverseTranslateModel,
@@ -237,6 +237,7 @@ export function getSnapshotNavigation(): CatalogNavigation {
   const supportedBrands = new Set<string>(ENCAR_BRANDS.map(brand => brand.name));
   const counts = new Map<string, number>();
   const modelGroups = new Map<string, Map<string, CatalogModelOption>>();
+  const generationVariantsByBrand = new Map<string, Map<string, CatalogGenerationOption>>();
   const modelNames = new Map<string, { name: string; nameKo: string }>();
 
   // Build the compact selector index in one pass, not one scan per brand.
@@ -265,6 +266,26 @@ export function getSnapshotNavigation(): CatalogNavigation {
     const current = groups.get(name);
     if (current) current.count++;
     else groups.set(name, { name, nameKo, count: 1 });
+
+    let brandGenerations = generationVariantsByBrand.get(brand);
+    if (!brandGenerations) {
+      brandGenerations = new Map();
+      generationVariantsByBrand.set(brand, brandGenerations);
+    }
+    const year = getYear(car);
+    const generation = brandGenerations.get(rawModel);
+    if (generation) {
+      generation.count++;
+      generation.yearFrom = Math.min(generation.yearFrom, year || generation.yearFrom);
+      generation.yearTo = Math.max(generation.yearTo, year);
+    } else {
+      brandGenerations.set(rawModel, {
+        name: rawModel,
+        count: 1,
+        yearFrom: year || 0,
+        yearTo: year || 0,
+      });
+    }
   }
 
   navigationCache = {
@@ -272,6 +293,21 @@ export function getSnapshotNavigation(): CatalogNavigation {
       .filter(brand => brand.count > 0).sort((a, b) => b.count - a.count),
     modelsByBrand: Object.fromEntries(ENCAR_BRANDS.map(brand => [brand.name,
       Array.from(modelGroups.get(brand.name)?.values() || []).sort((a, b) => b.count - a.count)])),
+    generationsByBrandModel: Object.fromEntries(ENCAR_BRANDS.map(brand => {
+      const variants = Array.from(generationVariantsByBrand.get(brand.name)?.values() || []);
+      const models = Array.from(modelGroups.get(brand.name)?.values() || []);
+      return [brand.name, Object.fromEntries(models.map(model => {
+        const matchingVariants = variants
+          .filter(variant => variant.name === model.nameKo
+            || getBaseModelName(variant.name) === model.nameKo
+            || variant.name.includes(model.nameKo))
+          .sort((a, b) => b.yearTo - a.yearTo || b.count - a.count);
+        return [model.nameKo, {
+          models: matchingVariants,
+          total: matchingVariants.reduce((sum, item) => sum + item.count, 0),
+        }];
+      }))];
+    })),
     total: snapshot.cars.length,
     generatedAt: snapshot.generatedAt,
   };

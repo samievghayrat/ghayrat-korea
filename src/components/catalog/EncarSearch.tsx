@@ -6,7 +6,7 @@ import { translateGenerationName, translateBadgeDetail } from '@/lib/translation
 import type { CarFilters } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import BottomSheet from '@/components/shared/BottomSheet';
-import { getCatalogModels, type CatalogNavigation } from '@/lib/catalog-navigation';
+import { getCatalogGenerations, getCatalogModels, type CatalogNavigation } from '@/lib/catalog-navigation';
 
 interface BrandCount {
   name: string;
@@ -640,12 +640,22 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
   useEffect(() => {
     if (filters.brand && filters.model) {
+      const preloaded = getCatalogGenerations(navigation, filters.brand, filters.model);
+      if (preloaded) {
+        const cacheKey = `generations:${filters.brand}:${filters.model}`;
+        clientCache.set(cacheKey, preloaded);
+        setGenerationVariants(preloaded.models || []);
+        setGenerationTotal(preloaded.total || 0);
+        setGenerationLoading(false);
+        return;
+      }
       fetchGenerations(filters.brand, filters.model);
     } else {
       setGenerationVariants([]);
       setGenerationTotal(0);
+      setGenerationLoading(false);
     }
-  }, [filters.brand, filters.model, fetchGenerations]);
+  }, [filters.brand, filters.model, navigation, fetchGenerations]);
 
   // Fetch badges/trims when a generation variant is selected
   useEffect(() => {
@@ -706,7 +716,13 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
     if (filters.brand) {
       const cacheKey = `generations:${filters.brand}:${model}`;
-      if (!clientCache.has(cacheKey)) {
+      const preloaded = getCatalogGenerations(navigation, filters.brand, model);
+      if (preloaded) {
+        clientCache.set(cacheKey, preloaded);
+        setGenerationVariants(preloaded.models || []);
+        setGenerationTotal(preloaded.total || 0);
+        setGenerationLoading(false);
+      } else if (!clientCache.has(cacheKey)) {
         fetchCachedJson<{ models?: ModelVariant[]; total?: number }>(
           cacheKey,
           `/api/car-models?brand=${encodeURIComponent(filters.brand)}&model=${encodeURIComponent(model)}`

@@ -71,6 +71,17 @@ test('expired auctions cannot appear as active or outrank current lots', () => {
   assert.equal(helpers.isDamagedAuctionClosed({ closesAt: null }), false);
   assert.equal(helpers.filterDamagedCars([expired, car], {})[0].id, car.id);
 });
+test('bid calculator follows current auction commission, VAT and processing brackets', () => {
+  assert.deepEqual(helpers.calculateDamagedAuctionBid(1_000_000, 'transfer'), {
+    bidKrw: 1_000_000, auctionFeeKrw: 55_000, vatKrw: 0, processingFeeKrw: 200_000, totalKrw: 1_255_000,
+  });
+  assert.deepEqual(helpers.calculateDamagedAuctionBid(10_000_000, 'scrap'), {
+    bidKrw: 10_000_000, auctionFeeKrw: 550_000, vatKrw: 1_000_000, processingFeeKrw: 100_000, totalKrw: 11_650_000,
+  });
+  assert.equal(helpers.calculateDamagedAuctionBid(60_000_000, 'transfer').auctionFeeKrw, 3_000_000);
+  assert.equal(helpers.calculateDamagedAuctionBid(30_000_000, 'transfer').processingFeeKrw, 400_000);
+  assert.equal(helpers.calculateDamagedAuctionBid(Number.NaN, 'scrap').totalKrw, 0);
+});
 const link = { __esModule: true, default: ({ children, prefetch, ...props }) => React.createElement('a', props, children) };
 const image = { __esModule: true, default: ({ fill, priority, ...props }) => React.createElement('img', { ...props, 'data-priority': priority }) };
 function overrides(lang = 'ru', query = '') {
@@ -80,8 +91,20 @@ function overrides(lang = 'ru', query = '') {
       const value = getTranslation(key, lang); assert.notEqual(value, key, `Missing translation: ${key}`); return value;
     }, formatMileage: value => `${value} km`, formatKrwPrice: value => `${value} KRW` }) },
     '@/components/detail/ImageGallery': { __esModule: true, default: ({ images }) => React.createElement('div', { 'data-gallery-count': images.length }) },
+    './DamagedBidCalculator': { __esModule: true, default: ({ category }) => React.createElement('div', { 'data-bid-category': category }) },
   };
 }
+test('bid calculator renders a safe local estimate form in every language', () => {
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    const { default: Calculator } = loadTs('src/components/damaged/DamagedBidCalculator.tsx', overrides(lang));
+    const html = renderToStaticMarkup(React.createElement(Calculator, { category: 'transfer-scrap' }));
+    assert.ok(html.includes(getTranslation('damaged.bidCalculator', lang)));
+    assert.ok(html.includes(getTranslation('damaged.bidEstimate', lang)));
+    assert.match(html, /input[Mm]ode="numeric"/);
+    assert.equal((html.match(/type="radio"/g) || []).length, 2);
+    assert.ok(!/process_bid|submitBid|action=/.test(html));
+  }
+});
 test('catalogue SSR displays paginated cars immediately, only three priority photos, and readable controls in every language', () => {
   for (const lang of ['ru', 'en', 'tj', 'uz']) {
     const { default: Catalog } = loadTs('src/components/damaged/DamagedCatalogClient.tsx', overrides(lang));
@@ -105,6 +128,7 @@ test('detail gallery and damage information are open and contact actions carry t
     assert.ok(html.includes('data-gallery-count="2"'));
     assert.ok(html.includes(getTranslation('damaged.airbags', lang)));
     assert.ok(html.includes(getTranslation('damaged.mileageUnverified', lang)));
+    assert.ok(html.includes('data-bid-category="transfer"'));
     assert.ok(!html.includes('<details'));
     const links = [...html.matchAll(/href="(https:\/\/(?:wa.me|t.me)[^"]*)"/g)].map(match => new URL(match[1].replaceAll('&amp;', '&')));
     assert.equal(links.length, 2);

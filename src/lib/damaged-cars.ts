@@ -20,6 +20,46 @@ export interface DamagedCatalogue {
 }
 export interface DamagedSnapshot { cars: DamagedCar[]; fetchedAt: string; count: number }
 
+export type DamagedAuctionType = 'transfer' | 'scrap';
+export interface DamagedBidCalculation {
+  bidKrw: number;
+  auctionFeeKrw: number;
+  vatKrw: number;
+  processingFeeKrw: number;
+  totalKrw: number;
+}
+
+// Current auction tariff verified from the source calculator on 2026-09-16.
+// Bids are entered in KRW and must use 10,000-won increments.
+export function calculateDamagedAuctionBid(bidKrw: number, auctionType: DamagedAuctionType): DamagedBidCalculation {
+  const bid = Number.isFinite(bidKrw) ? Math.max(0, Math.floor(bidKrw)) : 0;
+  if (!bid) return { bidKrw: 0, auctionFeeKrw: 0, vatKrw: 0, processingFeeKrw: 0, totalKrw: 0 };
+
+  const auctionFeeKrw = bid < 10_000
+    ? 0
+    : bid < 1_000_000
+      ? 50_000
+      : Math.min(Math.floor(bid * 0.055), 3_000_000);
+  const vatKrw = auctionType === 'scrap' ? Math.floor(bid * 0.1) : 0;
+  const processingFeeKrw = auctionType === 'scrap'
+    ? 100_000
+    : bid < 10_000
+      ? 0
+      : bid < 5_000_000
+        ? 200_000
+        : bid < 30_000_000
+          ? 300_000
+          : 400_000;
+
+  return {
+    bidKrw: bid,
+    auctionFeeKrw,
+    vatKrw,
+    processingFeeKrw,
+    totalKrw: bid + auctionFeeKrw + vatKrw + processingFeeKrw,
+  };
+}
+
 // Deliberate allowlist: catalogue responses never contain private source responses,
 // source descriptions, cookies, account information or all gallery URLs.
 export function summarizeDamagedCar(car: DamagedCarSummary): DamagedCarSummary {

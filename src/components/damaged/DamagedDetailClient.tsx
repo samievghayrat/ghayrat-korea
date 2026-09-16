@@ -5,6 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarShareButton from '@/components/shared/CarShareButton';
 import ContactCTA from '@/components/shared/ContactCTA';
+import DamagedBidCalculator from './DamagedBidCalculator';
 import { getCarShareUrl } from '@/lib/car-sharing';
 import { isDamagedAuctionClosed, type DamagedCar } from '@/lib/damaged-cars';
 import type { TranslationKey } from '@/lib/i18n';
@@ -74,6 +75,7 @@ export default function DamagedDetailClient({ initial }: { initial: DamagedCar }
             : car.closesAt && <div className="mb-4 border-b border-gray-100 pb-3"><p className="text-xs text-gray-500">{t('damaged.closes')}</p><time dateTime={car.closesAt} className="text-sm font-semibold text-gray-900">{new Date(car.closesAt).toLocaleString(localeNames[lang], { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' })}</time><p className="text-xs text-gray-400">{t('damaged.koreaTime')}</p></div>}
           <p className="mb-2 text-xl font-bold text-primary">{t('damaged.askPrice')}</p>
           <p className="mb-4 text-sm leading-relaxed text-gray-500">{t('damaged.priceHint')}</p>
+          <DamagedBidCalculator category={car.category} />
           {car.storageFeeKrw !== null && car.storageFeeKrw > 0 && <dl className="mb-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3 text-xs"><dt className="text-gray-500">{t('damaged.storageFee')}</dt><dd className="shrink-0 font-semibold text-gray-700">{formatKrwPrice(car.storageFeeKrw)}</dd></dl>}
           <ContactCTA />
         </section>

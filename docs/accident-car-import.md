@@ -42,4 +42,15 @@ passwords, cookies, profile data or bids. Redeploy after rebuilding the snapshot
 - Only public `/upload/data/` image paths are accepted. Existing image watermarks are unchanged.
 - Contact drafts and shared URLs use the GHAYRAT detail link, not the supplier URL.
 
+## Bid estimate
+
+The detail-page bid field is a local calculator only and never calls a bidding
+endpoint. Its tariff constants were verified against the source calculator on
+2026-09-16: 5.5% auction commission capped at KRW 3,000,000; KRW 50,000 below
+KRW 1,000,000; transfer processing of KRW 200,000 / 300,000 / 400,000 by the
+current source brackets; or KRW 100,000 scrap processing plus 10% VAT. Bids use
+KRW 10,000 increments. Re-verify these values before changing or extending the
+calculator. Storage, transport, repairs and export clearance are deliberately
+excluded from the auction total.
+
 Checks: `npm run test:damaged-cars`, `npm run test:mobile-contact`, `npm run build`.

@@ -84,6 +84,12 @@ test('catalogue cards match their year-based destination quote without changing 
   }
   const own = renderToStaticMarkup(React.createElement(Card, { car: { ...listing, source: 'own' } }));
   assert.ok(own.includes('612000 RUB / 8160 USD'));
+
+  const generated = renderToStaticMarkup(React.createElement(Card, {
+    car: { ...listing, generation: '더 뉴 K3 2세대' },
+  }));
+  assert.ok(generated.includes('data-testid="car-generation"'));
+  assert.ok(generated.includes('Новый K3 2-го поколения'));
 });
 
 test('catalogue exposes generation immediately while mileage stays inside more filters', () => {

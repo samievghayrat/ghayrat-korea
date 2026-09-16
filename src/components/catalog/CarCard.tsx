@@ -5,7 +5,7 @@ import Image from 'next/image';
 import type { CarListing } from '@/types';
 import FavoriteButton from '@/components/shared/FavoriteButton';
 import { useApp } from '@/contexts/AppContext';
-import { getCompactModelName } from '@/lib/translations';
+import { getCompactModelName, translateGenerationName } from '@/lib/translations';
 import { localizeVehicleValue } from '@/lib/i18n';
 import { getPriceIncludingEncarFee } from '@/lib/encar-fee';
 import { getCarDeliveryDestination } from '@/lib/car-destination';
@@ -25,6 +25,9 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
   };
 
   const displayModel = getCompactModelName(car.model);
+  const displayGeneration = car.generation
+    ? translateGenerationName(car.generation, lang)
+    : '';
 
   const yearLabel = car.month
     ? `${car.year}/${String(car.month).padStart(2, '0')}`
@@ -81,6 +84,11 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             <h3 className="truncate text-[15px] font-bold leading-snug text-gray-950 transition-colors group-hover:text-primary">
               {car.brand} <span className="font-semibold text-gray-700">{displayModel}</span>
             </h3>
+            {displayGeneration && (
+              <p data-testid="car-generation" className="mt-0.5 truncate text-[12px] font-medium leading-snug text-gray-500">
+                {displayGeneration}
+              </p>
+            )}
 
             <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600">
               <span>{yearLabel}</span>

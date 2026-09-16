@@ -1,4 +1,4 @@
-import { translateBrand, translateModel, translateFuel, translateColor, translateBadgeDetail, reverseTranslateBrand, reverseTranslateModel } from './translations';
+import { getCompactModelName, translateBrand, translateModel, translateFuel, translateColor, translateBadgeDetail, reverseTranslateBrand, reverseTranslateModel } from './translations';
 import { convertKrwToRub, convertKrwToUsd, getEurToRub, getUsdToRub } from './currency';
 import { calculateImportCost } from './calculator';
 import { ENCAR_FEE_KRW, getEncarFeeKrw } from './encar-fee';
@@ -789,7 +789,9 @@ async function transformSearchResults(
       ]);
 
       const brand = translateBrand((item.Manufacturer as string) || '');
-      const model = translateModel((item.Model as string) || '');
+      const rawModel = (item.Model as string) || '';
+      const model = translateModel(rawModel);
+      const generation = getCompactModelName(model) !== model ? rawModel : undefined;
       const yearStr = String(item.Year || '');
       const year = parseInt(yearStr.substring(0, 4)) || 0;
       const month = parseInt(yearStr.substring(4, 6)) || undefined;
@@ -837,6 +839,7 @@ async function transformSearchResults(
         source: 'encar' as const,
         brand,
         model,
+        generation,
         year,
         month,
         mileage: (item.Mileage as number) || 0,

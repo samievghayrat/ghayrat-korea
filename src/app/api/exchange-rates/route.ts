@@ -1,12 +1,28 @@
 import { NextResponse } from 'next/server';
+import { fetchGoogleFinanceRate } from '@/lib/google-finance';
 
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 let cache: { rates: Record<string, number>; timestamp: number } | null = null;
 
 async function fetchRates(): Promise<Record<string, number>> {
   try {
+    const [krwToRub, usdToRub, eurToRub, tjsToRub] = await Promise.all([
+      fetchGoogleFinanceRate('KRW', 'RUB', 2500),
+      fetchGoogleFinanceRate('USD', 'RUB', 2500),
+      fetchGoogleFinanceRate('EUR', 'RUB', 2500),
+      fetchGoogleFinanceRate('TJS', 'RUB', 2500),
+    ]);
+    if (krwToRub > 0.02 && krwToRub < 0.2
+      && usdToRub > 20 && usdToRub < 300
+      && eurToRub > 20 && eurToRub < 400
+      && tjsToRub > 1 && tjsToRub < 50) {
+      return { USD: usdToRub, EUR: eurToRub, KRW: krwToRub, TJS: tjsToRub };
+    }
+  } catch { /* try fallback */ }
+
+  try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/RUB', {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(1500),
     });
     if (res.ok) {
       const data = await res.json();
@@ -21,7 +37,7 @@ async function fetchRates(): Promise<Record<string, number>> {
 
   try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/KRW', {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(1500),
     });
     if (res.ok) {
       const data = await res.json();

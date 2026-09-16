@@ -150,21 +150,41 @@ test('the initial detail HTML contains the title, photograph, specs and calculat
   assert.doesNotMatch(html, /WAITING/);
 });
 
-test('concurrent currency conversions share one request and preserve the current markup and rounding', async () => {
+function googleRateHtml(base, quote, value) {
+  return `<c-wiz data-p="%.@.[null,null,[&quot;${base}&quot;,&quot;${quote}&quot;]],null,rest">`
+    + `<span jsname="Pdsbrc"><span>${value}</span></span></c-wiz>`;
+}
+
+test('Google Finance parser selects the requested pair instead of unrelated quotes', () => {
+  const { parseGoogleFinanceRate } = loadTs('src/lib/google-finance.ts');
+  const html = googleRateHtml('USD', 'RUB', '84.1953')
+    + googleRateHtml('EUR', 'RUB', '97.2153');
+  assert.equal(parseGoogleFinanceRate(html, 'USD', 'RUB'), 84.1953);
+  assert.equal(parseGoogleFinanceRate(html, 'EUR', 'RUB'), 97.2153);
+  assert.equal(parseGoogleFinanceRate(html, 'KRW', 'RUB'), null);
+});
+
+test('concurrent currency conversions share one Google refresh and preserve the current markup and rounding', async () => {
   const originalFetch = global.fetch;
-  let release;
-  const response = new Promise(resolve => { release = resolve; });
   const calls = [];
-  global.fetch = (url, options) => { calls.push({ url, options }); return response; };
+  const releases = [];
+  global.fetch = (url, options) => {
+    calls.push({ url, options });
+    return new Promise(resolve => releases.push(() => {
+      const pair = String(url).match(/quote\/([A-Z]{3})-([A-Z]{3})/)?.slice(1);
+      const values = { 'KRW-RUB': '0.06', 'USD-RUB': '75', 'EUR-RUB': '85.71428571428571' };
+      resolve({ ok: true, text: async () => googleRateHtml(pair[0], pair[1], values[pair.join('-')]) });
+    }));
+  };
   try {
     const rates = loadTs('src/lib/currency.ts');
     const jobs = Array.from({ length: 24 }, () => Promise.all([
       rates.convertKrwToRub(10000000), rates.convertKrwToUsd(10000000),
       rates.getUsdToRub(), rates.getEurToRub(),
     ]));
-    assert.equal(calls.length, 1);
-    assert.ok(calls[0].options.signal instanceof AbortSignal);
-    release({ ok: true, json: async () => ({ rates: { RUB: 0.06, USD: 0.0008, EUR: 0.0007 } }) });
+    assert.equal(calls.length, 3);
+    assert.ok(calls.every(call => call.options.signal instanceof AbortSignal));
+    releases.forEach(release => release());
     const results = await Promise.all(jobs);
     for (const [rub, usd, usdRub, eurRub] of results) {
       assert.equal(rub, 612000);
@@ -173,7 +193,7 @@ test('concurrent currency conversions share one request and preserve the current
       assert.ok(Math.abs(eurRub - 0.06 / 0.0007) < 1e-10);
     }
     assert.equal(await rates.convertKrwToRub(10000000), 612000);
-    assert.equal(calls.length, 1);
+    assert.equal(calls.length, 3);
   } finally { global.fetch = originalFetch; }
 });
 
@@ -191,9 +211,9 @@ test('unavailable rate providers share bounded fallback requests, not an unbound
     const started = Date.now();
     const result = await Promise.all([rates.convertKrwToRub(10000000), rates.convertKrwToUsd(10000000)]);
     assert.deepEqual(result, [693600, 7446]);
-    assert.equal(calls.length, 2);
+    assert.equal(calls.length, 5);
     assert.ok(calls.every(call => call.options.signal.aborted));
-    assert.ok(Date.now() - started < 4500);
+    assert.ok(Date.now() - started < 5500);
   } finally { clearTimeout(keepAlive); global.fetch = originalFetch; }
 });
 

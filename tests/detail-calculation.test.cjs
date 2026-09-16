@@ -209,15 +209,16 @@ test('unfamiliar Korean trim text is preserved phonetically instead of disappear
   assert.equal(getCompactModelName('더 뉴 K3 2세대'), 'K3');
 });
 
-test('detail heading, photo label and sharing use full names while catalog cards remain short', () => {
+test('detail pages and catalog cards use the same complete customer-facing car name', () => {
   const page = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
   assert.match(page, /const fullTitle = car \? getFullCarName\(car, lang\)/);
   assert.match(page, /<h1 className="break-words[^>]+>\s*\{fullTitle\}/);
   assert.match(page, /alt=\{fullTitle\}/);
   assert.match(page, /<CarShareButton title=\{`\$\{fullTitle\}/);
   const card = fs.readFileSync(path.resolve(__dirname, '../src/components/catalog/CarCard.tsx'), 'utf8');
-  assert.match(card, /const displayModel = getCompactModelName\(car\.model\)/);
-  assert.doesNotMatch(card, /getFullCarName/);
+  assert.match(card, /const displayTitle = getFullCarName\(car, lang\)/);
+  assert.match(card, /data-testid="car-full-title"/);
+  assert.doesNotMatch(card, /className="truncate text-\[15px\]/);
 });
 
 test('catalog social previews include the full name from available snapshot data', async () => {

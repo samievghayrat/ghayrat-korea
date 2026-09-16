@@ -86,10 +86,10 @@ test('catalogue cards match their year-based destination quote without changing 
   assert.ok(own.includes('612000 RUB / 8160 USD'));
 
   const generated = renderToStaticMarkup(React.createElement(Card, {
-    car: { ...listing, generation: '더 뉴 K3 2세대' },
+    car: { ...listing, brand: 'Lexus', model: 'ES300h 7세대', badge: '이그제큐티브' },
   }));
-  assert.ok(generated.includes('data-testid="car-generation"'));
-  assert.ok(generated.includes('Новый K3 2-го поколения'));
+  assert.ok(generated.includes('data-testid="car-full-title"'));
+  assert.ok(generated.includes('Lexus ES300h 7-го поколения Executive'));
 });
 
 test('catalogue exposes generation immediately while mileage stays inside more filters', () => {

@@ -622,7 +622,7 @@ function romanizeUntranslatedName(value: string): string {
   });
 }
 
-/** Detail pages retain the generation, engine variant and trim; cards stay compact. */
+/** Build the complete customer-facing name used on detail pages and catalog cards. */
 export function getFullCarName(car: {
   brand: string;
   model: string;

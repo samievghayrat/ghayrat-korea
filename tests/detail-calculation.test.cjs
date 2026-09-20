@@ -489,6 +489,16 @@ test('known repairs without a panel list keep the diagram visible and retain the
   assert.ok(html.includes(getTranslation('condition.bodyDetailsMissing', 'ru')));
   assert.ok(!html.includes(getTranslation('condition.noBodyRepairs', 'ru')));
   assert.ok(!html.includes('absolute flex items-center justify-center'));
+  assert.ok(html.includes(getTranslation('condition.statusFindings', 'ru')));
+});
+
+test('condition summary clearly distinguishes a checked body from incomplete panel data', () => {
+  const checked = renderInsuranceHistory({ bodyInspectionAvailable: true, accidentHistory: false });
+  assert.ok(checked.includes('data-testid="condition-status"'));
+  assert.ok(checked.includes(getTranslation('condition.statusClear', 'ru')));
+  const partial = renderInsuranceHistory({ bodyInspectionAvailable: false });
+  assert.ok(partial.includes(getTranslation('condition.statusPartial', 'ru')));
+  assert.ok(!partial.includes(getTranslation('condition.statusClear', 'ru')));
 });
 
 test('partial body diagnosis stays visible without implying the whole vehicle was inspected or clean', () => {

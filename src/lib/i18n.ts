@@ -451,6 +451,9 @@ const t = {
   'condition.insuranceCases': { ru: 'Страховые случаи по этому авто', en: 'Insurance claims for this car', tj: 'Ҳодисаҳои суғуртавии ин мошин', uz: 'Ushbu avtomobil bo‘yicha sug‘urta holatlari' },
   'condition.thirdPartyInsuranceCases': { ru: 'Страховые случаи — ущерб другим авто', en: 'Insurance claims for damage to other cars', tj: 'Ҳодисаҳои суғуртавӣ — зарар ба мошинҳои дигар', uz: 'Sug‘urta holatlari — boshqa avtomobillarga zarar' },
   'condition.disclaimer': { ru: 'Состояние указано на дату отчёта. Перед покупкой рекомендуем независимый осмотр.', en: 'Condition is reported as of the inspection date. We recommend an independent inspection before purchase.', tj: 'Ҳолат дар санаи ҳисобот нишон дода шудааст. Пеш аз харид муоинаи мустақилро тавсия медиҳем.', uz: 'Holat ko‘rik sanasiga tegishli. Xariddan oldin mustaqil tekshiruvni tavsiya qilamiz.' },
+  'condition.statusFindings': { ru: 'Есть отметки по кузову', en: 'Body findings recorded', tj: 'Дар кузов қайдҳо ҳастанд', uz: 'Kuzovda qaydlar bor' },
+  'condition.statusClear': { ru: 'Повреждения не отмечены', en: 'No damage noted', tj: 'Зарар қайд нашудааст', uz: 'Shikast qayd etilmagan' },
+  'condition.statusPartial': { ru: 'Данные неполные', en: 'Partial data', tj: 'Маълумот нопурра аст', uz: 'Ma’lumotlar to‘liq emas' },
 
   // Damage map
   'damage.change': { ru: 'Замена', en: 'Replaced', tj: 'Иваз', uz: 'Almashtirilgan' },

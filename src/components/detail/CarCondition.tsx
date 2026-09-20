@@ -73,11 +73,29 @@ export default function CarCondition({ records, carId, inspectionData, source }:
     ? new Date(`${report.reportDate}T00:00:00Z`).toLocaleDateString(
       { ru: 'ru-RU', en: 'en-US', tj: 'tg-TJ', uz: 'uz-UZ' }[lang], { timeZone: 'UTC' },
     ) : null;
+  const bodyStatus = report
+    ? report.panels.length > 0 || hasDamage
+      ? 'findings'
+      : report.reportKind !== 'body_diagnosis' && report.bodyInspectionAvailable
+        ? 'clear'
+        : 'partial'
+    : null;
 
   return (
     <>
       <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm" aria-label={t('accident.title')}>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">{t('accident.title')}</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-gray-900">{t('accident.title')}</h2>
+          {bodyStatus && (
+            <span data-testid="condition-status" className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              bodyStatus === 'findings' ? 'bg-amber-50 text-amber-800'
+                : bodyStatus === 'clear' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+            }`}>
+              {t(bodyStatus === 'findings' ? 'condition.statusFindings'
+                : bodyStatus === 'clear' ? 'condition.statusClear' : 'condition.statusPartial')}
+            </span>
+          )}
+        </div>
         {isLoading && (
           <div role="status" className="text-sm text-gray-500">
             {t('condition.loading')}

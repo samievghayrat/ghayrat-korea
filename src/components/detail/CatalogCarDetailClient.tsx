@@ -267,7 +267,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
       label: t('price.customsShort'),
       value: calculationReady && breakdown?.customsTotal
         ? formatUsd(breakdown.customsTotal)
-        : t('price.confirmingShort'),
+        : t('price.documentsRequiredShort'),
     },
   ];
   const russianPriceRows = [
@@ -399,8 +399,15 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
               </button>
             </div>
 
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-gray-900">{t('price.calculationTitle')}</h3>
+              <span className="rounded-md bg-gray-100 px-2 py-1 text-[11px] font-bold tracking-wide text-gray-600">
+                {destination === 'russia' ? 'RUB' : 'USD'}
+              </span>
+            </div>
+
             {destination === 'tajikistan' ? (
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4">
+              <div className="mt-2 rounded-2xl border border-gray-200 bg-white px-4">
                 <dl className="divide-y divide-gray-100">
                   {tajikPriceRows.map((row) => (
                     <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
@@ -410,12 +417,12 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
                   ))}
                 </dl>
                 <div className="border-t border-gray-200 py-4">
-                  <div className="flex items-center justify-between gap-4" aria-live="polite">
+                  <div className="flex items-center justify-between gap-4 rounded-xl bg-emerald-50 px-3 py-3" aria-live="polite">
                     <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
                     {calculationReady && formattedDeliveryTotal ? (
                       <span className="text-2xl font-bold tracking-tight text-gray-950">{formattedDeliveryTotal}</span>
                     ) : apiLoaded ? (
-                      <span className="text-base font-semibold text-gray-500">{t('price.confirmingShort')}</span>
+                      <span className="max-w-[11rem] text-right text-sm font-semibold leading-5 text-gray-600">{t('price.documentsRequiredShort')}</span>
                     ) : (
                       <span className="h-8 w-28 animate-pulse rounded bg-gray-100" />
                     )}
@@ -428,7 +435,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
                 </div>
               </div>
             ) : (
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4">
+              <div className="mt-2 rounded-2xl border border-gray-200 bg-white px-4">
                 <dl className="divide-y divide-gray-100">
                   {russianPriceRows.map(row => (
                     <div key={row.label} className="flex items-center justify-between gap-3 py-3">
@@ -439,12 +446,14 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
                 </dl>
                 <RussiaCustomsSummary breakdown={breakdown} />
                 <div className="border-t border-gray-200 py-4">
-                  <div className="flex items-center justify-between gap-3" aria-live="polite">
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-3 py-3" aria-live="polite">
                     <span className="text-base font-semibold text-gray-950">{t('price.totalShort')}</span>
                     {calculationReady && formattedDeliveryTotal ? (
                       <span className="text-2xl font-bold tracking-tight tabular-nums text-gray-950">{formattedDeliveryTotal}</span>
                     ) : apiLoaded ? (
-                      <span className="text-base font-semibold text-gray-500">{t('price.confirmingShort')}</span>
+                      <span className="max-w-[11rem] text-right text-sm font-semibold leading-5 text-gray-600">
+                        {breakdown?.missingData?.length ? t('price.engineDataRequiredShort') : t('price.confirmingShort')}
+                      </span>
                     ) : (
                       <span className="h-8 w-28 animate-pulse rounded bg-gray-100" />
                     )}

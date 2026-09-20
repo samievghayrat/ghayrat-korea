@@ -308,11 +308,26 @@ test('Russian customs starts collapsed, shows the sum, and contains the renamed 
   assert.equal(getTranslation('price.delivery', 'ru'), 'Доставка и услуга');
 });
 
-test('missing Russian engine information keeps the customs summary pending', () => {
+test('incomplete estimates explain exactly which information is needed', () => {
+  const missingEngine = { ...russianExample, calculationComplete: false, missingData: ['hp'] };
+  const html = renderToStaticMarkup(React.createElement(RussiaCustomsSummary, { breakdown: missingEngine }));
+  assert.match(html, /Нужны данные двигателя/);
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    assert.notEqual(getTranslation('price.calculationTitle', lang), 'price.calculationTitle');
+    assert.notEqual(getTranslation('price.documentsRequiredShort', lang), 'price.documentsRequiredShort');
+    assert.notEqual(getTranslation('price.engineDataRequiredShort', lang), 'price.engineDataRequiredShort');
+  }
+  const detail = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
+  assert.match(detail, /t\('price\.documentsRequiredShort'\)/);
+  assert.match(detail, /t\('price\.engineDataRequiredShort'\)/);
+  assert.match(detail, /destination === 'russia' \? 'RUB' : 'USD'/);
+});
+
+test('missing Russian engine information explains why the customs total is unavailable', () => {
   const result = calculateImportCost({ ...base, hp: undefined, destination: 'russia' });
   const html = renderToStaticMarkup(React.createElement(RussiaCustomsSummary, { breakdown: result }));
   const summary = html.match(/<summary[\s\S]*?<\/summary>/)[0];
-  assert.ok(summary.includes(getTranslation('price.confirmingShort', 'ru')));
+  assert.ok(summary.includes(getTranslation('price.engineDataRequiredShort', 'ru')));
   assert.doesNotMatch(summary, /\d[\d\s]* ₽/);
 });
 

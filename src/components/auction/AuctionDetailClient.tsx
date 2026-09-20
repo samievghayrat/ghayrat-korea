@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import CarShareButton from "@/components/shared/CarShareButton";
 import { getCarShareUrl, getManagerContactLinks } from "@/lib/car-sharing";
 import { useEffect, useMemo, useState } from "react";
@@ -142,13 +143,14 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-gray-300 border-t-red-600" />
               </div>
             )}
-            <img
+            <Image
               key={currentImage}
               src={currentImage}
               alt={title}
-              className="h-full w-full object-cover"
-              loading="eager"
-              decoding="async"
+              fill
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              className="object-cover"
+              priority
               fetchPriority="high"
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageLoaded(true)}
@@ -201,7 +203,7 @@ export default function AuctionDetailClient({ car, images }: AuctionDetailClient
                   }`}
                   aria-label={`${copy.showPhoto} ${index + 1}`}
                 >
-                  <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                  <Image src={image} alt="" fill sizes="96px" className="object-cover" />
                 </button>
               ))}
             </div>

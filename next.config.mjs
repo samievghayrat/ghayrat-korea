@@ -13,6 +13,10 @@ const nextConfig = {
         pathname: '/upload/data/**',
         search: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'kcar-bidding-api.ghayrat-sami.workers.dev',
+      },
     ],
   },
   serverExternalPackages: ['mongoose'],

@@ -67,6 +67,17 @@ test('only the first row of three catalogue photos receives high priority', () =
   assert.equal((html.match(/data-priority="false"/g) || []).length, 21);
 });
 
+test('auction cards and gallery use optimized responsive images', () => {
+  const card = fs.readFileSync(path.resolve(__dirname, '../src/components/auction/AuctionCarCard.tsx'), 'utf8');
+  const detail = fs.readFileSync(path.resolve(__dirname, '../src/components/auction/AuctionDetailClient.tsx'), 'utf8');
+  for (const source of [card, detail]) {
+    assert.match(source, /import Image from ["']next\/image["']/);
+    assert.doesNotMatch(source, /<img\b/);
+  }
+  assert.match(card, /sizes="\(max-width: 640px\) 100vw/);
+  assert.match(detail, /sizes="96px"/);
+});
+
 test('catalogue cards match their year-based destination quote without changing own-car prices', () => {
   const noComponent = { __esModule: true, default: () => null };
   const { default: Card } = loadTs('src/components/catalog/CarCard.tsx', {

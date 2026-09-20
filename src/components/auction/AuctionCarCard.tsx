@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { localizeVehicleValue } from "@/lib/i18n";
@@ -64,12 +65,13 @@ export default function AuctionCarCard({ car, priority = false, href }: AuctionC
       className="group overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-red-200 hover:shadow-md"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
-        <img
+        <Image
           src={imageSrc}
           alt={title}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+          priority={priority}
           fetchPriority={priority ? "high" : "auto"}
           onError={useGalleryFallback}
         />

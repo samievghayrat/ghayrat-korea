@@ -275,7 +275,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
     { label: t('price.delivery'), value: breakdown ? formatRub(breakdown.serviceFee) : '—' },
   ];
   const contactLinks = getManagerContactLinks(
-    `${t('contact.carInterest')} ${fullTitle} ${car.year}\n${getCarShareUrl('catalog', car.id, destination)}`,
+    `${t('contact.carInterest')}: ${fullTitle} ${car.year}\n№ ${car.id}\n${getCarShareUrl('catalog', car.id, destination)}`,
   );
 
   return (
@@ -546,15 +546,26 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
 
 
             <a
-              href={contactLinks.telegram}
+              href={contactLinks.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-cta-green mt-5"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+              </svg>
+              {t('contact.exactQuote')}
+            </a>
+            <a
+              href={contactLinks.telegram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[#0088cc] transition-colors hover:bg-sky-50"
+            >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
               </svg>
-              {t('nav.writeManager')}
+              {t('contact.telegramAlternative')}
             </a>
 
             {/* How to buy link */}

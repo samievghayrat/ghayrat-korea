@@ -96,6 +96,19 @@ test('WhatsApp and Telegram drafts include the current car link in every selecte
   }
 });
 
+test('detail quote action sends the full car name, listing number and exact country link', () => {
+  const detail = fs.readFileSync(path.resolve(__dirname, '../src/components/detail/CatalogCarDetailClient.tsx'), 'utf8');
+  assert.match(detail, /contact\.carInterest'\)\}: \$\{fullTitle\} \$\{car\.year\}/);
+  assert.match(detail, /№ \$\{car\.id\}/);
+  assert.match(detail, /getCarShareUrl\('catalog', car\.id, destination\)/);
+  assert.match(detail, /href=\{contactLinks\.whatsapp\}[\s\S]*?contact\.exactQuote/);
+  assert.match(detail, /href=\{contactLinks\.telegram\}[\s\S]*?contact\.telegramAlternative/);
+  for (const lang of ['ru', 'en', 'tj', 'uz']) {
+    assert.notEqual(getTranslation('contact.exactQuote', lang), 'contact.exactQuote');
+    assert.notEqual(getTranslation('contact.telegramAlternative', lang), 'contact.telegramAlternative');
+  }
+});
+
 test('header, footer and contact actions also include the current listing link', () => {
   const route = '/catalog/42738544';
   for (const file of ['src/components/layout/Header.tsx', 'src/components/layout/Footer.tsx',

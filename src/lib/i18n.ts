@@ -84,6 +84,8 @@ const t = {
   'nav.auction': { ru: 'Аукцион', en: 'Auction', tj: 'Музояда', uz: 'Auksion' },
   'brand.subtitle': { ru: 'Авто из Кореи', en: 'Cars from Korea', tj: 'Мошинҳо аз Корея', uz: 'Koreyadan avtomobillar' },
   'contact.carInterest': { ru: 'Интересует автомобиль', en: 'I am interested in car', tj: 'Ба ин мошин таваҷҷуҳ дорам', uz: 'Bu avtomobilga qiziqyapman' },
+  'contact.exactQuote': { ru: 'Получить точный расчёт', en: 'Get an exact quote', tj: 'Ҳисоби дақиқ гиред', uz: 'Aniq hisobni olish' },
+  'contact.telegramAlternative': { ru: 'Или написать в Telegram', en: 'Or message us on Telegram', tj: 'Ё дар Telegram нависед', uz: 'Yoki Telegram orqali yozing' },
 
   // Source tabs
   'tab.encar': { ru: 'Encar', en: 'Encar', tj: 'Encar', uz: 'Encar' },

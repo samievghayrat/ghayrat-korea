@@ -33,6 +33,14 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
   const hasPrice = car.price_krw > 0 || (car.source === 'own' && (car.price_rub > 0 || (car.price_usd || 0) > 0));
   const displayPrice = getPriceIncludingEncarFee(car,
     car.source === 'encar' ? getCarDeliveryDestination(car.year) : undefined);
+  const fuelValue = car.fuel.toLocaleLowerCase();
+  const drivetrainValue = (car.drivetrain || '').toLocaleLowerCase();
+  const highlights = [
+    car.mileage > 0 && car.mileage <= 50_000 ? t('card.lowMileage') : null,
+    /hybrid|гибрид|하이브리드/.test(fuelValue) ? t('fuel.hybrid')
+      : /electric|электро|전기/.test(fuelValue) ? t('fuel.electric') : null,
+    /awd|4wd|полный|사륜|4륜/.test(drivetrainValue) ? t('card.allWheelDrive') : null,
+  ].filter((value): value is string => Boolean(value)).slice(0, 2);
 
   return (
     <Link
@@ -89,6 +97,15 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
               <span className="text-gray-300">/</span>
               <span className="truncate">{localizeVehicleValue(car.fuel, lang)}</span>
             </div>
+            {highlights.length > 0 && (
+              <div data-testid="car-highlights" className="mt-2 flex flex-wrap gap-1.5">
+                {highlights.map(highlight => (
+                  <span key={highlight} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                    {highlight}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="shrink-0 text-right text-base font-extrabold leading-tight text-emerald-700 sm:text-lg">
             {hasPrice ? formatListingPrice(displayPrice.priceKrw, displayPrice.priceRub, displayPrice.priceUsd) : '—'}

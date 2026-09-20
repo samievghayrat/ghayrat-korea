@@ -92,6 +92,25 @@ test('catalogue cards match their year-based destination quote without changing 
   assert.ok(generated.includes('Lexus ES300h 7-го поколения Executive'));
 });
 
+test('catalogue cards show no more than two useful factual highlights', () => {
+  const noComponent = { __esModule: true, default: () => null };
+  const { default: Card } = loadTs('src/components/catalog/CarCard.tsx', {
+    'next/link': { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) },
+    'next/image': noComponent,
+    '@/components/shared/FavoriteButton': noComponent,
+    '@/contexts/AppContext': { useApp: () => ({ t: key => getTranslation(key, 'ru'), lang: 'ru',
+      formatMileage: String, formatListingPrice: () => '$8,000' }) },
+  });
+  const html = renderToStaticMarkup(React.createElement(Card, {
+    car: { ...car, mileage: 30_000, fuel: 'Гибрид', drivetrain: 'Полный (AWD)' },
+  }));
+  const highlights = html.match(/<div[^>]+data-testid="car-highlights"[\s\S]*?<\/div>/)[0];
+  assert.ok(highlights.includes(getTranslation('card.lowMileage', 'ru')));
+  assert.ok(highlights.includes(getTranslation('fuel.hybrid', 'ru')));
+  assert.ok(!highlights.includes(getTranslation('card.allWheelDrive', 'ru')));
+  assert.equal((highlights.match(/<span/g) || []).length, 2);
+});
+
 test('catalogue exposes generation immediately while mileage stays inside more filters', () => {
   const { default: Search } = loadTs('src/components/catalog/EncarSearch.tsx', {
     '@/lib/constants': { YEAR_OPTIONS: [2026, 2025] },

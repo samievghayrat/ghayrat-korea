@@ -273,6 +273,8 @@ const t = {
   'card.priceInKorea': { ru: 'Цена в Корее', en: 'Price in Korea', tj: 'Нарх дар Корея', uz: 'Koreyadagi narx' },
   'card.priceInKoreaUsd': { ru: 'Цена в Корее · USD', en: 'Korea price · USD', tj: 'Нарх дар Корея · USD', uz: 'Koreya narxi · USD' },
   'card.viewAndCalculate': { ru: 'Открыть и рассчитать доставку', en: 'Open and calculate delivery', tj: 'Кушодан ва ҳисоб кардани таҳвил', uz: 'Ochish va yetkazishni hisoblash' },
+  'card.lowMileage': { ru: 'Низкий пробег', en: 'Low mileage', tj: 'Масофаи кам', uz: 'Kam yurgan' },
+  'card.allWheelDrive': { ru: 'Полный привод', en: 'All-wheel drive', tj: 'Чархгардони пурра', uz: 'To‘liq uzatma' },
   'card.turnkeyVladivostok': { ru: 'до Владивостока, с доставкой и растаможкой', en: 'to Vladivostok, including shipping and customs', tj: 'то Владивосток, бо интиқол ва расмиёти гумрукӣ', uz: 'Vladivostokgacha, yetkazish va bojxona bilan' },
   'card.turnkeyTajikistan': { ru: 'до Таджикистана с доставкой и растаможкой', en: 'to Tajikistan with shipping and customs', tj: 'то Тоҷикистон бо таҳвил ва расмиёти гумрукӣ', uz: 'Tojikistongacha yetkazish va bojxona bilan' },
 

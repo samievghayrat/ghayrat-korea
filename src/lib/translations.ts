@@ -530,6 +530,7 @@ const badgeWordMap: Record<string, string> = {
   '가솔린+전기': 'Гибрид',
   '디젤+전기': 'Гибрид',
   '전기': 'Электро',
+  '휠체어 리프트': 'Подъёмник для инвалидной коляски',
 };
 
 export function translateBadgeDetail(korean: string, lang: Lang = 'ru'): string {

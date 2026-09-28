@@ -81,6 +81,13 @@ test('fuel filtering accepts multiple selections', () => {
   const result = getSnapshotSearch({ fuel: 'gasoline,diesel', limit: 1000 });
   assert.ok(result.total > 0);
   assert.ok(result.rows.every(car => /(가솔린|디젤)/.test(String(car.FuelType || ''))));
+  assert.ok(result.rows.every(car => !/(\+전기|하이브리드|HEV|PHEV)/i.test(`${car.FuelType || ''} ${car.Badge || ''}`)));
+});
+
+test('gasoline does not include hybrid or LPG cars', () => {
+  const result = getSnapshotSearch({ fuel: 'gasoline', limit: 2000 });
+  assert.ok(result.total > 0);
+  assert.ok(result.rows.every(car => !/(\+전기|하이브리드|HEV|PHEV|LPG)/i.test(`${car.FuelType || ''} ${car.Badge || ''}`)));
 });
 
 test('the selector payload is compact and does not send vehicle records to the browser', () => {

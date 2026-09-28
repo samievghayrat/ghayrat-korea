@@ -679,10 +679,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     }
   }, [filters.brand, filters.model, navigation, fetchGenerations]);
 
-  // Badge/trim data is only needed in the advanced panel. Avoid starting this
-  // relatively expensive snapshot lookup during the primary brand/model flow.
+  // Begin loading badge/trim data as soon as a generation is selected. It stays
+  // out of the primary brand/model flow, but is usually ready before the user
+  // opens the advanced panel.
   useEffect(() => {
-    if (showMoreFilters && filters.brand && filters.model && filters.modelVariant) {
+    if (filters.brand && filters.model && filters.modelVariant) {
       const cacheKey = `badges:${filters.brand}:${filters.model}:${filters.modelVariant}`;
       const cached = clientCache.get(cacheKey) as { badges?: BadgeOption[]; badgeTree?: BadgeTreeGroup[] } | undefined;
       if (cached) {
@@ -714,7 +715,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       setBadgeList([]);
       setBadgeTree([]);
     }
-  }, [showMoreFilters, filters.brand, filters.model, filters.modelVariant]);
+  }, [filters.brand, filters.model, filters.modelVariant]);
 
   const sortedGenerationVariants = [...generationVariants].sort((a, b) =>
     (b.yearTo || 0) - (a.yearTo || 0)
@@ -968,7 +969,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                     >
                       <button
                         type="button"
-                        aria-label={isGroupExpanded ? t('search.hideFilters') : t('search.moreFilters')}
+                        aria-label={`${isGroupExpanded ? 'Скрыть' : 'Показать'}: ${groupLabel || t('filter.type')}`}
                         onClick={() => {
                           setExpandedGroup(isGroupExpanded ? null : groupKey);
                           if (!isGroupExpanded) setExpandedBadge(null);

@@ -79,19 +79,38 @@ function matchesModel(car: SnapshotCar, model?: string): boolean {
     || translateModel(baseModel) === model;
 }
 
+type SnapshotFuelCategory = 'gasoline' | 'diesel' | 'hybrid' | 'electric' | 'lpg' | 'other';
+
+function getFuelCategory(car: SnapshotCar): SnapshotFuelCategory {
+  const fuel = (car.FuelType || '').toUpperCase();
+  const badge = (car.Badge || '').toUpperCase();
+  const combined = `${fuel} ${badge}`;
+
+  // Check combined fuels before their component words. Korean hybrid values such
+  // as "gasoline+electric" otherwise also match the gasoline substring.
+  if (/HEV|PHEV|HYBRID|하이브리드|가솔린\+전기|디젤\+전기/.test(combined)) return 'hybrid';
+  if (/LPG/.test(fuel)) return 'lpg';
+  if (/전기|ELECTRIC|\bEV\b/.test(fuel)) return 'electric';
+  if (/디젤|DIESEL/.test(fuel)) return 'diesel';
+  if (/가솔린|GASOLINE/.test(fuel)) return 'gasoline';
+  return 'other';
+}
+
+function fuelCategoryLabel(category: SnapshotFuelCategory, fallback: string): string {
+  return {
+    gasoline: '가솔린',
+    diesel: '디젤',
+    hybrid: '하이브리드',
+    electric: '전기',
+    lpg: 'LPG',
+    other: fallback,
+  }[category];
+}
+
 function matchesFuel(car: SnapshotCar, fuel?: string): boolean {
   if (!fuel) return true;
-  const fuelMap: Record<string, string[]> = {
-    gasoline: ['가솔린'],
-    diesel: ['디젤'],
-    hybrid: ['가솔린+전기', '디젤+전기', '하이브리드'],
-    electric: ['전기'],
-    lpg: ['LPG'],
-  };
   const selected = fuel.split(',').map(value => value.trim()).filter(Boolean);
-  return selected.some(type =>
-    (fuelMap[type] || []).some(value => (car.FuelType || '').includes(value))
-  );
+  return selected.includes(getFuelCategory(car));
 }
 
 function matchesTransmission(car: SnapshotCar, transmission?: string): boolean {
@@ -337,7 +356,7 @@ export function getSnapshotModelData(brand: string, model?: string, variant?: st
         const details = detailCounts.get(badge)!;
         details.set(detail, (details.get(detail) || 0) + 1);
       }
-      const fuel = car.FuelType || '';
+      const fuel = fuelCategoryLabel(getFuelCategory(car), car.FuelType || '');
       const drivetrainMatch = badge.match(/(?:^|\s)(2WD|4WD|AWD)(?:\s|$)/i);
       const groupKey = `${fuel}|${drivetrainMatch?.[1]?.toUpperCase() || ''}`;
       if (!tree.has(groupKey)) tree.set(groupKey, new Map());

@@ -390,11 +390,11 @@ export function calculateImportCost(input: CalcInput): PriceBreakdownData {
     ? Math.round(panAutoCustoms!.utilizationFee)
     : localUtilizationFee;
 
-  // 5. Delivery to Vladivostok ($600) + company service (50,000 RUB).
+  // 5. Delivery to Vladivostok ($600) + company service (40,000 RUB).
   // Korea-side expenses are carried separately in `encarFee` so every item can
   // be shown transparently without counting it twice in the total.
   const serviceFeeUsd = 600;
-  const companyServiceFeeRub = 50000;
+  const companyServiceFeeRub = 40000;
   const serviceFee = Math.round(serviceFeeUsd * usdToRub) + companyServiceFeeRub;
 
   // 6. Broker fee: 100,000 RUB

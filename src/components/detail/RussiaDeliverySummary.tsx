@@ -3,7 +3,7 @@
 import type { PriceBreakdownData } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 
-const COMPANY_SERVICE_FEE_RUB = 50_000;
+const COMPANY_SERVICE_FEE_RUB = 40_000;
 
 export default function RussiaDeliverySummary({ breakdown }: { breakdown: PriceBreakdownData | null }) {
   const { t } = useApp();

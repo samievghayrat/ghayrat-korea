@@ -145,8 +145,8 @@ export interface PriceBreakdownData {
   customsFee: number; // таможенный сбор за оформление
   utilizationFee: number;
   utilizationWarning?: string; // warning for >160 HP cars
-  serviceFee: number; // $1,600 converted to RUB
-  serviceFeeUsd: number; // raw USD amount
+  serviceFee: number; // $600 shipping converted to RUB + 50,000 RUB service
+  serviceFeeUsd: number; // raw shipping amount in USD
   brokerFee: number; // 100,000 RUB
   // Tajikistan-specific fields (all in USD)
   customsValue?: number;

@@ -312,6 +312,8 @@ const t = {
   'price.utilizationFee': { ru: 'Утилизационный сбор', en: 'Utilization fee', tj: 'Ҳаққи утилизатсия', uz: 'Utilizatsiya to\'lovi' },
   'price.delivery': { ru: 'Доставка и услуга', en: 'Delivery & service', tj: 'Таҳвил ва хизматрасонӣ', uz: 'Yetkazish va xizmat' },
   'price.shippingRussia': { ru: 'Доставка', en: 'Shipping', tj: 'Таҳвил', uz: 'Yetkazib berish' },
+  'price.koreaExpensesParking': { ru: 'Расходы по Корее / стояночные', en: 'Korea expenses / parking', tj: 'Хароҷот дар Корея / таваққуфгоҳ', uz: 'Koreyadagi xarajatlar / saqlash' },
+  'price.shippingVladivostok': { ru: 'Доставка до Владивостока', en: 'Shipping to Vladivostok', tj: 'Таҳвил то Владивосток', uz: 'Vladivostokkacha yetkazish' },
   'price.companyService': { ru: 'Услуга', en: 'Service fee', tj: 'Хизматрасонӣ', uz: 'Xizmat haqi' },
   'price.deliveryDesc': { ru: 'расходы в Корее, доставка до Владивостока, услуга компании', en: 'expenses in Korea, delivery to Vladivostok, company service', tj: 'хароҷот дар Корея, интиқол то Владивосток, хизмати ширкат', uz: 'Koreyadagi xarajatlar, Vladivostokgacha yetkazish, kompaniya xizmati' },
   'price.customsFee': { ru: 'Таможенный сбор', en: 'Customs processing fee', tj: 'Ҳаққи гумрукӣ', uz: 'Bojxona yigʻimi' },

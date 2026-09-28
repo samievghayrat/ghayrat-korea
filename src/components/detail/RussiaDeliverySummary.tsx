@@ -7,12 +7,31 @@ const COMPANY_SERVICE_FEE_RUB = 50_000;
 
 export default function RussiaDeliverySummary({ breakdown }: { breakdown: PriceBreakdownData | null }) {
   const { t } = useApp();
-  const total = breakdown?.currency === 'RUB' ? breakdown.serviceFee : null;
-  const shipping = total !== null ? Math.max(0, total - COMPANY_SERVICE_FEE_RUB) : null;
+  const ready = breakdown?.currency === 'RUB';
+  const shippingRub = ready ? Math.max(0, breakdown.serviceFee - COMPANY_SERVICE_FEE_RUB) : null;
+  const koreaExpensesRub = ready ? (breakdown.encarFee || 0) : null;
+  const total = ready ? breakdown.serviceFee + (breakdown.encarFee || 0) : null;
+  const usdToRub = ready && breakdown.serviceFeeUsd > 0 && shippingRub !== null
+    ? shippingRub / breakdown.serviceFeeUsd
+    : null;
+  const koreaExpensesUsd = koreaExpensesRub !== null && usdToRub
+    ? Math.round(koreaExpensesRub / usdToRub)
+    : null;
   const formatRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
   const rows = [
-    { label: t('price.shippingRussia'), value: shipping !== null ? formatRub(shipping) : '—' },
+    {
+      label: t('price.koreaExpensesParking'),
+      value: breakdown?.encarFeeKrw
+        ? `₩${breakdown.encarFeeKrw.toLocaleString('ko-KR')}${koreaExpensesUsd !== null ? ` ($${koreaExpensesUsd.toLocaleString('en-US')})` : ''}`
+        : '—',
+    },
+    {
+      label: t('price.shippingVladivostok'),
+      value: shippingRub !== null
+        ? `$${breakdown!.serviceFeeUsd.toLocaleString('en-US')} (${formatRub(shippingRub)})`
+        : '—',
+    },
     { label: t('price.companyService'), value: formatRub(COMPANY_SERVICE_FEE_RUB) },
   ];
 

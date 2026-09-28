@@ -272,7 +272,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
     },
   ];
   const russianPriceRows = [
-    { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice + (breakdown.encarFee || 0) : displayPrice.priceRub) },
+    { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice : displayPrice.priceRub) },
   ];
   const contactLinks = getManagerContactLinks(
     `${t('contact.carInterest')}: ${fullTitle} ${car.year}\n№ ${car.id}\n${getCarShareUrl('catalog', car.id, destination)}`,

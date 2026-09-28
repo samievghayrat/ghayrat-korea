@@ -151,7 +151,7 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
           onClick={onToggle}
           className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
             value
-              ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+              ? 'border-primary/20 bg-primary/[0.035] hover:border-primary/40'
               : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
           }`}
         >
@@ -451,7 +451,7 @@ function BrandModelPicker({
   );
 
   return (
-    <div ref={containerRef} className="mb-2 space-y-2">
+    <div ref={containerRef} className="mb-3 space-y-2">
       <div className="relative">
         <button
           type="button"
@@ -459,7 +459,7 @@ function BrandModelPicker({
           aria-expanded={open === 'brands'}
           className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all ${
             selectedBrand
-              ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+              ? 'border-primary/20 bg-primary/[0.035] hover:border-primary/40'
               : 'border-transparent bg-gray-100/80 hover:bg-gray-100'
           }`}
         >
@@ -499,7 +499,7 @@ function BrandModelPicker({
             !selectedBrand
               ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
               : selectedModel
-                ? 'border-primary/25 bg-primary/5 hover:border-primary/45'
+                ? 'border-primary/20 bg-primary/[0.035] hover:border-primary/40'
                 : 'border-gray-200 bg-white hover:border-gray-300'
           }`}
         >
@@ -791,7 +791,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
 
   return (
-    <div className="relative z-30 rounded-[24px] border border-gray-200/80 bg-white p-3 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
+    <div className="relative z-30 rounded-[26px] border border-gray-200/80 bg-white p-4 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.65)]">
       <BrandModelPicker
         brands={brandCounts || []}
         models={modelList}
@@ -818,7 +818,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
 
       {/* Generation selector */}
       {filters.model && (
-        <div data-testid="generation-filter">
+        <div data-testid="generation-filter" className="border-t border-gray-100 pt-3">
           <SelectBox
           label=""
           value={selectedGenName}
@@ -882,7 +882,11 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       )}
 
       {/* Primary year range */}
-      <div className="mb-2 grid grid-cols-2 gap-2">
+      <div className="mb-2 border-t border-gray-100 pt-3">
+        <div className="mb-2 px-0.5 text-xs font-bold uppercase tracking-wide text-gray-400">
+          {t('filter.year')}
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
         {([
           ['yearFrom', t('filter.yearFrom')],
           ['yearTo', t('filter.yearTo')],
@@ -894,7 +898,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
               onChange={(event) => updateYearRange(key, event.target.value ? Number(event.target.value) : undefined)}
               className={`h-12 w-full appearance-none rounded-xl border px-3 pr-9 text-sm font-semibold outline-none transition-colors focus:ring-2 focus:ring-primary/15 ${
                 filters[key]
-                  ? 'border-primary/30 bg-primary/5 text-primary'
+                  ? 'border-primary/25 bg-primary/[0.04] text-primary'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -906,6 +910,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
             </span>
           </label>
         ))}
+        </div>
       </div>
 
       {/* Hierarchical Badge Tree: Fuel+Drivetrain â†’ Engine Badge â†’ Trim */}

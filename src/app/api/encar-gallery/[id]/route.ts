@@ -4,7 +4,13 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 const ENCAR_READSIDE_BASE = 'https://api.encar.com/v1/readside';
+const ENCAR_SEARCH_URL = 'https://api.encar.com/search/car/list/general';
 const ENCAR_IMAGE_CDN = 'https://ci.encar.com';
+const ENCAR_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+};
 
 interface EncarPhoto {
   type?: string;
@@ -32,6 +38,37 @@ function getDisplayImageUrl(path: string): string {
   return `${ENCAR_IMAGE_CDN}${canonicalPath}?${params.toString()}`;
 }
 
+async function fetchVehicle(vehicleId: string): Promise<Response> {
+  return fetch(`${ENCAR_READSIDE_BASE}/vehicle/${vehicleId}`, {
+    headers: ENCAR_HEADERS,
+    cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
+  });
+}
+
+async function resolveVehicleId(listingId: string): Promise<string | null> {
+  const query = `(And.Hidden.N._.SellType.\uC77C\uBC18._.CarId.${listingId}.)`;
+  const url = new URL(ENCAR_SEARCH_URL);
+  url.searchParams.set('count', 'true');
+  url.searchParams.set('q', query);
+  url.searchParams.set('sr', '|ModifiedDate|0|1');
+
+  const response = await fetch(url, {
+    headers: ENCAR_HEADERS,
+    cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const result = data.SearchResults?.[0] as { Photo?: unknown } | undefined;
+  if (typeof result?.Photo !== 'string') return null;
+
+  // Encar listing IDs can differ from the internal vehicle ID used by the
+  // readside gallery API. The canonical photo prefix contains that ID.
+  return result.Photo.match(/\/(\d+)_?$/)?.[1] || null;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -42,15 +79,16 @@ export async function GET(
   }
 
   try {
-    const response = await fetch(`${ENCAR_READSIDE_BASE}/vehicle/${id}`, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-      cache: 'no-store',
-      signal: AbortSignal.timeout(8000),
-    });
+    // Start the lightweight listing lookup at the same time. Most IDs work
+    // directly, while newer Encar listings sometimes point at a different
+    // internal vehicle ID. Parallel resolution keeps the normal path fast.
+    const resolvedIdPromise = resolveVehicleId(id).catch(() => null);
+    let response = await fetchVehicle(id);
+
+    if (!response.ok) {
+      const resolvedId = await resolvedIdPromise;
+      if (resolvedId && resolvedId !== id) response = await fetchVehicle(resolvedId);
+    }
 
     if (!response.ok) {
       return NextResponse.json({ error: 'Gallery unavailable' }, { status: 502 });
@@ -92,7 +130,9 @@ export async function GET(
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600',
+          // Listing galleries rarely change. Keep successful responses close
+          // to visitors so the Encar readside API is not on every page load.
+          'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=604800',
         },
       },
     );

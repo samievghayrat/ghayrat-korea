@@ -107,6 +107,10 @@ function fuelCategoryLabel(category: SnapshotFuelCategory, fallback: string): st
   }[category];
 }
 
+export function normalizeSnapshotFuelType(fuelType?: string, badge?: string): string {
+  return fuelCategoryLabel(getFuelCategory({ FuelType: fuelType, Badge: badge }), fuelType || '');
+}
+
 function matchesFuel(car: SnapshotCar, fuel?: string): boolean {
   if (!fuel) return true;
   const selected = fuel.split(',').map(value => value.trim()).filter(Boolean);

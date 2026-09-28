@@ -22,7 +22,7 @@ function loadTs(file, overrides = {}, modules = new Map()) {
   return loaded.exports;
 }
 
-const { getSnapshotNavigation, getSnapshotModelData, getSnapshotBrandCounts, getSnapshotSearch } = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'));
+const { getSnapshotNavigation, getSnapshotModelData, getSnapshotBrandCounts, getSnapshotSearch, normalizeSnapshotFuelType } = loadTs(path.resolve(__dirname, '../src/lib/encar-snapshot.ts'));
 const { ENCAR_BRANDS } = loadTs(path.resolve(__dirname, '../src/lib/encar-brands.ts'));
 const { getCatalogGenerations, getCatalogModels } = loadTs(path.resolve(__dirname, '../src/lib/catalog-navigation.ts'));
 const navigation = getSnapshotNavigation();
@@ -88,6 +88,11 @@ test('gasoline does not include hybrid or LPG cars', () => {
   const result = getSnapshotSearch({ fuel: 'gasoline', limit: 2000 });
   assert.ok(result.total > 0);
   assert.ok(result.rows.every(car => !/(\+전기|하이브리드|HEV|PHEV|LPG)/i.test(`${car.FuelType || ''} ${car.Badge || ''}`)));
+});
+
+test('HEV badges normalize inconsistent Encar gasoline labels to hybrid', () => {
+  assert.equal(normalizeSnapshotFuelType('가솔린', 'HEV 9인승 Gravity'), '하이브리드');
+  assert.equal(normalizeSnapshotFuelType('가솔린', '9인승 Gravity'), '가솔린');
 });
 
 test('the selector payload is compact and does not send vehicle records to the browser', () => {

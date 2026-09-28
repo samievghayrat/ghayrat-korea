@@ -4,7 +4,7 @@ import { calculateImportCost } from './calculator';
 import { ENCAR_FEE_KRW, getEncarFeeKrw } from './encar-fee';
 import type { CarListing, CarFilters, CatalogResponse } from '@/types';
 import { HP_DATA, ENGINE_FALLBACK } from '@/data/hp-data';
-import { getSnapshotCarById, getSnapshotSearch } from './encar-snapshot';
+import { getSnapshotCarById, getSnapshotSearch, normalizeSnapshotFuelType } from './encar-snapshot';
 import { ENCAR_API_BASE, ENCAR_READSIDE_BASE } from './encar-endpoints';
 import { fetchEncarInspection } from './fetch-encar-inspection';
 import { getPanAutoVehicleReference } from './pan-auto';
@@ -808,9 +808,9 @@ async function transformSearchResults(
       const hp = engineData.hp || 0;
       // Use Encar displacement first, then fallback to ENGINE_FALLBACK cc from local lookup
       const displacement = engineData.cc || (item.Displacement as number) || 0;
-      const fuel = translateFuel((item.FuelType as string) || '');
       const rawBadge = (item.Badge as string) || '';
       const rawBadgeDetail = (item.BadgeDetail as string) || '';
+      const fuel = translateFuel(normalizeSnapshotFuelType((item.FuelType as string) || '', rawBadge));
 
       // Pre-calculate turnkey prices on server with accurate HP and live rates
       const russiaBreakdown = calculateImportCost({

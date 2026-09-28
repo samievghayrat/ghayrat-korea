@@ -57,5 +57,9 @@ export async function GET(request: NextRequest) {
     // Don't fail the response if reservation lookup fails
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600',
+    },
+  });
 }

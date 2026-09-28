@@ -657,9 +657,10 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
     }
   }, [filters.brand, filters.model, navigation, fetchGenerations]);
 
-  // Fetch badges/trims when a generation variant is selected
+  // Badge/trim data is only needed in the advanced panel. Avoid starting this
+  // relatively expensive snapshot lookup during the primary brand/model flow.
   useEffect(() => {
-    if (filters.brand && filters.model && filters.modelVariant) {
+    if (showMoreFilters && filters.brand && filters.model && filters.modelVariant) {
       const cacheKey = `badges:${filters.brand}:${filters.model}:${filters.modelVariant}`;
       const cached = clientCache.get(cacheKey) as { badges?: BadgeOption[]; badgeTree?: BadgeTreeGroup[] } | undefined;
       if (cached) {
@@ -691,7 +692,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
       setBadgeList([]);
       setBadgeTree([]);
     }
-  }, [filters.brand, filters.model, filters.modelVariant]);
+  }, [showMoreFilters, filters.brand, filters.model, filters.modelVariant]);
 
   const sortedGenerationVariants = [...generationVariants].sort((a, b) =>
     (b.yearTo || 0) - (a.yearTo || 0)

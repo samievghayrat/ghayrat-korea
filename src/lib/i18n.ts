@@ -311,6 +311,8 @@ const t = {
   'price.customsDuty': { ru: 'Таможенная пошлина', en: 'Customs duty', tj: 'Божи гумрукӣ', uz: 'Bojxona boji' },
   'price.utilizationFee': { ru: 'Утилизационный сбор', en: 'Utilization fee', tj: 'Ҳаққи утилизатсия', uz: 'Utilizatsiya to\'lovi' },
   'price.delivery': { ru: 'Доставка и услуга', en: 'Delivery & service', tj: 'Таҳвил ва хизматрасонӣ', uz: 'Yetkazish va xizmat' },
+  'price.shippingRussia': { ru: 'Доставка', en: 'Shipping', tj: 'Таҳвил', uz: 'Yetkazib berish' },
+  'price.companyService': { ru: 'Услуга', en: 'Service fee', tj: 'Хизматрасонӣ', uz: 'Xizmat haqi' },
   'price.deliveryDesc': { ru: 'расходы в Корее, доставка до Владивостока, услуга компании', en: 'expenses in Korea, delivery to Vladivostok, company service', tj: 'хароҷот дар Корея, интиқол то Владивосток, хизмати ширкат', uz: 'Koreyadagi xarajatlar, Vladivostokgacha yetkazish, kompaniya xizmati' },
   'price.customsFee': { ru: 'Таможенный сбор', en: 'Customs processing fee', tj: 'Ҳаққи гумрукӣ', uz: 'Bojxona yigʻimi' },
   'price.customsFeeDesc': { ru: 'сбор за оформление', en: 'declaration processing', tj: 'барои расмиёт', uz: 'rasmiylashtirish uchun' },

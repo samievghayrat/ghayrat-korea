@@ -7,6 +7,7 @@ import type { CarListing } from '@/types';
 import ImageGallery from '@/components/detail/ImageGallery';
 import CarSpecs from '@/components/detail/CarSpecs';
 import RussiaCustomsSummary from '@/components/detail/RussiaCustomsSummary';
+import RussiaDeliverySummary from '@/components/detail/RussiaDeliverySummary';
 import Equipment from '@/components/detail/Equipment';
 import CarCondition from '@/components/detail/CarCondition';
 import SimilarCars from '@/components/detail/SimilarCars';
@@ -272,7 +273,6 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
   ];
   const russianPriceRows = [
     { label: t('card.priceInKorea'), value: formatRub(breakdown ? breakdown.carPrice + (breakdown.encarFee || 0) : displayPrice.priceRub) },
-    { label: t('price.delivery'), value: breakdown ? formatRub(breakdown.serviceFee) : '—' },
   ];
   const contactLinks = getManagerContactLinks(
     `${t('contact.carInterest')}: ${fullTitle} ${car.year}\n№ ${car.id}\n${getCarShareUrl('catalog', car.id, destination)}`,
@@ -444,6 +444,7 @@ export default function CatalogCarDetailClient({ initialCar = null }: { initialC
                     </div>
                   ))}
                 </dl>
+                <RussiaDeliverySummary breakdown={breakdown} />
                 <RussiaCustomsSummary breakdown={breakdown} />
                 <div className="border-t border-gray-200 py-4">
                   <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-3 py-3" aria-live="polite">

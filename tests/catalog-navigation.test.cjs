@@ -77,6 +77,12 @@ test('generation and mileage selections filter the saved catalogue records', () 
   assert.ok(selectedMileage.rows.every(car => car.Mileage === mileage));
 });
 
+test('fuel filtering accepts multiple selections', () => {
+  const result = getSnapshotSearch({ fuel: 'gasoline,diesel', limit: 1000 });
+  assert.ok(result.total > 0);
+  assert.ok(result.rows.every(car => /(가솔린|디젤)/.test(String(car.FuelType || ''))));
+});
+
 test('the selector payload is compact and does not send vehicle records to the browser', () => {
   const json = JSON.stringify(navigation);
   assert.ok(Buffer.byteLength(json) < 500000, `${Buffer.byteLength(json)} bytes`);

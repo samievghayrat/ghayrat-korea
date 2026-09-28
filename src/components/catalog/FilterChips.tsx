@@ -57,8 +57,11 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
     chips.push({ label: translateModel(filters.badgeDetail), key: 'badgeDetail' });
   }
   if (filters.fuel) {
-    const key = fuelMap[filters.fuel];
-    chips.push({ label: key ? t(key) : filters.fuel, key: 'fuel' });
+    const label = filters.fuel.split(',').map(value => {
+      const key = fuelMap[value];
+      return key ? t(key) : value;
+    }).join(', ');
+    chips.push({ label, key: 'fuel' });
   }
   if (filters.bodyType) {
     const key = bodyMap[filters.bodyType];

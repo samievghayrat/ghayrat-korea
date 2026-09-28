@@ -224,6 +224,28 @@ function SelectBox({ label, value, count, placeholder, open, onToggle, onClear, 
   );
 }
 
+function splitSelections(value?: string): string[] {
+  return value ? value.split(',').map(item => item.trim()).filter(Boolean) : [];
+}
+
+function toggleSelection(value: string | undefined, item: string): string | undefined {
+  const selected = splitSelections(value);
+  const next = selected.includes(item)
+    ? selected.filter(value => value !== item)
+    : [...selected, item];
+  return next.length ? next.join(',') : undefined;
+}
+
+function fuelCodeFromLabel(value: string): string | undefined {
+  if (value.includes('전기') && (value.includes('가솔린') || value.includes('디젤'))) return 'hybrid';
+  if (value.includes('하이브리드')) return 'hybrid';
+  if (value.includes('디젤')) return 'diesel';
+  if (value.includes('LPG')) return 'lpg';
+  if (value.includes('전기')) return 'electric';
+  if (value.includes('가솔린')) return 'gasoline';
+  return undefined;
+}
+
 function BrandModelPicker({
   brands,
   models,
@@ -931,30 +953,57 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                 const groupKey = `${group.fuel}|${group.drivetrain}`;
                 const groupLabel = [translateBadgeDetail(group.fuel, lang), group.drivetrain].filter(Boolean).join(' ');
                 const isGroupExpanded = expandedGroup === groupKey;
-                const isGroupSelected = filters.badge && group.badges.some(b => b.name === filters.badge);
+                const groupFuelCode = fuelCodeFromLabel(group.fuel);
+                const selectedFuels = splitSelections(filters.fuel);
+                const isGroupSelected = Boolean(groupFuelCode && selectedFuels.includes(groupFuelCode));
 
                 return (
                   <div key={groupKey}>
                     {/* Level 1: Fuel + Drivetrain group */}
-                    <button
-                      onClick={() => {
-                        setExpandedGroup(isGroupExpanded ? null : groupKey);
-                        if (!isGroupExpanded) setExpandedBadge(null);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-all text-left ${
+                    <div className={`flex w-full items-center rounded-xl text-sm transition-all ${
                         isGroupSelected
-                          ? 'bg-primary/5 text-primary font-medium'
+                          ? 'bg-primary/[0.07] text-primary'
                           : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <span className="flex items-center gap-1.5">
-                        <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${isGroupExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <button
+                        type="button"
+                        aria-label={isGroupExpanded ? t('search.hideFilters') : t('search.moreFilters')}
+                        onClick={() => {
+                          setExpandedGroup(isGroupExpanded ? null : groupKey);
+                          if (!isGroupExpanded) setExpandedBadge(null);
+                        }}
+                        className="flex h-11 w-10 shrink-0 items-center justify-center"
+                      >
+                        <svg className={`h-3.5 w-3.5 text-gray-400 transition-transform ${isGroupExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="truncate">{groupLabel || t('filter.type')}</span>
-                      </span>
-                      <span className="text-xs text-gray-400 tabular-nums ml-2 flex-shrink-0">{group.count}</span>
-                    </button>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!groupFuelCode}
+                        onClick={() => groupFuelCode && onChange({
+                          ...filters,
+                          fuel: toggleSelection(filters.fuel, groupFuelCode),
+                          page: 1,
+                        })}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-3 py-2 pr-2.5 text-left font-medium disabled:cursor-default"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                            isGroupSelected ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white'
+                          }`}>
+                            {isGroupSelected && (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="m5 10 3 3 7-7" />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="truncate">{groupLabel || t('filter.type')}</span>
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-gray-400">{group.count}</span>
+                      </button>
+                    </div>
 
                     {/* Level 2: Engine badges within group */}
                     {isGroupExpanded && (
@@ -1200,9 +1249,9 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                 {FUEL_TYPES.map((f) => (
                   <button
                     key={f.value}
-                    onClick={() => update('fuel', filters.fuel === f.value ? undefined : f.value)}
+                    onClick={() => update('fuel', toggleSelection(filters.fuel, f.value))}
                     className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
-                      filters.fuel === f.value
+                      splitSelections(filters.fuel).includes(f.value)
                         ? 'bg-primary/10 text-primary font-medium'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
@@ -1216,7 +1265,7 @@ export default function EncarSearch({ filters, onChange, brandCounts, totalCars,
                       }`} />
                       {f.label}
                     </span>
-                    {filters.fuel === f.value && (
+                    {splitSelections(filters.fuel).includes(f.value) && (
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                       </svg>

@@ -88,7 +88,10 @@ function matchesFuel(car: SnapshotCar, fuel?: string): boolean {
     electric: ['전기'],
     lpg: ['LPG'],
   };
-  return (fuelMap[fuel] || []).some(value => (car.FuelType || '').includes(value));
+  const selected = fuel.split(',').map(value => value.trim()).filter(Boolean);
+  return selected.some(type =>
+    (fuelMap[type] || []).some(value => (car.FuelType || '').includes(value))
+  );
 }
 
 function matchesTransmission(car: SnapshotCar, transmission?: string): boolean {
@@ -144,8 +147,8 @@ function matchesFilters(car: SnapshotCar, filters: CarFilters): boolean {
   if (!matchesBrand(car, filters.brand)) return false;
   if (filters.modelVariant && car.Model !== filters.modelVariant) return false;
   if (!filters.modelVariant && !matchesModel(car, filters.model)) return false;
-  if (filters.badge && car.Badge !== filters.badge) return false;
-  if (filters.badgeDetail && car.BadgeDetail !== filters.badgeDetail) return false;
+  if (filters.badge && !filters.badge.split(',').includes(car.Badge || '')) return false;
+  if (filters.badgeDetail && !filters.badgeDetail.split(',').includes(car.BadgeDetail || '')) return false;
   if (!matchesFuel(car, filters.fuel)) return false;
   if (!matchesTransmission(car, filters.transmission)) return false;
   if (!matchesColor(car, filters.color)) return false;
